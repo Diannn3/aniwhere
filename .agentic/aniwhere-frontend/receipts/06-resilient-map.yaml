@@ -1,4 +1,4 @@
-﻿task_id: ANIWHERE-FRONTEND-2026-09-18
+task_id: ANIWHERE-FRONTEND-2026-09-18
 feature_id: 06-resilient-map
 status: ACCEPTED
 completed_at: 2026-09-18T03:35:30+08:00
@@ -19,7 +19,7 @@ evidence:
   critic_verdict: PASS
 artifact:
   branch: feat/aniwhere-frontend-prototype
-  commit: pending
+  commit: f9c9d04
   changed_files:
     - src/components/map/ResilientLagunaMap.svelte
 known_limits:
