@@ -41,8 +41,8 @@
     {
       "id": "05-discovery-results",
       "name": "Discovery list, filters, selected outlet coordination, empty states",
-      "status": "PENDING",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "e5a640f",
       "receipt": ".agentic/aniwhere-frontend/receipts/05-discovery-results.yaml"
     },
     {

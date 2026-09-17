@@ -1,0 +1,308 @@
+﻿<script lang="ts">
+  import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
+  import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
+
+  interface OutletWithFit {
+    outlet: Outlet;
+    fit: FitResult;
+    distanceKm: number;
+  }
+
+  let {
+    items = [],
+    harvest,
+    selectedId = undefined,
+    lang = 'en',
+    onSelect = () => {},
+  }: {
+    items: OutletWithFit[];
+    harvest: HarvestQuery;
+    selectedId?: string;
+    lang?: 'en' | 'fil';
+    onSelect?: (id: string) => void;
+  } = $props();
+
+  // Laguna Bounding Box
+  const MIN_LAT = 14.03;
+  const MAX_LAT = 14.34;
+  const MIN_LNG = 121.10;
+  const MAX_LNG = 121.48;
+
+  const SVG_WIDTH = 480;
+  const SVG_HEIGHT = 400;
+
+  function project(lat: number, lng: number): { x: number; y: number } {
+    const normX = (lng - MIN_LNG) / (MAX_LNG - MIN_LNG);
+    const normY = (MAX_LAT - lat) / (MAX_LAT - MIN_LAT); // Invert Y
+    const padding = 36;
+    const innerW = SVG_WIDTH - padding * 2;
+    const innerH = SVG_HEIGHT - padding * 2;
+    return {
+      x: Math.round((padding + normX * innerW) * 10) / 10,
+      y: Math.round((padding + normY * innerH) * 10) / 10,
+    };
+  }
+
+  const originMun = $derived(
+    LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) ||
+    LAGUNA_MUNICIPALITIES[0]
+  );
+
+  const originPos = $derived(project(originMun.lat, originMun.lng));
+
+  const selectedItem = $derived(
+    items.find((item) => item.outlet.id === selectedId)
+  );
+
+  const selectedPos = $derived(
+    selectedItem ? project(selectedItem.outlet.lat, selectedItem.outlet.lng) : null
+  );
+
+  function getStatusColor(status: FitResult['status']): string {
+    switch (status) {
+      case 'match':
+        return '#597928'; // Green
+      case 'partial':
+        return '#B86A2B'; // Amber
+      case 'confirm':
+        return '#4E7380'; // Route Blue
+      case 'no_match':
+      default:
+        return '#8C9388'; // Gray
+    }
+  }
+</script>
+
+<div class="relative w-full h-full min-h-[380px] bg-[#F4F7F0] rounded-2xl border border-[#20251E]/12 overflow-hidden flex flex-col select-none shadow-xs">
+  
+  <!-- Map Header Bar -->
+  <div class="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
+    <div class="bg-[#FFFDF8]/95 backdrop-blur-md border border-[#20251E]/12 px-3 py-1.5 rounded-xl shadow-xs pointer-events-auto flex items-center gap-2">
+      <svg class="w-4 h-4 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+      <span class="text-xs font-bold text-[#20251E]">
+        {lang === 'fil' ? 'Mapa ng Pamilihan sa Laguna' : 'Laguna Market Corridor'}
+      </span>
+    </div>
+
+    <span class="bg-[#FCECD8]/95 backdrop-blur-md border border-[#20251E]/10 text-[#6E3511] px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-xs pointer-events-auto">
+      {lang === 'fil' ? 'Guhit-mapa' : 'Illustrative'}
+    </span>
+  </div>
+
+  <!-- SVG Spatial Canvas -->
+  <div class="w-full flex-1 flex items-center justify-center p-2">
+    <svg
+      class="w-full h-full max-h-[500px]"
+      viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Laguna market map with farmer origin and buyer outlets"
+    >
+      <!-- Base terrain contours -->
+      <defs>
+        <pattern id="grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1" fill="#20251E" fill-opacity="0.04" />
+        </pattern>
+      </defs>
+      <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#grid-dots)" />
+
+      <!-- Laguna de Bay lake contour -->
+      <path
+        d="M 40 40 C 120 20, 260 25, 340 35 C 410 45, 460 70, 440 120 C 420 170, 360 180, 290 170 C 230 160, 180 180, 120 165 C 60 150, 20 120, 30 80 Z"
+        fill="#4E7380"
+        fill-opacity="0.14"
+        stroke="#4E7380"
+        stroke-width="1.5"
+        stroke-opacity="0.3"
+      />
+      <text
+        x="240"
+        y="95"
+        font-family="'Source Sans 3', sans-serif"
+        font-size="12"
+        font-weight="700"
+        fill="#4E7380"
+        fill-opacity="0.75"
+        text-anchor="middle"
+      >
+        Laguna de Bay
+      </text>
+
+      <!-- Mt. Makiling Mountain Silhouette Area -->
+      <path
+        d="M 120 260 C 160 210, 200 210, 240 260 C 210 270, 150 270, 120 260 Z"
+        fill="#91AC67"
+        fill-opacity="0.25"
+        stroke="#597928"
+        stroke-width="1"
+        stroke-dasharray="3 3"
+        stroke-opacity="0.4"
+      />
+      <text
+        x="180"
+        y="248"
+        font-family="'Source Sans 3', sans-serif"
+        font-size="9"
+        font-weight="700"
+        fill="#597928"
+        fill-opacity="0.75"
+        text-anchor="middle"
+      >
+        Mt. Makiling
+      </text>
+
+      <!-- Highway / Transport Corridor (Calamba -> Los Baños -> Santa Cruz) -->
+      <path
+        d="M 90 200 Q 180 230, 210 240 T 380 140"
+        stroke="#20251E"
+        stroke-width="2"
+        stroke-opacity="0.18"
+        stroke-dasharray="4 4"
+        fill="none"
+      />
+
+      <!-- Active Connection Line between Origin and Selected Outlet -->
+      {#if selectedPos}
+        <line
+          x1={originPos.x}
+          y1={originPos.y}
+          x2={selectedPos.x}
+          y2={selectedPos.y}
+          stroke={getStatusColor(selectedItem?.fit.status || 'match')}
+          stroke-width="2.5"
+          stroke-dasharray="6 4"
+        />
+      {/if}
+
+      <!-- Outlet Pins -->
+      {#each items as item}
+        {@const pos = project(item.outlet.lat, item.outlet.lng)}
+        {@const isSelected = item.outlet.id === selectedId}
+        {@const color = getStatusColor(item.fit.status)}
+
+        <g
+          class="cursor-pointer transition-transform duration-150 {isSelected ? 'scale-110' : 'hover:scale-105'}"
+          tabindex="0"
+          role="button"
+          aria-label={`${item.outlet.name}: ${item.fit.statusLabel}, ${item.distanceKm} km`}
+          onclick={() => onSelect(item.outlet.id)}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelect(item.outlet.id);
+            }
+          }}
+        >
+          <!-- Pulsing Focus / Selection ring -->
+          {#if isSelected}
+            <circle cx={pos.x} cy={pos.y} r="18" fill={color} fill-opacity="0.2" stroke={color} stroke-width="1.5" />
+          {/if}
+
+          <!-- Pin Outer Circle -->
+          <circle
+            cx={pos.x}
+            cy={pos.y}
+            r={isSelected ? "11" : "9"}
+            fill={color}
+            stroke="#FFFDF8"
+            stroke-width="2"
+            class="shadow-sm"
+          />
+
+          <!-- Pin Inner Core -->
+          <circle cx={pos.x} cy={pos.y} r={isSelected ? "4" : "3"} fill="#FFFDF8" />
+
+          <!-- Floating Name Label -->
+          <g transform={`translate(${pos.x}, ${pos.y + 16})`}>
+            <rect
+              x="-48"
+              y="-2"
+              width="96"
+              height="16"
+              rx="4"
+              fill="#FFFDF8"
+              fill-opacity="0.95"
+              stroke="#20251E"
+              stroke-opacity="0.15"
+              stroke-width="0.75"
+            />
+            <text
+              x="0"
+              y="10"
+              font-family="'Source Sans 3', sans-serif"
+              font-size="9"
+              font-weight={isSelected ? "700" : "600"}
+              fill="#20251E"
+              text-anchor="middle"
+            >
+              {item.outlet.name.replace('Demo ', '')}
+            </text>
+          </g>
+        </g>
+      {/each}
+
+      <!-- Farmer Origin Pin (Always on top) -->
+      <g
+        transform={`translate(${originPos.x}, ${originPos.y})`}
+        role="region"
+        aria-label={`Your location: ${originMun.name}`}
+      >
+        <circle cx="0" cy="0" r="14" fill="#6E3511" fill-opacity="0.2" />
+        <circle cx="0" cy="0" r="8" fill="#6E3511" stroke="#FFFDF8" stroke-width="2" />
+        <circle cx="0" cy="0" r="3" fill="#FFFDF8" />
+
+        <g transform="translate(0, -14)">
+          <rect
+            x="-44"
+            y="-14"
+            width="88"
+            height="15"
+            rx="4"
+            fill="#6E3511"
+          />
+          <text
+            x="0"
+            y="-3"
+            font-family="'Source Sans 3', sans-serif"
+            font-size="8.5"
+            font-weight="700"
+            fill="#FFFDF8"
+            text-anchor="middle"
+          >
+            {lang === 'fil' ? 'Iyong Lokasyon' : 'Your Origin'}
+          </text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Bottom Legend / Status Pill Bar -->
+  <div class="bg-[#FFFDF8]/95 backdrop-blur-sm border-t border-[#20251E]/10 p-2.5 px-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#4A5245]">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#597928] inline-block"></span>
+        <span class="font-medium">{lang === 'fil' ? 'Tugma' : 'Match'}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#B86A2B] inline-block"></span>
+        <span class="font-medium">{lang === 'fil' ? 'Bahagya' : 'Partial'}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#4E7380] inline-block"></span>
+        <span class="font-medium">{lang === 'fil' ? 'Kumpirmahin' : 'Confirm'}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#8C9388] inline-block"></span>
+        <span class="font-medium">{lang === 'fil' ? 'Hindi tugma' : 'No match'}</span>
+      </div>
+    </div>
+
+    <span class="text-[10px] text-[#6B7265] italic">
+      {lang === 'fil' ? 'Tantyang distansya lamang' : 'Approximate road corridor'}
+    </span>
+  </div>
+
+</div>
