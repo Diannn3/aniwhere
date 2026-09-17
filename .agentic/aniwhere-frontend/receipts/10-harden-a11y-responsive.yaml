@@ -34,7 +34,8 @@ evidence:
     - zero_prompt_leakage: VERIFIED
 artifact:
   branch: feat/aniwhere-frontend-prototype
-  commit: PENDING_COMMIT
+  commit: a287813
+
   changed_files:
     - src/styles/global.css
     - docs/FRONTEND_LIMITATIONS.md

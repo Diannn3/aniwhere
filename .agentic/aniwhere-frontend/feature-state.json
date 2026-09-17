@@ -1,7 +1,7 @@
 {
   "task_id": "ANIWHERE-FRONTEND-2026-09-18",
   "branch": "feat/aniwhere-frontend-prototype",
-  "current_feature_index": 10,
+  "current_feature_index": 11,
   "features": [
 
     {
@@ -78,10 +78,11 @@
     {
       "id": "10-harden-a11y-responsive",
       "name": "Resilience, a11y, responsive polish, reference corrections",
-      "status": "PENDING",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "a287813",
       "receipt": ".agentic/aniwhere-frontend/receipts/10-harden-a11y-responsive.yaml"
     },
+
     {
       "id": "11-e2e-docs-receipts",
       "name": "Automated visual/browser QA, docs, completion receipts",
