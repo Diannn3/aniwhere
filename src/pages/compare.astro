@@ -1,0 +1,15 @@
+﻿---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ComparisonExperience from '../components/compare/ComparisonExperience.svelte';
+
+const title = 'AniWhere — Compare Market Options';
+const description = 'Compare selling outlets side-by-side. Calculate proceeds after your entered hauling expense before you travel.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  currentPath="/compare"
+>
+  <ComparisonExperience client:load />
+</BaseLayout>
