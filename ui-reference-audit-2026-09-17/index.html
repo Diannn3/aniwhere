@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AniWhere — UI reference review</title>
+  <style>
+    :root{color-scheme:light;--olive:#597928;--leaf:#91AC67;--brown:#6E3511;--cream:#FCECD8;--surface:#FFFDF8;--ink:#20251E;--blue:#4E7380}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--surface);color:var(--ink);font:17px/1.6 system-ui,sans-serif}a{color:var(--blue);text-underline-offset:4px}a:focus-visible,summary:focus-visible{outline:3px solid var(--brown);outline-offset:5px}header,main,footer{max-width:1320px;margin:auto;padding:32px}header{padding-top:56px;border-bottom:1px solid #20251e33}.brand{display:flex;align-items:center;gap:16px;font-weight:750;font-size:24px}.brand img{width:48px;height:auto}h1{font:600 clamp(32px,5vw,64px)/1.1 Georgia,serif;letter-spacing:-.025em;max-width:900px;margin:32px 0 20px}h2{font:600 clamp(26px,3vw,40px)/1.2 Georgia,serif;margin:0 0 12px}h3{font-size:18px;margin:0 0 8px}p{max-width:850px;margin:12px 0}.links{display:flex;gap:12px 24px;flex-wrap:wrap;margin:24px 0}.links a{padding:8px 0}nav ol{padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 32px;margin:32px 0}nav a{display:block;padding:8px 0}section{padding:40px 0;border-bottom:1px solid #20251e33;scroll-margin-top:24px}.number{color:var(--brown);font-size:16px;font-weight:700;margin-bottom:8px}.pair{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}.pair figure{margin:0}.pair img{display:block;width:100%;height:auto;border:1px solid #20251e33;border-radius:8px;background:white}.pair .mobile img{max-width:640px;margin:auto}.pair figcaption{margin:10px 0;font-size:15px}.notes{background:var(--cream);padding:20px 24px;border-radius:8px;margin-top:24px;max-width:900px}.notes p{margin:0}.hint{font-size:15px}summary{cursor:pointer;padding:12px 0;font-weight:600}details{margin:20px 0}.full{display:inline-block;padding:8px 0}footer{font-size:15px;padding-bottom:56px}.skip{position:absolute;top:-100px;background:var(--surface);padding:12px}.skip:focus{top:8px} @media(max-width:700px){header,main,footer{padding:24px 16px}.pair{grid-template-columns:1fr}.pair .original{max-width:220px}nav ol{grid-template-columns:1fr}section{padding:32px 0}} @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}} @media(forced-colors:active){.notes,.pair img{border:1px solid CanvasText}a:focus-visible,summary:focus-visible{outline:3px solid Highlight}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#screens">Skip to screens</a>
+  <header>
+    <div class="brand"><img src="references/image-11.png" width="273" height="255" alt="Supplied AniWhere A-shaped field and route logo">AniWhere</div>
+    <h1>Ten screens, a clearer farmer journey.</h1>
+    <p>A visual review of your supplied references and a regenerated UI for each screen. The original layout reference and supplied logo were provided to each generation call. Select an image to inspect it at full resolution.</p>
+    <p class="hint">These are generated UI concepts. Business records, prices and maps shown in the new screens are illustrative. They do not demonstrate a working application or verified market conditions.</p>
+    <div class="links">
+      <a href="AUDIT-AND-GENERATION-PLAN.md">Full audit and generation plan</a>
+      <a href="PROMPTS-01-03.md">Prompts 01–03</a>
+      <a href="PROMPTS-04-06.md">Prompts 04–06</a>
+      <a href="PROMPTS-07-10.md">Prompts 07–10</a>
+      <a href="REVIEW.md">Final inspection record</a>
+    </div>
+    <nav aria-label="Screen index"><ol>
+      <li><a href="#screen-01">01 · Mobile harvest entry</a></li><li><a href="#screen-02">02 · Desktop homepage</a></li>
+      <li><a href="#screen-03">03 · Mobile buyer workspace</a></li><li><a href="#screen-04">04 · Mobile place detail</a></li>
+      <li><a href="#screen-05">05 · Mobile comparison</a></li><li><a href="#screen-06">06 · Mobile discovery</a></li>
+      <li><a href="#screen-07">07 · Desktop place detail</a></li><li><a href="#screen-08">08 · Desktop comparison</a></li>
+      <li><a href="#screen-09">09 · Desktop buyer workspace</a></li><li><a href="#screen-10">10 · Desktop discovery</a></li>
+    </ol></nav>
+  </header>
+  <main id="screens">
+    <section id="screen-01"><div class="number">01</div><h2>Mobile harvest entry</h2><p>A compact path from crop, quantity and location to discovery.</p>
+      <div class="pair"><figure class="original"><a href="references/image-1.png"><img src="references/image-1.png" loading="lazy" alt="Original mobile harvest-entry inspiration"></a><figcaption>Your original reference</figcaption></figure><figure class="mobile"><a href="01-mobile-harvest.png"><img src="01-mobile-harvest.png" loading="lazy" alt="Regenerated mobile harvest form with tomatoes, quantity and location"></a><figcaption>Regenerated concept · <a href="01-mobile-harvest.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: remove unsupported match counts before searching, use numeric quantity input, simplify navigation and give the search action enough space.</p></div>
+    </section>
+    <section id="screen-02"><div class="number">02</div><h2>Desktop homepage</h2><p>The map and harvest form lead the page.</p>
+      <div class="pair"><figure class="original"><a href="references/image-2.png"><img src="references/image-2.png" loading="lazy" alt="Original desktop homepage inspiration"></a><figcaption>Your original reference</figcaption></figure><figure><a href="02-desktop-home.png"><img src="02-desktop-home.png" loading="lazy" alt="Regenerated AniWhere desktop homepage"></a><figcaption>Regenerated concept · <a href="02-desktop-home.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: one search flow, Laguna scope, useful introductory copy and no fabricated adoption statistics.</p></div>
+    </section>
+    <section id="screen-03"><div class="number">03</div><h2>Mobile buyer workspace</h2><p>A manageable list of offers and their review status.</p>
+      <div class="pair"><figure class="original"><a href="references/image-3.png"><img src="references/image-3.png" loading="lazy" alt="Original mobile buyer dashboard inspiration"></a><figcaption>Your original reference</figcaption></figure><figure class="mobile"><a href="03-mobile-buyer.png"><img src="03-mobile-buyer.png" loading="lazy" alt="Regenerated mobile buyer workspace with three sample offers"></a><figcaption>Regenerated concept · <a href="03-mobile-buyer.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: published, in-review and draft offers; replace unsupported inquiry statistics and a map of private farmers with a clear management task.</p></div>
+    </section>
+    <section id="screen-04"><div class="number">04</div><h2>Mobile place detail</h2><p>Terms, harvest fit and the cost calculation in one place.</p>
+      <div class="pair"><figure class="original"><a href="references/image-4.png"><img src="references/image-4.png" loading="lazy" alt="Original mobile market-detail inspiration"></a><figcaption>Your original reference</figcaption></figure><figure class="mobile"><a href="04-mobile-detail.png"><img src="04-mobile-detail.png" loading="lazy" alt="Regenerated mobile detail for the fictional Demo Cooperative"></a><figcaption>Regenerated concept · <a href="04-mobile-detail.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: replace the undefined 94% score and unsupported verification badges; explain PHP 8,400 gross less PHP 600 entered transport, leaving PHP 7,800.</p></div>
+    </section>
+    <section id="screen-05"><div class="number">05</div><h2>Mobile comparison</h2><p>Accepted quantity and entered costs remain visible together.</p>
+      <div class="pair"><figure class="original"><a href="references/image-5.png"><img src="references/image-5.png" loading="lazy" alt="Original mobile comparison inspiration"></a><figcaption>Your original reference</figcaption></figure><figure class="mobile"><a href="05-mobile-compare.png"><img src="05-mobile-compare.png" loading="lazy" alt="Regenerated mobile comparison of three fictional selling options"></a><figcaption>Regenerated concept · <a href="05-mobile-compare.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: show actual transport charges, preserve the 100 kg remaining at the partial option, and remove unsupported best-option claims.</p></div>
+    </section>
+    <section id="screen-06"><div class="number">06</div><h2>Mobile discovery</h2><p>A quieter map supports a readable results sheet.</p>
+      <div class="pair"><figure class="original"><a href="references/image-6.png"><img src="references/image-6.png" loading="lazy" alt="Original mobile map and results-sheet inspiration"></a><figcaption>Your original reference</figcaption></figure><figure class="mobile"><a href="06-mobile-discover.png"><img src="06-mobile-discover.png" loading="lazy" alt="Regenerated mobile discovery with map and results"></a><figcaption>Regenerated concept · <a href="06-mobile-discover.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: descriptive fit states, explicit Map/List control, consistent sample prices and no invented precise road distances.</p></div>
+    </section>
+    <section id="screen-07"><div class="number">07</div><h2>Desktop place detail</h2><p>The same terms as the mobile detail, with more room to inspect them.</p>
+      <div class="pair"><figure class="original"><a href="references/image-7.png"><img src="references/image-7.png" loading="lazy" alt="Original desktop market-detail inspiration"></a><figcaption>Your original reference</figcaption></figure><figure><a href="07-desktop-detail.png"><img src="07-desktop-detail.png" loading="lazy" alt="Regenerated desktop detail for the fictional Demo Cooperative"></a><figcaption>Regenerated concept · <a href="07-desktop-detail.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: consistent price and accepted quantity across devices; remove fabricated private contact details, reviews and registration claims.</p></div>
+    </section>
+    <section id="screen-08"><div class="number">08</div><h2>Desktop comparison</h2><p>Three aligned options with the deductions made explicit.</p>
+      <div class="pair"><figure class="original"><a href="references/image-8.png"><img src="references/image-8.png" loading="lazy" alt="Original desktop comparison inspiration"></a><figcaption>Your original reference</figcaption></figure><figure><a href="08-desktop-compare.png"><img src="08-desktop-compare.png" loading="lazy" alt="Regenerated desktop comparison with accepted quantities and entered transport costs"></a><figcaption>Regenerated concept · <a href="08-desktop-compare.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: gross minus entered transport equals PHP 7,800 / PHP 9,300 / PHP 5,700. The third option accepts only 200 kg. Equal visual treatment avoids an unexplained recommendation.</p></div>
+    </section>
+    <section id="screen-09"><div class="number">09</div><h2>Desktop buyer workspace</h2><p>Review and maintain buying offers without a distracting analytics dashboard.</p>
+      <div class="pair"><figure class="original"><a href="references/image-9.png"><img src="references/image-9.png" loading="lazy" alt="Original desktop buyer-dashboard inspiration"></a><figcaption>Your original reference</figcaption></figure><figure><a href="09-desktop-buyer.png"><img src="09-desktop-buyer.png" loading="lazy" alt="Regenerated desktop buyer workspace and sample offer table"></a><figcaption>Regenerated concept · <a href="09-desktop-buyer.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: counts derived from the three visible records, explicit publication states and guidance for reviewing current terms.</p></div>
+    </section>
+    <section id="screen-10"><div class="number">10</div><h2>Desktop discovery</h2><p>Filters, results and map share the same harvest context.</p>
+      <div class="pair"><figure class="original"><a href="references/image-10.png"><img src="references/image-10.png" loading="lazy" alt="Original desktop discovery inspiration"></a><figcaption>Your original reference</figcaption></figure><figure><a href="10-desktop-discover.png"><img src="10-desktop-discover.png" loading="lazy" alt="Regenerated desktop market discovery with filters, results and map"></a><figcaption>Regenerated concept · <a href="10-desktop-discover.png" download>Download PNG</a></figcaption></figure></div>
+      <div class="notes"><p>Audit focus: consistent filters and results, a compact harvest summary, explicit fit explanations and no mixed-crop average-price metric.</p></div>
+    </section>
+  </main>
+  <footer><p>Prepared 17 September 2026. The references are preserved for comparison. Images are individual PNG deliverables; this page is a local review gallery. A built product still requires real data, approved assets, responsive implementation and accessibility testing.</p><a href="#">Back to top</a></footer>
+</body>
+</html>

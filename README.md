@@ -20,6 +20,10 @@ The archive contains:
 
 The documents distinguish reviewed public information, fictional demonstration data, product assumptions, and work that still requires validation. The repository currently contains planning materials rather than a completed application.
 
+## UI reference audit
+
+View the [published UI reference gallery](./ui-reference-audit-2026-09-17/index.html). It contains one regenerated screen for each of the ten supplied UI references, the supplied logo and reference images, exact generation prompts, and a QA record. The images are visual concepts; business names, prices, locations and maps shown in the demo screens are illustrative.
+
 ## Package integrity
 
 SHA-256:
