@@ -27,15 +27,15 @@
     {
       "id": "03-navigation-state",
       "name": "Shared navigation, locale system, localStorage adapter, URL parser",
-      "status": "IN_PROGRESS",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "e5df549",
       "receipt": ".agentic/aniwhere-frontend/receipts/03-navigation-state.yaml"
     },
     {
       "id": "04-home-harvest",
       "name": "Harvest-entry homepage, mobile & desktop composition",
-      "status": "PENDING",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "68b8927",
       "receipt": ".agentic/aniwhere-frontend/receipts/04-home-harvest.yaml"
     },
     {
