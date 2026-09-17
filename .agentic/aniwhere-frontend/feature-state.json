@@ -1,19 +1,19 @@
 {
   "task_id": "ANIWHERE-FRONTEND-2026-09-18",
   "branch": "feat/aniwhere-frontend-prototype",
-  "current_feature_index": 0,
+  "current_feature_index": 1,
   "features": [
     {
       "id": "00-preflight",
       "name": "Preflight, branch, contract, design tokens",
-      "status": "IN_PROGRESS",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "53bb236",
       "receipt": ".agentic/aniwhere-frontend/receipts/00-preflight.yaml"
     },
     {
       "id": "01-foundation",
       "name": "Astro/Svelte/Tailwind foundation, tokens, base layout",
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
       "commit": null,
       "receipt": ".agentic/aniwhere-frontend/receipts/01-foundation.yaml"
     },

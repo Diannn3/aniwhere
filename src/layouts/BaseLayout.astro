@@ -1,0 +1,222 @@
+---
+import BrandMark from '../components/brand/BrandMark.astro';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentPath?: string;
+  lang?: 'en' | 'fil';
+}
+
+const {
+  title = 'AniWhere — Harvest-Based Market Discovery for Farmers',
+  description = 'Tell us your harvest. We show where it can realistically go. Market discovery and decision support for farmers in Laguna, Philippines.',
+  currentPath = Astro.url.pathname,
+  lang = 'en',
+} = Astro.props;
+
+const isFil = lang === 'fil';
+
+const navItems = [
+  { href: '/', label: isFil ? 'Tahanan' : 'Home', key: 'home' },
+  { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', key: 'discover' },
+  { href: '/compare', label: isFil ? 'Paghambingin' : 'Compare', key: 'compare' },
+  { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', key: 'saved' },
+];
+
+const buyerNav = {
+  href: '/buyer',
+  label: isFil ? 'Demo ng Mamimili' : 'Buyer demo',
+  key: 'buyer',
+};
+
+const isActive = (path: string) => {
+  if (path === '/' && currentPath === '/') return true;
+  if (path !== '/' && currentPath.startsWith(path)) return true;
+  return false;
+};
+---
+
+<!doctype html>
+<html lang={lang} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    
+    <!-- Preconnect to Google Fonts for Source Serif 4 & Source Sans 3 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..800;1,8..60,400..800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-[#FFFDF8] text-[#20251E] flex flex-col min-h-screen antialiased selection:bg-[#FCECD8] selection:text-[#6E3511]">
+    <!-- Accessibility Skip Link -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-50 px-4 py-2 bg-[#597928] text-[#FFFDF8] rounded-md shadow-lg outline-none ring-2 ring-[#20251E]"
+    >
+      {isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}
+    </a>
+
+    <!-- Top Announcement / Demo Context Banner -->
+    <aside class="bg-[#FCECD8]/70 border-b border-[#20251E]/10 py-1.5 px-4 text-xs text-[#6E3511] flex items-center justify-between" aria-label="Demo notice">
+      <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="inline-block px-1.5 py-0.5 rounded bg-[#6E3511]/10 font-medium tracking-wide uppercase text-[10px]">
+            Demo — sample data
+          </span>
+          <span class="hidden sm:inline">
+            {isFil ? 'Halimbawang datos lamang para sa NextGen Agri Hackathon.' : 'Illustrative fixture data for NextGen Agri Hackathon demonstration.'}
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- Global Language Switcher -->
+          <div class="flex items-center gap-1 text-[11px] font-medium" role="group" aria-label="Language selection">
+            <a
+              href={`?lang=en`}
+              class={`px-2 py-0.5 rounded transition-colors ${lang === 'en' ? 'bg-[#597928] text-[#FFFDF8] font-semibold' : 'text-[#4A5245] hover:text-[#20251E]'}`}
+              aria-current={lang === 'en' ? 'true' : undefined}
+            >
+              EN
+            </a>
+            <span class="text-[#20251E]/30" aria-hidden="true">|</span>
+            <a
+              href={`?lang=fil`}
+              class={`px-2 py-0.5 rounded transition-colors ${lang === 'fil' ? 'bg-[#597928] text-[#FFFDF8] font-semibold' : 'text-[#4A5245] hover:text-[#20251E]'}`}
+              aria-current={lang === 'fil' ? 'true' : undefined}
+            >
+              FIL
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Navigation Header -->
+    <header class="sticky top-0 z-40 bg-[#FFFDF8]/95 backdrop-blur-md border-b border-[#20251E]/10 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto h-16 flex items-center justify-between gap-4">
+        <!-- Logo / Home Link -->
+        <a href="/" class="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928] rounded-lg transition-opacity" aria-label="AniWhere home">
+          <BrandMark size="md" />
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center gap-1" aria-label="Main navigation">
+          {navItems.map((item) => (
+            <a
+              href={item.href}
+              class={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive(item.href)
+                  ? 'bg-[#FCECD8] text-[#597928] font-semibold shadow-xs'
+                  : 'text-[#4A5245] hover:text-[#20251E] hover:bg-[#FCECD8]/40'
+              }`}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <!-- Right Header Action / Buyer Workspace Demo Link -->
+        <div class="flex items-center gap-3">
+          <a
+            href={buyerNav.href}
+            class={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              isActive(buyerNav.href)
+                ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
+                : 'border-[#20251E]/15 text-[#4A5245] hover:bg-[#FCECD8]/30 hover:text-[#20251E]'
+            }`}
+          >
+            {buyerNav.label}
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Main Content -->
+    <main id="main-content" class="flex-1 pb-20 md:pb-12">
+      <slot />
+    </main>
+
+    <!-- Mobile Bottom Navigation (Visible on < 768px screens for Farmer Routes) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF8]/95 backdrop-blur-md border-t border-[#20251E]/10 px-3 py-2" aria-label="Mobile navigation">
+      <div class="flex items-center justify-around max-w-md mx-auto">
+        <a
+          href="/"
+          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors ${
+            isActive('/') ? 'text-[#597928] font-semibold' : 'text-[#4A5245] hover:text-[#20251E]'
+          }`}
+          aria-current={isActive('/') ? 'page' : undefined}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span class="text-[11px]">{isFil ? 'Tahanan' : 'Home'}</span>
+        </a>
+
+        <a
+          href="/discover"
+          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors ${
+            isActive('/discover') ? 'text-[#597928] font-semibold' : 'text-[#4A5245] hover:text-[#20251E]'
+          }`}
+          aria-current={isActive('/discover') ? 'page' : undefined}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span class="text-[11px]">{isFil ? 'Maghanap' : 'Discover'}</span>
+        </a>
+
+        <a
+          href="/compare"
+          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors ${
+            isActive('/compare') ? 'text-[#597928] font-semibold' : 'text-[#4A5245] hover:text-[#20251E]'
+          }`}
+          aria-current={isActive('/compare') ? 'page' : undefined}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span class="text-[11px]">{isFil ? 'Ihambing' : 'Compare'}</span>
+        </a>
+
+        <a
+          href="/saved"
+          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors ${
+            isActive('/saved') ? 'text-[#597928] font-semibold' : 'text-[#4A5245] hover:text-[#20251E]'
+          }`}
+          aria-current={isActive('/saved') ? 'page' : undefined}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          <span class="text-[11px]">{isFil ? 'Nai-save' : 'Saved'}</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Footer -->
+    <footer class="bg-[#FFFDF8] border-t border-[#20251E]/10 py-8 px-4 sm:px-6 text-sm text-[#4A5245]">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <BrandMark size="sm" />
+          <span class="text-xs text-[#6B7265]">
+            &copy; 2026 AniWhere &middot; NextGen Agri Hackathon Laguna
+          </span>
+        </div>
+        <p class="text-xs text-center md:text-right text-[#6B7265] max-w-lg">
+          {isFil 
+            ? 'Ang AniWhere ay isang konsepto para sa pagtuklas ng merkado ng mga magsasaka. Lahat ng impormasyon ay halimbawa lamang para sa demonstrasyon.'
+            : 'AniWhere is a harvest market discovery concept. All data shown are illustrative demonstration fixtures. Confirm all terms before travel.'}
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
