@@ -55,8 +55,8 @@
     {
       "id": "07-outlet-detail-saved",
       "name": "Outlet detail and saved local outlets",
-      "status": "PENDING",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "fe87148",
       "receipt": ".agentic/aniwhere-frontend/receipts/07-outlet-detail-saved.yaml"
     },
     {
