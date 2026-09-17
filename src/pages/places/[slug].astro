@@ -1,0 +1,59 @@
+﻿---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import OutletDetailExperience from '../../components/places/OutletDetailExperience.svelte';
+import { DEMO_OUTLETS } from '../../content/demo-outlets';
+import type { Outlet } from '../../lib/domain/types';
+
+export function getStaticPaths() {
+  return DEMO_OUTLETS.map((outlet) => ({
+    params: { slug: outlet.slug },
+    props: { outlet },
+  }));
+}
+
+interface Props {
+  outlet?: Outlet;
+}
+
+const { slug } = Astro.params;
+const outlet = Astro.props.outlet || DEMO_OUTLETS.find((o) => o.slug === slug);
+const isFound = Boolean(outlet);
+---
+
+<BaseLayout
+  title={isFound ? `AniWhere — ${outlet!.name}` : 'AniWhere — Outlet Not Found'}
+  description={isFound ? outlet!.description : 'The requested agricultural selling outlet was not found in Laguna fixtures.'}
+  currentPath={`/places/${slug}`}
+>
+  {isFound ? (
+    <OutletDetailExperience client:load outlet={outlet!} />
+  ) : (
+    <div class="max-w-2xl mx-auto px-4 py-16 text-center space-y-6">
+      <div class="w-16 h-16 rounded-full bg-[#6E3511]/10 text-[#6E3511] mx-auto flex items-center justify-center">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#20251E]">
+        Outlet Not Found
+      </h1>
+
+      <p class="text-sm text-[#4A5245] max-w-md mx-auto">
+        The destination outlet <code class="px-2 py-0.5 bg-[#FAF7EE] rounded border text-xs font-mono">{slug}</code> is not in our verified Laguna demo fixtures.
+      </p>
+
+      <div class="pt-4">
+        <a
+          href="/discover"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all min-h-[44px]"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Back to Market Discovery</span>
+        </a>
+      </div>
+    </div>
+  )}
+</BaseLayout>

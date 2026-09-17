@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
   import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { serializeDiscoverQuery } from '../../lib/state/url-state';
@@ -12,14 +12,21 @@
 
   let {
     items = [],
-    harvest,
+    harvest = {
+      crop: 'tomato',
+      quantityKg: 300,
+      originMunicipality: 'los-banos',
+      readyDate: '2026-09-17',
+    },
     selectedId = undefined,
+    isDetailView = false,
     lang = 'en',
     onSelect = () => {},
   }: {
-    items: OutletWithFit[];
-    harvest: HarvestQuery;
+    items?: OutletWithFit[];
+    harvest?: HarvestQuery;
     selectedId?: string;
+    isDetailView?: boolean;
     lang?: 'en' | 'fil';
     onSelect?: (id: string) => void;
   } = $props();
@@ -343,7 +350,7 @@
     </svg>
 
     <!-- Mobile Non-Modal Pin Inspection Bottom Sheet (P1.1 44px touch targets & zero pin occlusion) -->
-    {#if selectedItem}
+    {#if selectedItem && !isDetailView}
       <div
         class="lg:hidden absolute bottom-3 left-3 right-3 z-20 bg-[#FFFDF8]/98 backdrop-blur-md border border-[#597928]/30 rounded-2xl p-4 shadow-xl space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-150"
       >
