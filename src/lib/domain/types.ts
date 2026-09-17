@@ -75,4 +75,8 @@ export interface BuyerDemoOffer {
   pricePerKg?: number;
   status: 'published' | 'in_review' | 'draft';
   updatedAt: string;
+  deliveryWindow?: string;
+  location?: string;
+  notes?: string;
 }
+

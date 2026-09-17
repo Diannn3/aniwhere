@@ -58,3 +58,14 @@ export function getBuyerOfferCounts(): { published: number; inReview: number; dr
     draft: offers.filter((o) => o.status === 'draft').length,
   };
 }
+
+export function deleteBuyerOffer(id: string): void {
+  const current = getBuyerOffers();
+  const updated = current.filter((o) => o.id !== id);
+  safeStorage.setItem(STORAGE_KEY, updated);
+}
+
+export function resetBuyerOffers(): void {
+  safeStorage.setItem(STORAGE_KEY, INITIAL_BUYER_OFFERS);
+}
+

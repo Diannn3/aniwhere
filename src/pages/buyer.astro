@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BuyerWorkspace from '../components/buyer/BuyerWorkspace.svelte';
+
+const lang = (Astro.url.searchParams.get('lang') as 'en' | 'fil') || 'en';
+const isFil = lang === 'fil';
+
+const title = isFil
+  ? 'AniWhere — Mga Alok sa Pagbili'
+  : 'AniWhere — Your Buying Offers';
+
+const description = isFil
+  ? 'Demonstrasyon ng workspace ng mamimili. Gumawa at pamahalaan ang mga alok sa pagbili ng ani.'
+  : 'Demonstration workspace for agricultural buyers. Create and manage buying offers saved locally on your device.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  currentPath="/buyer"
+  lang={lang}
+>
+  <BuyerWorkspace client:load initialLang={lang} />
+</BaseLayout>
