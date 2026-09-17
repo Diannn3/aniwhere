@@ -1,8 +1,9 @@
 {
   "task_id": "ANIWHERE-FRONTEND-2026-09-18",
   "branch": "feat/aniwhere-frontend-prototype",
-  "current_feature_index": 3,
+  "current_feature_index": 10,
   "features": [
+
     {
       "id": "00-preflight",
       "name": "Preflight, branch, contract, design tokens",
@@ -69,10 +70,11 @@
     {
       "id": "09-buyer-workspace",
       "name": "Buyer local-demo workspace and offer editor",
-      "status": "PENDING",
-      "commit": null,
+      "status": "ACCEPTED",
+      "commit": "c5c8927",
       "receipt": ".agentic/aniwhere-frontend/receipts/09-buyer-workspace.yaml"
     },
+
     {
       "id": "10-harden-a11y-responsive",
       "name": "Resilience, a11y, responsive polish, reference corrections",

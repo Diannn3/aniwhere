@@ -19,7 +19,8 @@ evidence:
   critic_verdict: PASS
 artifact:
   branch: feat/aniwhere-frontend-prototype
-  commit: PENDING_COMMIT
+  commit: c5c8927
+
   changed_files:
     - src/pages/buyer.astro
     - src/components/buyer/BuyerWorkspace.svelte
