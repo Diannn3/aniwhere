@@ -1,0 +1,24 @@
+# Feature 02 — Typed demo fixtures, crop aliases, validation, matching and comparison domain functions
+
+- Attempt: 1
+- Goal: Implement deterministic matching (4 fit states), crop normalization, pure transport math, Laguna municipalities, translations, and Vitest suite.
+- Relevant files inspected: ANTIGRAVITY_MASTER_PROMPT.md, AUDIT-AND-GENERATION-PLAN.md
+- Change summary:
+  - Created `src/lib/domain/types.ts`: typed domain contracts
+  - Created `src/lib/domain/crops.ts`: normalization and aliases (kamatis -> tomato, talong -> eggplant, kalamansi -> calamansi)
+  - Created `src/lib/domain/match.ts`: deterministic 4 fit states (match, partial, confirm, no_match)
+  - Created `src/lib/domain/compare.ts`: transparent transport math (gross - entered transport = after entered transport)
+  - Created `src/lib/domain/distance.ts`: Haversine approximate straight-line distance
+  - Created `src/lib/domain/validation.ts`: harvest query input constraints
+  - Created `src/content/demo-outlets.ts`: canonical 3 fixtures + edge cases (confirm capacity, excluded crop)
+  - Created `src/content/municipalities.ts`: 10 bundled Laguna municipalities
+  - Created `src/content/translations.ts`: complete English & Filipino dictionaries
+  - Created test suites: `match.test.ts`, `compare.test.ts`, `validation.test.ts`
+- Commands and results:
+  - `npx vitest run`: 3 test files passed, 14 tests passed (0 failures)
+  - `npx astro check`: 18 files checked, 0 errors, 0 warnings, 0 hints
+- Progress: Positive. Canonical scenario verified to the centavo:
+  - Demo Coop: 300kg accepted, gross P8,400, transport P600, after transport P7,800 (Match)
+  - Demo Processor: 300kg accepted, gross P9,600, transport P300, after transport P9,300 (Match)
+  - Demo Market: 200kg accepted, 100kg unsold, gross P6,000, transport P300, after transport P5,700 (Partial)
+- Next decision: Commit feature 02.
