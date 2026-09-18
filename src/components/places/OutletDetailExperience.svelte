@@ -4,7 +4,7 @@
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
@@ -21,7 +21,7 @@
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
-    readyDate: '2026-09-17',
+    readyDate: todayInManila(),
   });
 
   let saved = $state(false);
@@ -52,6 +52,13 @@
 
   function handleToggleSave() {
     saved = toggleSavedOutlet(outlet.id);
+  }
+
+  function formatEvidenceDate(value: string | null | undefined): string {
+    if (!value) return isFil ? 'Hindi alam' : 'Unknown';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function handleCopyMessage() {
@@ -193,8 +200,8 @@
           </svg>
         </div>
         <div>
-          <div class="text-xs font-semibold text-[#20251E]">Direct Sourcing</div>
-          <div class="text-[11px] text-[#6B7265]">Buys from local smallholders</div>
+          <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Uri ng Ebidensya' : 'Evidence Type'}</div>
+          <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
         </div>
       </div>
 
@@ -205,8 +212,8 @@
           </svg>
         </div>
         <div>
-          <div class="text-xs font-semibold text-[#20251E]">Active Schedule</div>
-          <div class="text-[11px] text-[#6B7265]">Sample terms as of {outlet.sampleOfferDate}</div>
+          <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Huling Update' : 'Last Updated'}</div>
+          <div class="text-[11px] text-[#6B7265]">{fitResult.dataUpdatedAt ? formatEvidenceDate(fitResult.dataUpdatedAt) : outlet.sampleOfferDate}</div>
         </div>
       </div>
 
@@ -217,8 +224,8 @@
           </svg>
         </div>
         <div>
-          <div class="text-xs font-semibold text-[#20251E]">Verified Fixture</div>
-          <div class="text-[11px] text-[#6B7265]">Laguna Agri Hackathon 2026</div>
+          <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'May Bisa Hanggang' : 'Valid Until'}</div>
+          <div class="text-[11px] text-[#6B7265]">{fitResult.dataValidUntil ? formatEvidenceDate(fitResult.dataValidUntil) : (isFil ? 'Walang expiry na nakatala' : 'No expiry recorded')}</div>
         </div>
       </div>
     </div>
@@ -277,7 +284,7 @@
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
           {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">Based on fixture</div>
+        <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
       </div>
 
       <!-- 4. Gross Subtotal -->
@@ -343,6 +350,12 @@
           {isFil ? 'Mga Katanungan Bago Bumiyahe' : 'Requirements to Confirm'}
         </h2>
       </div>
+
+      {#if fitResult.unknowns.length > 0}
+        <div class="rounded-xl p-3 bg-[#4E7380]/10 border border-[#4E7380]/20 text-xs text-[#2A4B56]">
+          <strong>{isFil ? 'Hindi pa alam:' : 'Still unknown:'}</strong> {(isFil ? fitResult.unknownsFil : fitResult.unknowns).join(', ')}
+        </div>
+      {/if}
 
       <p class="text-xs text-[#6B7265]">
         {isFil
