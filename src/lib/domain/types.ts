@@ -19,6 +19,15 @@ export type MarketEvidenceKind =
   | 'public_reference'
   | 'unknown';
 
+export type HarvestDetailField = 'variety' | 'grade' | 'packaging';
+
+export interface StructuredRequirement {
+  field: HarvestDetailField;
+  acceptedValues: string[];
+  label?: string;
+  labelFil?: string;
+}
+
 export interface CropCondition {
   maxKg?: number;
   minKg?: number;
@@ -41,6 +50,7 @@ export interface CropCondition {
   sourceKind?: MarketEvidenceKind;
   sourceLabel?: string;
   lastUpdatedAt?: string;
+  requirements?: StructuredRequirement[];
 }
 
 export interface Outlet {
@@ -112,6 +122,7 @@ export interface BuyerOfferRecord {
   grade?: string;
   packaging?: string;
   notes?: string;
+  requirements?: StructuredRequirement[];
   updatedAt: string;
   sourceId?: string;
 }
@@ -143,6 +154,7 @@ export interface HarvestQuery {
   quantityKg: number;
   originMunicipality: string;
   readyDate?: string;
+  details?: Partial<Record<HarvestDetailField, string>>;
 }
 
 export type FitReasonCode =
@@ -159,6 +171,8 @@ export type FitReasonCode =
   | 'offer_expired_for_harvest'
   | 'availability_date_unknown'
   | 'receiving_day_incompatible'
+  | 'requirement_information_missing'
+  | 'requirement_incompatible'
   | 'crop_excluded'
   | 'below_minimum_quantity';
 
