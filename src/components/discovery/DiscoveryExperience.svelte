@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
-  import { DEMO_OUTLETS } from '../../content/demo-outlets';
+  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -73,7 +73,7 @@
 
   // Evaluate all outlets against current harvest query
   const processedOutlets = $derived<ProcessedOutlet[]>(
-    DEMO_OUTLETS.map((outlet) => {
+    CURRENT_OUTLETS.map((outlet) => {
       const fit = evaluateFit(outlet, harvest);
       const distanceKm = calculateStraightLineDistanceKm(
         originCoords.lat,
