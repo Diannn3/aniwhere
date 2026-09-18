@@ -4,7 +4,7 @@
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { parseDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
@@ -72,18 +72,28 @@
     }
   }
 
+  const harvestDetailSummary = $derived(
+    [
+      harvest.details?.variety ? `${isFil ? 'barayti' : 'variety'}: ${harvest.details.variety}` : '',
+      harvest.details?.grade ? `${isFil ? 'grade' : 'grade'}: ${harvest.details.grade}` : '',
+      harvest.details?.packaging ? `${isFil ? 'packaging' : 'packaging'}: ${harvest.details.packaging}` : '',
+    ]
+      .filter(Boolean)
+      .join(', ')
+  );
+
   const messageTemplate = $derived(
     isFil
-      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}. Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa halimbawang presyo na ₱${fitResult.samplePricePerKg ?? '---'}/kg at ano po ang inyong grading at receiving schedule? Maraming salamat po.`
-      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}. I would like to confirm if you are currently accepting deliveries at the sample price of ₱${fitResult.samplePricePerKg ?? '---'}/kg and what your receiving schedule and grading requirements are. Thank you.`
+      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa halimbawang presyo na ₱${fitResult.samplePricePerKg ?? '---'}/kg at ano po ang inyong grading at receiving schedule? Maraming salamat po.`
+      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. I would like to confirm if you are currently accepting deliveries at the sample price of ₱${fitResult.samplePricePerKg ?? '---'}/kg and what your receiving schedule and grading requirements are. Thank you.`
   );
 
   const backUrl = $derived(
-    `/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+    `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 
   const compareUrl = $derived(
-    `/compare?places=${encodeURIComponent(outlet.id)}&crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+    `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 </script>
 
