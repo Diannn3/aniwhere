@@ -173,6 +173,89 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.reasonCodes).toContain('receiving_day_incompatible');
   });
 
+  it('missing structured harvest detail yields confirm instead of guessing compatibility', () => {
+    const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
+    const withRequirement: Outlet = {
+      ...coop,
+      acceptedCrops: {
+        ...coop.acceptedCrops,
+        tomato: {
+          ...coop.acceptedCrops.tomato!,
+          requirements: [
+            {
+              field: 'packaging',
+              acceptedValues: ['plastic crate'],
+              label: 'Packaging',
+              labelFil: 'Packaging',
+            },
+          ],
+        },
+      },
+    };
+
+    const result = evaluateFit(withRequirement, query300);
+    expect(result.status).toBe('confirm');
+    expect(result.reasonCodes).toContain('requirement_information_missing');
+    expect(result.unknowns).toContain('Packaging');
+    expect(result.acceptedKg).toBeNull();
+  });
+
+  it('known incompatible structured requirement yields no_match', () => {
+    const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
+    const withRequirement: Outlet = {
+      ...coop,
+      acceptedCrops: {
+        ...coop.acceptedCrops,
+        tomato: {
+          ...coop.acceptedCrops.tomato!,
+          requirements: [
+            {
+              field: 'grade',
+              acceptedValues: ['grade a'],
+            },
+          ],
+        },
+      },
+    };
+
+    const result = evaluateFit(withRequirement, {
+      ...query300,
+      details: { grade: 'grade b' },
+    });
+
+    expect(result.status).toBe('no_match');
+    expect(result.reasonCodes).toContain('requirement_incompatible');
+    expect(result.acceptedKg).toBe(0);
+    expect(result.remainingKg).toBe(300);
+  });
+
+  it('matching structured requirement allows normal quantity matching to continue', () => {
+    const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
+    const withRequirement: Outlet = {
+      ...coop,
+      acceptedCrops: {
+        ...coop.acceptedCrops,
+        tomato: {
+          ...coop.acceptedCrops.tomato!,
+          requirements: [
+            {
+              field: 'packaging',
+              acceptedValues: ['plastic crate'],
+            },
+          ],
+        },
+      },
+    };
+
+    const result = evaluateFit(withRequirement, {
+      ...query300,
+      details: { packaging: 'Plastic Crate' },
+    });
+
+    expect(result.status).toBe('match');
+    expect(result.acceptedKg).toBe(300);
+  });
+
   it('does not fabricate proceeds when price is unknown', () => {
     const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
     const noPrice: Outlet = {
