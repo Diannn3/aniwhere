@@ -158,7 +158,7 @@
         <p class="text-sm text-[#4A5245] max-w-md mx-auto leading-relaxed">
           {isFil
             ? 'Pumili ng isa hanggang tatlong lugar sa paghahanap upang makita ang magkatabing pagsusuri ng presyo at gastos.'
-            : 'Select 1 to 3 outlets from discovery to compare accepted quantities, sample prices, and transport costs.'}
+            : 'Select 1 to 3 outlets from discovery to compare accepted quantities, available price evidence, and transport costs.'}
         </p>
       </div>
 
@@ -270,7 +270,7 @@
 
               <!-- Price per kg -->
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-                <span class="text-[#4A5245]">{isFil ? 'Presyo bawat kilo:' : 'Price per kg:'}</span>
+                <span class="text-[#4A5245]">{fit.evidenceKind === 'demo' ? (isFil ? 'Halimbawang presyo/kg:' : 'Sample price/kg:') : fit.evidenceKind === 'buyer_offer' ? (isFil ? 'Buyer-posted presyo/kg:' : 'Buyer-posted price/kg:') : (isFil ? 'Presyo bawat kilo:' : 'Price per kg:')}</span>
                 <span class="font-bold text-sm text-[#20251E]">
                   {fit.samplePricePerKg !== null ? `₱${fit.samplePricePerKg.toFixed(2)}` : 'Not posted'}
                 </span>
