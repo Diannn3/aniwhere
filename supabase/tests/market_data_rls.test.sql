@@ -45,7 +45,7 @@ select ok(
   'reference_prices has RLS enabled'
 );
 
-select has_function('public', 'can_edit_place', array['uuid'], 'can_edit_place helper exists');
+select has_function('private', 'can_edit_place', array['uuid'], 'private.can_edit_place helper exists');
 
 select ok(
   (select count(*) >= 4 from pg_policies where schemaname = 'public' and tablename = 'offers'),
