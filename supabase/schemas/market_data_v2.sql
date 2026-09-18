@@ -120,6 +120,7 @@ create table if not exists public.offers (
   grade text,
   packaging text,
   notes text,
+  structured_requirements jsonb not null default '[]'::jsonb,
   source_id uuid references public.sources(id) on delete set null,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
