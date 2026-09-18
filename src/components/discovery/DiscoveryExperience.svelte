@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
-  import { DEMO_OUTLETS } from '../../content/demo-outlets';
+  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -37,6 +37,10 @@
   let editCrop = $state(initialQuery.harvest.crop);
   let editKg = $state(initialQuery.harvest.quantityKg);
   let editOrigin = $state(initialQuery.harvest.originMunicipality);
+  let editReadyDate = $state(initialQuery.harvest.readyDate || '');
+  let editVariety = $state(initialQuery.harvest.details?.variety || '');
+  let editGrade = $state(initialQuery.harvest.details?.grade || '');
+  let editPackaging = $state(initialQuery.harvest.details?.packaging || '');
 
   onMount(() => {
     savedIds = getSavedOutletIds();
@@ -53,6 +57,10 @@
       editCrop = clientQuery.harvest.crop;
       editKg = clientQuery.harvest.quantityKg;
       editOrigin = clientQuery.harvest.originMunicipality;
+      editReadyDate = clientQuery.harvest.readyDate || '';
+      editVariety = clientQuery.harvest.details?.variety || '';
+      editGrade = clientQuery.harvest.details?.grade || '';
+      editPackaging = clientQuery.harvest.details?.packaging || '';
     }
   });
 
@@ -71,7 +79,7 @@
 
   // Evaluate all outlets against current harvest query
   const processedOutlets = $derived<ProcessedOutlet[]>(
-    DEMO_OUTLETS.map((outlet) => {
+    CURRENT_OUTLETS.map((outlet) => {
       const fit = evaluateFit(outlet, harvest);
       const distanceKm = calculateStraightLineDistanceKm(
         originCoords.lat,
@@ -115,13 +123,13 @@
           return a.distanceKm - b.distanceKm;
         }
         if (sortBy === 'price') {
-          return (b.fit.samplePricePerKg || 0) - (a.fit.samplePricePerKg || 0);
+          return (b.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY) - (a.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY);
         }
         if (sortBy === 'payout') {
-          return (b.fit.afterTransportPay || 0) - (a.fit.afterTransportPay || 0);
+          return (b.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY) - (a.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY);
         }
         if (sortBy === 'transport') {
-          return (a.fit.enteredTransport || 9999) - (b.fit.enteredTransport || 9999);
+          return (a.fit.enteredTransport ?? Number.POSITIVE_INFINITY) - (b.fit.enteredTransport ?? Number.POSITIVE_INFINITY);
         }
         // Default: 'fit'
         const rank = { match: 1, partial: 2, confirm: 3, no_match: 4 };
@@ -156,6 +164,15 @@
       crop: editCrop,
       quantityKg: Number(editKg),
       originMunicipality: editOrigin,
+      readyDate: editReadyDate || undefined,
+      details:
+        editVariety.trim() || editGrade.trim() || editPackaging.trim()
+          ? {
+              ...(editVariety.trim() ? { variety: editVariety.trim() } : {}),
+              ...(editGrade.trim() ? { grade: editGrade.trim() } : {}),
+              ...(editPackaging.trim() ? { packaging: editPackaging.trim() } : {}),
+            }
+          : undefined,
     };
     isEditingHarvest = false;
 
@@ -180,6 +197,23 @@
   function formatCurrency(val: number | null | undefined): string {
     if (val === null || val === undefined) return '—';
     return `₱${val.toLocaleString('en-PH', { maximumFractionDigits: 0 })}`;
+  }
+
+  function formatEvidenceDate(value: string | null | undefined): string {
+    if (!value) return lang === 'fil' ? 'Hindi alam' : 'Unknown';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function priceLabelFor(fit: FitResult): string {
+    if (fit.evidenceKind === 'demo') {
+      return lang === 'fil' ? 'Halimbawang presyo' : 'Sample price';
+    }
+    if (fit.evidenceKind === 'buyer_offer') {
+      return lang === 'fil' ? 'Presyong naka-post ng buyer' : 'Buyer-posted price';
+    }
+    return lang === 'fil' ? 'Presyo' : 'Price';
   }
 </script>
 
@@ -213,7 +247,7 @@
 
     <!-- Collapsible Quick Harvest Editor -->
     {#if isEditingHarvest}
-      <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+      <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
         <div>
           <label for="edit-crop-select" class="block text-xs font-bold text-[#20251E] mb-1">{t('cropLabel', lang)}</label>
           <select id="edit-crop-select" bind:value={editCrop} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold">
@@ -237,12 +271,32 @@
           </select>
         </div>
 
+        <div>
+          <label for="edit-ready-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('readyDateLabel', lang)}</label>
+          <input id="edit-ready-input" type="date" bind:value={editReadyDate} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+        </div>
+
         <button
           type="submit"
           class="w-full bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] font-bold text-sm px-4 py-2 rounded-xl transition-colors cursor-pointer"
         >
           {lang === 'fil' ? 'I-update' : 'Update results'}
         </button>
+
+        <div class="sm:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
+          <div>
+            <label for="edit-variety-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('varietyLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <input id="edit-variety-input" type="text" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          </div>
+          <div>
+            <label for="edit-grade-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('gradeLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <input id="edit-grade-input" type="text" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          </div>
+          <div>
+            <label for="edit-packaging-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('packagingLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <input id="edit-packaging-input" type="text" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          </div>
+        </div>
       </form>
     {/if}
   </div>
@@ -348,9 +402,9 @@
           bind:value={sortBy}
           class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl px-2.5 py-1 text-xs font-semibold text-[#20251E] outline-none cursor-pointer"
         >
-          <option value="fit">{lang === 'fil' ? 'Pinakamagandang Tugma' : 'Best Fit'}</option>
+          <option value="fit">{lang === 'fil' ? 'Status ng Pagkakatugma' : 'Fit status'}</option>
           <option value="distance">{lang === 'fil' ? 'Pinakamalapit' : 'Nearest'}</option>
-          <option value="payout">{lang === 'fil' ? 'Pinakamataas na Matitira' : 'Highest Payout'}</option>
+          <option value="payout">{lang === 'fil' ? 'Halaga Matapos ang Biyahe' : 'Amount after transport'}</option>
           <option value="price">{lang === 'fil' ? 'Presyo / kg' : 'Price / kg'}</option>
           <option value="transport">{lang === 'fil' ? 'Mababang Biyahe' : 'Lowest Transport'}</option>
         </select>
@@ -492,12 +546,26 @@
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
 
+            <!-- Evidence / freshness: demo, buyer-posted, reviewed, and public-reference data must stay visibly distinct. -->
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
+              <span class="font-bold text-[#20251E]">{item.fit.sourceLabel || (lang === 'fil' ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
+              {#if item.fit.dataUpdatedAt}
+                <span>{lang === 'fil' ? 'Na-update' : 'Updated'} {formatEvidenceDate(item.fit.dataUpdatedAt)}</span>
+              {/if}
+              {#if item.fit.dataValidUntil}
+                <span>{lang === 'fil' ? 'May bisa hanggang' : 'Valid until'} {formatEvidenceDate(item.fit.dataValidUntil)}</span>
+              {/if}
+              {#if item.fit.unknowns.length > 0}
+                <span class="text-[#4E7380] font-semibold">{lang === 'fil' ? 'Kailangang kumpirmahin:' : 'Unknown:'} {(lang === 'fil' ? item.fit.unknownsFil : item.fit.unknowns).join(', ')}</span>
+              {/if}
+            </div>
+
             <!-- Honest Math Transparency Box -->
             {#if item.fit.samplePricePerKg !== null}
               <div class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div>
-                    <span class="block text-[11px] text-[#6B7265]">{t('samplePrice', lang)}</span>
+                    <span class="block text-[11px] text-[#6B7265]">{priceLabelFor(item.fit)}</span>
                     <span class="font-bold text-[#20251E] font-tabular">₱{item.fit.samplePricePerKg} / kg</span>
                     <span class="block text-[10px] text-[#6B7265]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
                   </div>

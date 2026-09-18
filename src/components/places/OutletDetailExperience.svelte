@@ -4,7 +4,7 @@
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
@@ -21,7 +21,7 @@
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
-    readyDate: '2026-09-17',
+    readyDate: todayInManila(),
   });
 
   let saved = $state(false);
@@ -49,9 +49,17 @@
   const fitResult = $derived(evaluateFit(outlet, harvest));
 
   const isFil = $derived(lang === 'fil');
+  const hasVerifiedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
 
   function handleToggleSave() {
     saved = toggleSavedOutlet(outlet.id);
+  }
+
+  function formatEvidenceDate(value: string | null | undefined): string {
+    if (!value) return isFil ? 'Hindi alam' : 'Unknown';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function handleCopyMessage() {
@@ -65,18 +73,50 @@
     }
   }
 
+  const harvestDetailSummary = $derived(
+    [
+      harvest.details?.variety ? `${isFil ? 'barayti' : 'variety'}: ${harvest.details.variety}` : '',
+      harvest.details?.grade ? `${isFil ? 'grade' : 'grade'}: ${harvest.details.grade}` : '',
+      harvest.details?.packaging ? `${isFil ? 'packaging' : 'packaging'}: ${harvest.details.packaging}` : '',
+    ]
+      .filter(Boolean)
+      .join(', ')
+  );
+
+  const priceLabel = $derived(
+    fitResult.evidenceKind === 'demo'
+      ? (isFil ? 'Halimbawang presyo' : 'Sample price')
+      : fitResult.evidenceKind === 'buyer_offer'
+        ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
+        : (isFil ? 'Presyo' : 'Price')
+  );
+
+  const priceQuestion = $derived(
+    fitResult.samplePricePerKg === null
+      ? (isFil
+          ? 'Nais ko rin pong malaman ang kasalukuyang presyo, receiving schedule, at grading requirements.'
+          : 'I would also like to confirm the current price, receiving schedule, and grading requirements.')
+      : fitResult.evidenceKind === 'demo'
+        ? (isFil
+            ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo at kung ang halimbawang presyong ₱${fitResult.samplePricePerKg}/kg ay naaangkop pa, pati ang grading at receiving schedule.`
+            : `I would like to confirm whether you are currently accepting deliveries and whether the demo price of ₱${fitResult.samplePricePerKg}/kg still applies, along with the receiving schedule and grading requirements.`)
+        : (isFil
+            ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa naka-post na presyong ₱${fitResult.samplePricePerKg}/kg at ano ang grading at receiving schedule.`
+            : `I would like to confirm whether you are currently accepting deliveries at the posted price of ₱${fitResult.samplePricePerKg}/kg and what the receiving schedule and grading requirements are.`)
+  );
+
   const messageTemplate = $derived(
     isFil
-      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}. Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa halimbawang presyo na ₱${fitResult.samplePricePerKg ?? '---'}/kg at ano po ang inyong grading at receiving schedule? Maraming salamat po.`
-      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}. I would like to confirm if you are currently accepting deliveries at the sample price of ₱${fitResult.samplePricePerKg ?? '---'}/kg and what your receiving schedule and grading requirements are. Thank you.`
+      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Maraming salamat po.`
+      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Thank you.`
   );
 
   const backUrl = $derived(
-    `/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+    `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 
   const compareUrl = $derived(
-    `/compare?places=${encodeURIComponent(outlet.id)}&crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+    `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 </script>
 
@@ -193,8 +233,8 @@
           </svg>
         </div>
         <div>
-          <div class="text-xs font-semibold text-[#20251E]">Direct Sourcing</div>
-          <div class="text-[11px] text-[#6B7265]">Buys from local smallholders</div>
+          <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Uri ng Ebidensya' : 'Evidence Type'}</div>
+          <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
         </div>
       </div>
 
@@ -205,8 +245,8 @@
           </svg>
         </div>
         <div>
-          <div class="text-xs font-semibold text-[#20251E]">Active Schedule</div>
-          <div class="text-[11px] text-[#6B7265]">Sample terms as of {outlet.sampleOfferDate}</div>
+          <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Huling Update' : 'Last Updated'}</div>
+          <div class="text-[11px] text-[#6B7265]">{fitResult.dataUpdatedAt ? formatEvidenceDate(fitResult.dataUpdatedAt) : outlet.sampleOfferDate}</div>
         </div>
       </div>
 
@@ -217,8 +257,8 @@
           </svg>
         </div>
         <div>
-          <div class="text-xs font-semibold text-[#20251E]">Verified Fixture</div>
-          <div class="text-[11px] text-[#6B7265]">Laguna Agri Hackathon 2026</div>
+          <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'May Bisa Hanggang' : 'Valid Until'}</div>
+          <div class="text-[11px] text-[#6B7265]">{fitResult.dataValidUntil ? formatEvidenceDate(fitResult.dataValidUntil) : (isFil ? 'Walang expiry na nakatala' : 'No expiry recorded')}</div>
         </div>
       </div>
     </div>
@@ -272,12 +312,12 @@
       <!-- 3. Sample Price -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
         <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
-          {isFil ? 'Halimbawang Presyo' : 'Sample Price'}
+          {priceLabel}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
           {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">Based on fixture</div>
+        <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
       </div>
 
       <!-- 4. Gross Subtotal -->
@@ -343,6 +383,12 @@
           {isFil ? 'Mga Katanungan Bago Bumiyahe' : 'Requirements to Confirm'}
         </h2>
       </div>
+
+      {#if fitResult.unknowns.length > 0}
+        <div class="rounded-xl p-3 bg-[#4E7380]/10 border border-[#4E7380]/20 text-xs text-[#2A4B56]">
+          <strong>{isFil ? 'Hindi pa alam:' : 'Still unknown:'}</strong> {(isFil ? fitResult.unknownsFil : fitResult.unknowns).join(', ')}
+        </div>
+      {/if}
 
       <p class="text-xs text-[#6B7265]">
         {isFil
@@ -460,7 +506,11 @@
         <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
         </svg>
-        <span>{isFil ? 'Pampublikong kontak' : 'Public contact'}</span>
+        <span>
+          {hasVerifiedContact
+            ? (isFil ? 'Pampublikong kontak' : 'Public contact')
+            : (isFil ? 'Walang beripikadong kontak' : 'No verified contact')}
+        </span>
       </button>
 
       <!-- 3. Compare Options -->
@@ -478,10 +528,10 @@
     <!-- Provenance / Timestamp Attribution Footer -->
     <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#6B7265]">
       <div>
-        Source: <span class="font-medium text-[#20251E]">Sample offer &bull; {outlet.sampleOfferDate}</span>
+        Source: <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || 'Source unknown'} &bull; {outlet.sampleOfferDate}</span>
       </div>
       <div>
-        Fixture: <span class="font-medium text-[#20251E]">Laguna Market Pilot &bull; NextGen Agri Hackathon 2026</span>
+        Fixture: <span class="font-medium text-[#20251E]">Illustrative Laguna demo &bull; NextGen Agri Hackathon 2026</span>
       </div>
     </div>
   </section>
@@ -574,16 +624,36 @@
 
       <div class="space-y-3 text-xs sm:text-sm text-[#20251E]">
         <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">Receiving Facility Desk</div>
-          <div class="font-bold">{outlet.municipality}, Laguna Corridor</div>
-          <div class="text-xs text-[#4A5245]">Operating hours: Mon-Sat 6:00 AM – 2:00 PM</div>
+          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">
+            {isFil ? 'Lokasyon ng tala' : 'Recorded location'}
+          </div>
+          <div class="font-bold">{outlet.municipality}, Laguna</div>
+          <div class="text-[11px] text-[#6B7265]">
+            {isFil
+              ? 'Walang operating hours na ipinapalagay kung hindi ito beripikado.'
+              : 'No operating hours are inferred unless they are verified.'}
+          </div>
         </div>
 
-        <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">Sample Contact Line</div>
-          <div class="font-mono text-xs text-[#20251E]">(049) 536-XXXX / Local Receiving Desk</div>
-          <div class="text-[11px] text-[#6B7265]">In live production, verified buyer lines will connect here.</div>
-        </div>
+        {#if hasVerifiedContact}
+          <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-2">
+            <div class="text-[11px] font-semibold text-[#6B7265] uppercase">
+              {isFil ? 'Beripikadong pampublikong kontak' : 'Verified public contact'}
+            </div>
+            {#if outlet.contactPhone}
+              <div class="font-mono text-xs text-[#20251E]">{outlet.contactPhone}</div>
+            {/if}
+            {#if outlet.contactEmail}
+              <div class="text-xs text-[#20251E]">{outlet.contactEmail}</div>
+            {/if}
+          </div>
+        {:else}
+          <div class="p-3 rounded-xl bg-[#4E7380]/8 border border-[#4E7380]/18 text-xs text-[#2A4B56]">
+            {isFil
+              ? 'Walang beripikadong pampublikong phone o email na nakaimbak para sa record na ito. Huwag gumamit ng imbentong contact details.'
+              : 'No verified public phone or email is stored for this record. AniWhere does not substitute invented contact details.'}
+          </div>
+        {/if}
 
         <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
           <strong>Notice:</strong> This is a NextGen Agri Hackathon demo fixture. Real commercial transactions and phone calls are not executed in this prototype pass.

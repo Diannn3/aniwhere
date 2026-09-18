@@ -4,6 +4,12 @@ export interface ValidationResult {
   errorsFil: Record<string, string>;
 }
 
+export function isValidIsoDate(value?: string): boolean {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 export function validateHarvestInput(data: {
   crop?: string;
   quantityKg?: number | string;
@@ -30,6 +36,11 @@ export function validateHarvestInput(data: {
   if (!data.originMunicipality || !data.originMunicipality.trim()) {
     errors.originMunicipality = 'Select your municipality or origin.';
     errorsFil.originMunicipality = 'Pumili ng iyong munisipalidad o pinagmulan.';
+  }
+
+  if (data.readyDate && !isValidIsoDate(data.readyDate)) {
+    errors.readyDate = 'Enter a valid harvest-ready date.';
+    errorsFil.readyDate = 'Maglagay ng wastong petsa kung kailan handa ang ani.';
   }
 
   return {

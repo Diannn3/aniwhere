@@ -2,51 +2,201 @@
 
 **Project:** AniWhere: Harvest-Based Market Discovery for Farmers  
 **Hackathon:** UPLB TTBDO NextGen Agri Hackathon 2026 (Top 10 Finalist)  
-**Document Version:** 1.0 (18 September 2026)
+**Document Version:** 2.0 (18 September 2026)
 
 ---
 
 ## 1. Executive Summary
 
-This codebase is a high-fidelity frontend demonstration prototype developed for the UPLB NextGen Agri Hackathon 2026. It models an **UPPETITE-like discovery and comparison workflow** that enables agricultural producers in Laguna to discover market outlets, evaluate compatibility with their harvest, and compare transparent financial projections before traveling.
+This codebase is a high-fidelity frontend demonstration prototype developed for the UPLB NextGen Agri Hackathon 2026.
 
-To ensure resilience, privacy, and zero operational dependency during offline or live pitching demonstrations, this phase is architected with strict boundary constraints.
+The current running application is intentionally reliable without a backend or third-party map service, while the repository now also contains a **production data/security scaffold** for the next implementation phase.
 
----
+Those two facts must not be conflated:
 
-## 2. Architectural Boundaries
+- the frontend demo is functional;
+- the Supabase schema exists as code;
+- no live production database is connected by this branch alone.
 
-### A. Zero Backend & Zero External Database
-- **Current State:** The prototype operates completely serverless and stateless on the backend. No active Supabase, PostgreSQL, Prisma, Redis, or cloud storage connections are utilized at runtime.
-- **Persistence Strategy:** All user actions (saving outlets, configuring compare sets, editing custom hauling expenses, and creating buyer offers) persist strictly to browser `localStorage` using a defensive, SSR-safe storage adapter (`src/lib/state/storage.ts`).
-- **Data Isolation:** Data entered on one device (e.g. buyer demo offers) remains local to that specific browser session and is never transmitted over the network.
-
-### B. Offline & Keyless Illustrative Cartography
-- **Current State:** Live third-party tile services (e.g. Mapbox, Google Maps, OpenRouteService) requiring proprietary API keys or paid usage quotas are deliberately avoided.
-- **Resilient Fallback:** An in-repo, responsive vector SVG cartographic projection of Laguna de Bay and the Mt. Makiling transport corridor (`ResilientLagunaMap.svelte`) delivers reliable geospatial visualization with 100% offline availability.
-- **Distance Calculation:** Straight-line spherical Haversine distances (`src/lib/domain/distance.ts`) are calculated deterministically between Laguna municipality centroids.
-
-### C. Pilot Commodity & Fixture Scope
-- **Canonical Crops:** Detailed algorithmic matching and sample price fixtures are implemented for three pilot crops:
-  1. **Tomatoes** (*Solanum lycopersicum* / Kamatis)
-  2. **Eggplant** (*Solanum melongena* / Talong)
-  3. **Calamansi** (*Citrus × microcarpa* / Kalamansi)
-- **Other Crops:** Harvest queries outside these three commodities transition into the deterministic `"Contact to confirm"` fit state, prompting direct verification before travel.
+The core trust rule is that AniWhere should never convert missing or stale market information into a confident claim simply to complete the UI.
 
 ---
 
-## 3. Financial & Arithmetic Integrity
+## 2. Runtime Architectural Boundaries
 
-- **Non-Profit Disclaimer:** Arithmetic is strictly bounded:
-  $$\text{Net After Transport} = \text{Gross Amount} - \text{Entered Hauling Deduction}$$
-- **Anti-Slop Framing:** The result is always explicitly labeled *"After entered transport only — not profit or guaranteed income. Before farm costs."* AniWhere does not claim to know on-farm production expenses (seeds, fertilizer, labor, irrigation) and therefore never calculates or displays "profit".
-- **Zero Winner Declarations:** The comparison engine displays up to 3 outlets on equal visual footing. No outlet is ever awarded a "Best Deal", "Top Choice", or "Recommended" badge.
+### A. No live backend at runtime
+
+**Current runtime state:**
+
+- no active Supabase client;
+- no active PostgreSQL connection;
+- no real buyer synchronization;
+- no cloud persistence for farmer searches;
+- no production buyer authentication.
+
+Browser interactions such as saved outlets and the buyer-demo workspace still persist through local browser storage.
+
+The new `supabase/` directory is a **handoff scaffold**, not evidence that a remote database has been deployed.
+
+### B. Demo and production data must stay distinguishable
+
+Current outlet terms are explicit fictional fixtures in `src/content/demo-outlets.ts`.
+
+The trust-model v2 domain now carries:
+
+- evidence kind;
+- source label;
+- updated timestamp;
+- validity end;
+- unresolved unknowns.
+
+Production work should introduce repository/data adapters rather than replacing fixture values with scraped or unverified values in the same file.
+
+### C. Offline/keyless map remains the fallback
+
+The current app still uses `ResilientLagunaMap.svelte`, an in-repo illustrative SVG map.
+
+Straight-line distance is computed with deterministic Haversine calculations.
+
+There is no claim that this is road distance, travel time, or freight cost.
+
+A future MapLibre/road-routing layer must remain progressive: failure of live mapping/routing must not make the list/discovery workflow unusable.
 
 ---
 
-## 4. Handoff & Production Roadmap
+## 3. Matching Boundaries
 
-The architecture is strictly separated into domain logic, presentation islands, and state adapters. To connect a live backend in a future phase:
-1. Replace `safeStorage` in `src/lib/state/` with an authenticated Supabase client using PostgreSQL Row Level Security (RLS).
-2. Wire real Department of Agriculture (DA-AMAS) or Agribusiness and Marketing Assistance Division price monitoring feeds into `src/content/demo-outlets.ts`.
-3. Enhance the SVG map with MapLibre GL JS vector tiles and an OpenRouteService routing API bridge.
+Detailed fixture matching is currently scoped to:
+
+1. tomato / kamatis;
+2. eggplant / talong;
+3. calamansi / kalamansi.
+
+Other crops return **Contact to confirm**.
+
+Within the pilot crops, the engine now distinguishes:
+
+- explicit crop exclusion;
+- missing crop-acceptance evidence;
+- unknown capacity;
+- non-current offer;
+- offer-validity window;
+- receiving weekdays;
+- minimum/maximum quantity;
+- full vs partial accepted quantity;
+- missing price.
+
+Important semantics:
+
+- no crop record is **not** a rejection;
+- paused/non-current terms cannot produce MATCH/PARTIAL;
+- missing capacity cannot produce a quantity claim;
+- missing price cannot produce proceeds;
+- a fit result never reserves capacity.
+
+Quality, grade, variety, and packaging are not yet fully machine-evaluated in the local fixture engine. They remain conditions to confirm unless/until structured production data is available.
+
+---
+
+## 4. Date & Freshness Boundaries
+
+Runtime default dates now use the current date in `Asia/Manila`.
+
+Offer-like fixture records can carry:
+
+- `validFrom`;
+- `validUntil`;
+- `offerStatus`;
+- `receivingWeekdays`;
+- source/freshness metadata.
+
+Historical demo timestamps can remain historical. They must not be silently rewritten to look current.
+
+Production freshness policy still needs to be defined per fact type. An address and a buyer price should not share the same staleness threshold.
+
+---
+
+## 5. Financial & Arithmetic Integrity
+
+AniWhere does not calculate profit.
+
+Where the required inputs are known:
+
+```text
+Gross Amount = posted price per kg × accepted quantity
+Amount After Transport = Gross Amount − known/entered hauling expense
+```
+
+The result excludes farm production costs.
+
+The comparison layer no longer introduces a generic transport fallback when no hauling value exists. Unknown transport remains unknown until an explicit demo default or user-entered amount exists.
+
+There is no universal Laguna hauling tariff in the code.
+
+---
+
+## 6. Production Data Scaffold
+
+The repository now includes:
+
+- `supabase/schemas/market_data_v2.sql`
+- `supabase/tests/market_data_rls.test.sql`
+- `supabase/README.md`
+
+The declarative schema scaffold separates:
+
+- organizations;
+- people/memberships;
+- stable places;
+- place editors;
+- crop capability facts;
+- time-sensitive offers;
+- sources;
+- verification records;
+- reference prices.
+
+RLS is scaffolded so anonymous farmers can eventually read approved public information while buyers/stewards can edit only authorized records.
+
+These policies still require behavioral testing in a running Supabase local environment. A proper versioned migration must be generated/reviewed through the Supabase CLI workflow before production application.
+
+---
+
+## 7. Routing/Mapping Roadmap
+
+Future live mapping should use a layered approach:
+
+1. Haversine distance for inexpensive candidate discovery;
+2. MapLibre as a live interactive map when available;
+3. road routing only for selected/detail/compare destinations;
+4. external routing key held server-side;
+5. cache route results;
+6. explicit fallback to straight-line distance when routing fails.
+
+Do not send every discovery candidate through a routing API.
+
+---
+
+## 8. What is still missing for a live pilot
+
+A production pilot still needs:
+
+- a deliberately selected/configured Supabase project;
+- applied/verified migrations;
+- generated DB/client types;
+- behavioral RLS tests;
+- authentication/invitation flows for buyers/stewards;
+- reviewed real Laguna place records;
+- source/verification workflow;
+- current buyer offer collection;
+- separation of demo and production repositories/adapters;
+- optional MapLibre integration;
+- server-side road-routing proxy;
+- field/usability validation with farmers and market actors.
+
+---
+
+## 9. Related handoff
+
+For the research findings, code changes, security decisions, and exact next queue from this hardening pass, see:
+
+`docs/ANIWHERE_TRUST_MODEL_V2_IMPLEMENTATION_2026-09-18.md`

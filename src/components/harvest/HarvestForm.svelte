@@ -3,7 +3,7 @@
   import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { validateHarvestInput } from '../../lib/domain/validation';
-  import { serializeDiscoverQuery } from '../../lib/state/url-state';
+  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { t } from '../../content/translations';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
@@ -11,7 +11,11 @@
   let crop = $state('tomato');
   let quantityKg = $state(300);
   let originMunicipality = $state('los-banos');
-  let readyDate = $state('2026-09-17');
+  let readyDate = $state(todayInManila());
+  let variety = $state('');
+  let grade = $state('');
+  let packaging = $state('');
+  let showDetails = $state(false);
   let lang = $state<'en' | 'fil'>(initialLang);
 
   let errors = $state<Record<string, string>>({});
@@ -20,10 +24,20 @@
   let cropSelectEl: HTMLSelectElement | null = $state(null);
   let quantityInputEl: HTMLInputElement | null = $state(null);
   let municipalitySelectEl: HTMLSelectElement | null = $state(null);
+  let readyDateInputEl: HTMLInputElement | null = $state(null);
 
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
+    const urlReady = urlParams.get('ready');
+    const urlVariety = urlParams.get('variety') || '';
+    const urlGrade = urlParams.get('grade') || '';
+    const urlPackaging = urlParams.get('packaging') || '';
+    readyDate = urlReady || todayInManila();
+    variety = urlVariety;
+    grade = urlGrade;
+    packaging = urlPackaging;
+    showDetails = Boolean(urlVariety || urlGrade || urlPackaging);
     if (urlLang === 'fil' || urlLang === 'en') {
       lang = urlLang;
     }
@@ -48,6 +62,8 @@
         quantityInputEl.focus();
       } else if (errors.originMunicipality && municipalitySelectEl) {
         municipalitySelectEl.focus();
+      } else if (errors.readyDate && readyDateInputEl) {
+        readyDateInputEl.focus();
       }
       return;
     }
@@ -60,6 +76,14 @@
         quantityKg: Number(quantityKg),
         originMunicipality,
         readyDate,
+        details:
+          variety.trim() || grade.trim() || packaging.trim()
+            ? {
+                ...(variety.trim() ? { variety: variety.trim() } : {}),
+                ...(grade.trim() ? { grade: grade.trim() } : {}),
+                ...(packaging.trim() ? { packaging: packaging.trim() } : {}),
+              }
+            : undefined,
       },
       'list',
       undefined,
@@ -182,7 +206,7 @@
     <!-- 4. Ready Date Card -->
     <label
       for="harvest-date"
-      class="block bg-[#FFFDF8] border border-[#20251E]/15 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs"
+      class="block bg-[#FFFDF8] border rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs {errors.readyDate ? 'border-red-500 bg-red-50/20' : 'border-[#20251E]/15'}"
     >
       <div class="flex items-center gap-1.5 text-xs font-semibold text-[#20251E] mb-1">
         <svg class="w-3.5 h-3.5 text-[#597928] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -196,11 +220,75 @@
       <input
         id="harvest-date"
         type="date"
+        min={todayInManila()}
+        bind:this={readyDateInputEl}
         bind:value={readyDate}
+        aria-describedby={errors.readyDate ? 'ready-date-error' : undefined}
         class="w-full bg-transparent text-sm sm:text-base font-semibold text-[#20251E] outline-none py-1"
       />
+      {#if errors.readyDate}
+        <p id="ready-date-error" class="text-[11px] font-medium text-red-700 mt-1" role="alert">
+          {errors.readyDate}
+        </p>
+      {/if}
     </label>
 
+  </div>
+
+  <div class="rounded-2xl border border-[#20251E]/10 bg-[#FAF7EE] overflow-hidden">
+    <button
+      type="button"
+      class="w-full flex items-center justify-between gap-3 px-4 py-3 text-left min-h-[48px]"
+      aria-expanded={showDetails}
+      onclick={() => (showDetails = !showDetails)}
+    >
+      <div>
+        <div class="text-sm font-semibold text-[#20251E]">{t('harvestDetailsToggle', lang)}</div>
+        <div class="text-[11px] text-[#6B7265] mt-0.5">{t('harvestDetailsHint', lang)}</div>
+      </div>
+      <svg
+        class="w-4 h-4 text-[#597928] transition-transform {showDetails ? 'rotate-180' : ''}"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </button>
+
+    {#if showDetails}
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-4 pb-4 border-t border-[#20251E]/8 pt-3">
+        <label class="space-y-1">
+          <span class="text-xs font-semibold text-[#20251E]">{t('varietyLabel', lang)}</span>
+          <input
+            type="text"
+            bind:value={variety}
+            placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'}
+            class="w-full rounded-xl border border-[#20251E]/15 bg-[#FFFDF8] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#597928]/35"
+          />
+        </label>
+        <label class="space-y-1">
+          <span class="text-xs font-semibold text-[#20251E]">{t('gradeLabel', lang)}</span>
+          <input
+            type="text"
+            bind:value={grade}
+            placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'}
+            class="w-full rounded-xl border border-[#20251E]/15 bg-[#FFFDF8] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#597928]/35"
+          />
+        </label>
+        <label class="space-y-1">
+          <span class="text-xs font-semibold text-[#20251E]">{t('packagingLabel', lang)}</span>
+          <input
+            type="text"
+            bind:value={packaging}
+            placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'}
+            class="w-full rounded-xl border border-[#20251E]/15 bg-[#FFFDF8] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#597928]/35"
+          />
+        </label>
+      </div>
+    {/if}
   </div>
 
   <!-- Primary Submit Button: Restrained Pill matching Reference 01 -->

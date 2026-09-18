@@ -1,10 +1,10 @@
 ﻿<script lang="ts">
   import { onMount } from 'svelte';
-  import { DEMO_OUTLETS } from '../../content/demo-outlets';
+  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
-  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { t } from '../../content/translations';
@@ -21,7 +21,7 @@
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
-    readyDate: '2026-09-17',
+    readyDate: todayInManila(),
   });
 
   // Local editable transport expense overrides per outlet
@@ -61,7 +61,7 @@
 
   const comparedOutlets = $derived(
     selectedIds
-      .map((id) => DEMO_OUTLETS.find((o) => o.id === id || o.slug === id))
+      .map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id))
       .filter((o): o is Outlet => Boolean(o))
       .slice(0, 3)
   );
@@ -78,11 +78,18 @@
     }
   }
 
-  function getTransportCost(outlet: Outlet, defaultCost: number | null): number {
+  function getTransportCost(outlet: Outlet, defaultCost: number | null): number | null {
     if (customTransports[outlet.id] !== undefined) {
       return customTransports[outlet.id];
     }
-    return defaultCost ?? 300;
+    return defaultCost;
+  }
+
+  function formatEvidenceDate(value: string | null | undefined): string {
+    if (!value) return isFil ? 'Hindi alam' : 'Unknown';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 </script>
 
@@ -108,7 +115,7 @@
       </div>
 
       <a
-        href={`/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#FFFDF8] text-[#597928] border border-[#597928]/30 hover:bg-[#597928]/10 transition-colors min-h-[44px]"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +158,7 @@
         <p class="text-sm text-[#4A5245] max-w-md mx-auto leading-relaxed">
           {isFil
             ? 'Pumili ng isa hanggang tatlong lugar sa paghahanap upang makita ang magkatabing pagsusuri ng presyo at gastos.'
-            : 'Select 1 to 3 outlets from discovery to compare accepted quantities, sample prices, and transport costs.'}
+            : 'Select 1 to 3 outlets from discovery to compare accepted quantities, available price evidence, and transport costs.'}
         </p>
       </div>
 
@@ -179,11 +186,11 @@
       }`}
     >
       {#each comparedOutlets as outlet (outlet.id)}
-        {@const defaultTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? 300}
+        {@const defaultTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}
         {@const activeTransport = getTransportCost(outlet, defaultTransport)}
-        {@const fit = evaluateFit(outlet, harvest, activeTransport)}
+        {@const fit = evaluateFit(outlet, harvest, activeTransport ?? undefined)}
         {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-        {@const detailUrl = `/places/${outlet.slug}?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        {@const detailUrl = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
 
         <article class="bg-white rounded-2xl border border-[#20251E]/12 p-6 shadow-sm flex flex-col justify-between gap-6 hover:border-[#597928]/40 transition-all">
           <div class="space-y-5">
@@ -236,6 +243,13 @@
               </p>
             </div>
 
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
+              <span class="font-bold text-[#20251E]">{fit.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
+              {#if fit.dataUpdatedAt}<span>{isFil ? 'Na-update' : 'Updated'} {formatEvidenceDate(fit.dataUpdatedAt)}</span>{/if}
+              {#if fit.dataValidUntil}<span>{isFil ? 'May bisa hanggang' : 'Valid until'} {formatEvidenceDate(fit.dataValidUntil)}</span>{/if}
+              {#if fit.unknowns.length > 0}<span class="text-[#4E7380] font-semibold">{isFil ? 'Kailangang kumpirmahin:' : 'Unknown:'} {(isFil ? fit.unknownsFil : fit.unknowns).join(', ')}</span>{/if}
+            </div>
+
             <!-- Quantitative Arithmetic Ledger -->
             <div class="space-y-2.5 text-xs">
               <!-- Accepted kg -->
@@ -250,13 +264,13 @@
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
                 <span class="text-[#4A5245]">{isFil ? 'Matitira:' : 'Remaining Unsold:'}</span>
                 <span class={`font-bold text-sm ${fit.remainingKg && fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#20251E]'}`}>
-                  {fit.remainingKg !== null ? `${fit.remainingKg} kg` : '0 kg'}
+                  {fit.remainingKg !== null ? `${fit.remainingKg} kg` : (isFil ? 'Kumpirmahin' : 'Confirm')}
                 </span>
               </div>
 
               <!-- Price per kg -->
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-                <span class="text-[#4A5245]">{isFil ? 'Presyo bawat kilo:' : 'Price per kg:'}</span>
+                <span class="text-[#4A5245]">{fit.evidenceKind === 'demo' ? (isFil ? 'Halimbawang presyo/kg:' : 'Sample price/kg:') : fit.evidenceKind === 'buyer_offer' ? (isFil ? 'Buyer-posted presyo/kg:' : 'Buyer-posted price/kg:') : (isFil ? 'Presyo bawat kilo:' : 'Price per kg:')}</span>
                 <span class="font-bold text-sm text-[#20251E]">
                   {fit.samplePricePerKg !== null ? `₱${fit.samplePricePerKg.toFixed(2)}` : 'Not posted'}
                 </span>
@@ -285,14 +299,15 @@
                     type="number"
                     min="0"
                     step="50"
-                    value={activeTransport}
+                    value={activeTransport ?? ''}
+                    placeholder="Enter your quote"
                     oninput={(e) => handleTransportChange(outlet.id, (e.target as HTMLInputElement).value)}
                     class="w-full pl-7 pr-3 py-1.5 rounded-lg border border-[#20251E]/20 text-sm font-bold text-[#6E3511] focus:outline-none focus:ring-2 focus:ring-[#597928] bg-white min-h-[44px]"
                     aria-label={`Hauling cost for ${outlet.name}`}
                   />
                 </div>
                 <div class="text-[10px] text-[#6B7265]">
-                  Entered by farmer &bull; Not a price quote
+                  {activeTransport === null ? (isFil ? 'Walang hauling estimate na nakaimbak' : 'No hauling estimate stored') : (isFil ? 'Halagang inilagay o demo default' : 'Entered amount or demo default')}
                 </div>
               </div>
 
@@ -342,7 +357,7 @@
     <!-- Additional Action / Return to Discovery -->
     <div class="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[#20251E]/10">
       <a
-        href={`/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] text-xs font-semibold hover:border-[#597928] transition-all min-h-[44px]"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,7 +368,7 @@
 
       {#if comparedOutlets.length < 3}
         <a
-          href={`/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+          href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#597928] text-white text-xs font-bold hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
