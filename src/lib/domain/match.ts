@@ -44,6 +44,23 @@ function emptyMoney() {
   };
 }
 
+const REQUIREMENT_LABELS = {
+  variety: { en: 'Variety', fil: 'Barayti' },
+  grade: { en: 'Grade', fil: 'Klase/grade' },
+  packaging: { en: 'Packaging', fil: 'Packaging' },
+} as const;
+
+function normalizeRequirementValue(value: string): string {
+  return value.trim().toLocaleLowerCase('en');
+}
+
+function requirementMatches(value: string, acceptedValues: string[]): boolean {
+  const normalized = normalizeRequirementValue(value);
+  return acceptedValues.some(
+    (accepted) => normalizeRequirementValue(accepted) === normalized
+  );
+}
+
 export function evaluateFit(
   outlet: Outlet,
   query: HarvestQuery,
@@ -250,7 +267,85 @@ export function evaluateFit(
     }
   }
 
-  // 6. Capacity must be known before AniWhere claims a quantity match.
+  // 6. Structured procurement requirements are deterministic only when
+  // both the buyer requirement and farmer-provided detail are explicit.
+  const requirements = cropRule.requirements ?? [];
+  const missingRequirements = requirements.filter((requirement) => {
+    const value = query.details?.[requirement.field];
+    return !value || !value.trim();
+  });
+
+  if (missingRequirements.length > 0) {
+    const missingLabels = missingRequirements.map(
+      (requirement) => requirement.label || REQUIREMENT_LABELS[requirement.field].en
+    );
+    const missingLabelsFil = missingRequirements.map(
+      (requirement) => requirement.labelFil || REQUIREMENT_LABELS[requirement.field].fil
+    );
+
+    return {
+      status: 'confirm',
+      statusLabel: 'Contact to confirm',
+      statusLabelFil: 'Makipag-ugnayan para kumpirmahin',
+      reason: `This outlet has explicit requirements for ${missingLabels.join(', ')}, but those harvest details were not provided.`,
+      reasonFil: `May tiyak na requirement ang outlet para sa ${missingLabelsFil.join(', ')}, ngunit hindi ibinigay ang mga detalyeng iyon ng ani.`,
+      reasonCodes: ['requirement_information_missing', 'conditions_to_confirm'],
+      acceptedKg: null,
+      remainingKg: null,
+      samplePricePerKg: price,
+      ...emptyMoney(),
+      conditionsToConfirm: missingRequirements.map((requirement) => {
+        const label = requirement.label || REQUIREMENT_LABELS[requirement.field].en;
+        return `Confirm ${label}: accepted values are ${requirement.acceptedValues.join(', ')}.`;
+      }),
+      conditionsToConfirmFil: missingRequirements.map((requirement) => {
+        const label = requirement.labelFil || REQUIREMENT_LABELS[requirement.field].fil;
+        return `Kumpirmahin ang ${label}: tinatanggap ang ${requirement.acceptedValues.join(', ')}.`;
+      }),
+      ...evidence,
+      unknowns: missingLabels,
+      unknownsFil: missingLabelsFil,
+    };
+  }
+
+  const incompatibleRequirement = requirements.find((requirement) => {
+    const value = query.details?.[requirement.field];
+    return Boolean(
+      value &&
+      requirement.acceptedValues.length > 0 &&
+      !requirementMatches(value, requirement.acceptedValues)
+    );
+  });
+
+  if (incompatibleRequirement) {
+    const provided = query.details?.[incompatibleRequirement.field] ?? '';
+    const label =
+      incompatibleRequirement.label ||
+      REQUIREMENT_LABELS[incompatibleRequirement.field].en;
+    const labelFil =
+      incompatibleRequirement.labelFil ||
+      REQUIREMENT_LABELS[incompatibleRequirement.field].fil;
+
+    return {
+      status: 'no_match',
+      statusLabel: 'Does not match',
+      statusLabelFil: 'Hindi tugma',
+      reason: `${label} "${provided}" is incompatible with the recorded requirement (${incompatibleRequirement.acceptedValues.join(', ')}).`,
+      reasonFil: `Hindi tugma ang ${labelFil} na "${provided}" sa nakatalang requirement (${incompatibleRequirement.acceptedValues.join(', ')}).`,
+      reasonCodes: ['requirement_incompatible'],
+      acceptedKg: 0,
+      remainingKg: requestedKg,
+      samplePricePerKg: price,
+      ...emptyMoney(),
+      conditionsToConfirm: [],
+      conditionsToConfirmFil: [],
+      ...evidence,
+      unknowns: [],
+      unknownsFil: [],
+    };
+  }
+
+  // 7. Capacity must be known before AniWhere claims a quantity match.
   if (cropRule.maxKg === undefined || cropRule.maxKg === null) {
     const transport =
       customTransport !== undefined
@@ -278,7 +373,7 @@ export function evaluateFit(
     };
   }
 
-  // 7. Known minimum-volume incompatibility is a real NO_MATCH.
+  // 8. Known minimum-volume incompatibility is a real NO_MATCH.
   if (cropRule.minKg && requestedKg < cropRule.minKg) {
     return {
       status: 'no_match',
@@ -299,7 +394,7 @@ export function evaluateFit(
     };
   }
 
-  // 8. Quantity arithmetic: full match vs partial match.
+  // 9. Quantity arithmetic: full match vs partial match.
   const acceptedKg = Math.min(requestedKg, cropRule.maxKg);
   const remainingKg = Math.max(0, requestedKg - acceptedKg);
   const transport =
