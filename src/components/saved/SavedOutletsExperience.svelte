@@ -5,7 +5,7 @@
   import { getSavedOutletIds, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
-  import { parseDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { t } from '../../content/translations';
 
@@ -54,7 +54,7 @@
   }
 
   const compareAllUrl = $derived(
-    `/compare?places=${savedIds.slice(0, 3).map(encodeURIComponent).join(',')}&crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+    `/compare?places=${savedIds.slice(0, 3).map(encodeURIComponent).join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 </script>
 
@@ -143,8 +143,8 @@
       {#each savedOutlets as outlet (outlet.id)}
         {@const fit = evaluateFit(outlet, harvest)}
         {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-        {@const detailHref = `/places/${outlet.slug}?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
-        {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
+        {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
 
         <article class="bg-white rounded-2xl border border-[#20251E]/12 p-6 shadow-sm hover:border-[#597928]/40 transition-all flex flex-col justify-between gap-6">
           <div class="space-y-4">
