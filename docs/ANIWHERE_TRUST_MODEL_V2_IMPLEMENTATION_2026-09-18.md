@@ -1149,3 +1149,126 @@ Never infer that a current offer reserves capacity.
 Never infer that a public/reference price is a buyer quote.
 
 Never convert an unknown into a match or a rejection simply to make the UI look complete.
+
+
+---
+
+## 26. Continued implementation log after the initial hardening pass
+
+This branch continued evolving after the first version of this report. The following changes were pushed as separate feature/fix commits rather than held locally.
+
+### 26.1 Supabase workflow correction
+
+A fresh audit against current Supabase documentation changed the backend handoff strategy.
+
+**Finding:** for a new project, current Supabase documentation supports a declarative-schema workflow under `supabase/schemas/`, followed by a CLI-generated migration and local verification. A hand-authored timestamped migration that has never been generated/applied/tested by the CLI can falsely look deploy-ready.
+
+**Implemented:**
+
+- moved the undeployed market schema to `supabase/schemas/market_data_v2.sql`;
+- removed the unverified hand-authored migration from `supabase/migrations/`;
+- updated the handoff documentation to require:
+  - local Supabase initialization;
+  - declarative schema inclusion;
+  - CLI-generated migration;
+  - review of the generated diff;
+  - local reset;
+  - database advisors;
+  - pgTAP tests;
+- kept the explicit boundary that no live Supabase project is connected by this branch.
+
+### 26.2 RLS helper security hardening
+
+**Finding:** privileged helper functions in an exposed schema are an unnecessary attack surface, especially when `SECURITY DEFINER` is involved. Current Supabase security guidance recommends treating grants and RLS as separate layers and reviewing privileged functions carefully.
+
+**Implemented:**
+
+- isolated privileged authorization helpers under a non-exposed `private` schema;
+- moved the timestamp trigger helper out of `public`;
+- revoked anonymous/public execution on private helpers;
+- retained only the minimum authenticated execute permission required for the RLS authorization helper;
+- added restrictive default privileges for future public-schema objects;
+- changed direct `auth.uid()` predicates to scalar subqueries where used repeatedly in policies;
+- corrected malformed dollar quoting discovered during the schema audit;
+- expanded the pgTAP structural contract to check:
+  - the `private` schema exists;
+  - `private.can_edit_place(uuid)` exists;
+  - `private.set_updated_at()` exists;
+  - anonymous users cannot execute the place authorization helper;
+  - authenticated users can execute only the authorization helper needed by RLS;
+  - authenticated users cannot directly execute the timestamp trigger helper.
+
+These database tests remain source-controlled contracts until a local Supabase stack is intentionally initialized and run.
+
+### 26.3 Runtime place/offer separation
+
+**Finding:** the production schema separated stable places from time-sensitive offers, but the frontend fixture source still authored them as one monolithic `Outlet` object. That made the runtime architecture contradict the production model and increased the chance that later real data would be mixed incorrectly.
+
+**Implemented:**
+
+Stable facts are now authored separately in:
+
+- `src/content/demo-places.ts`
+- `src/content/demo-capabilities.ts`
+- `src/content/demo-sources.ts`
+
+Time-sensitive demand is authored separately in:
+
+- `src/content/demo-offers.ts`
+
+Demo-only logistics assumptions are isolated in:
+
+- `src/content/demo-transport.ts`
+
+Repository contracts now live in:
+
+- `src/lib/data/market-repository.ts`
+- `src/lib/data/demo-market-repository.ts`
+
+A pure presentation adapter lives in:
+
+- `src/lib/data/outlet-adapter.ts`
+
+The legacy `DEMO_OUTLETS` export still exists so the UI does not need a risky rewrite during the hackathon pass, but it is now derived at the presentation boundary instead of being the source of truth.
+
+This means:
+
+```text
+stable place
++ crop capability evidence
++ current/non-current offers
++ provenance
++ demo hauling assumption
+        ↓
+presentation adapter
+        ↓
+existing Outlet UI contract
+```
+
+The adapter deliberately does **not** convert an explicitly unknown capability into an accepted crop.
+
+### 26.4 Runtime data-separation tests
+
+Added `src/lib/data/outlet-adapter.test.ts` to verify:
+
+- every demo offer references an existing place;
+- explicit crop exclusions survive composition;
+- active offer price/capacity/provenance survive composition;
+- demo hauling assumptions stay explicit;
+- an accepted capability with no offer does not invent price/capacity/offer status;
+- an `unknown` capability does not become an accepted crop.
+
+### 26.5 Build-system defects found by CI
+
+The new GitHub Actions gate found two existing repository issues before source tests could run:
+
+1. `pnpm-workspace.yaml` had no valid `packages` entry, causing clean `pnpm install --frozen-lockfile` to fail.
+2. the first CI setup used unnecessary Node cache coupling.
+
+Both were corrected. The workflow now installs cleanly, runs tests, performs Astro checking, and builds the production site.
+
+A later CI run also exposed that old comparison tests omitted `readyDate`. The stricter engine correctly refused date-constrained economics without a harvest date. The tests were fixed to provide an explicit availability date rather than weakening the engine.
+
+### 26.6 Current rule for feature pushes
+
+From this point in the pass, each completed feature or fix is pushed immediately to `feat/trust-model-v2` instead of being accumulated locally. This gives the branch an inspectable rollback trail and makes CI feedback available feature-by-feature.
