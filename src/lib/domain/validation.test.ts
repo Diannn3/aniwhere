@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateHarvestInput } from './validation';
+import { isValidIsoDate, validateHarvestInput } from './validation';
 
 describe('Harvest Input Validation', () => {
   it('passes on valid canonical tomato query', () => {
@@ -7,7 +7,7 @@ describe('Harvest Input Validation', () => {
       crop: 'tomato',
       quantityKg: 300,
       originMunicipality: 'los-banos',
-      readyDate: '2026-09-17',
+      readyDate: '2026-09-18',
     });
 
     expect(res.isValid).toBe(true);
@@ -50,5 +50,23 @@ describe('Harvest Input Validation', () => {
 
     expect(res.isValid).toBe(false);
     expect(res.errors.originMunicipality).toBeDefined();
+  });
+
+  it('accepts an omitted optional ready date but rejects malformed or impossible dates', () => {
+    expect(validateHarvestInput({
+      crop: 'tomato',
+      quantityKg: 300,
+      originMunicipality: 'los-banos',
+    }).isValid).toBe(true);
+
+    expect(validateHarvestInput({
+      crop: 'tomato',
+      quantityKg: 300,
+      originMunicipality: 'los-banos',
+      readyDate: '18-09-2026',
+    }).errors.readyDate).toBeDefined();
+
+    expect(isValidIsoDate('2026-02-30')).toBe(false);
+    expect(isValidIsoDate('2026-09-18')).toBe(true);
   });
 });
