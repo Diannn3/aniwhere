@@ -10,11 +10,7 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.harvest.quantityKg).toBe(300);
     expect(parsed.harvest.originMunicipality).toBe('los-banos');
     expect(parsed.harvest.readyDate).toBe('2026-09-18');
-    expect(parsed.harvest.details).toEqual({
-      variety: 'Local',
-      grade: 'Grade A',
-      packaging: 'Plastic crate',
-    });
+    expect(parsed.harvest.details).toBeUndefined();
     expect(parsed.view).toBe('map');
     expect(parsed.selectedPlaceId).toBe('demo-cooperative');
     expect(parsed.lang).toBe('fil');
@@ -55,6 +51,11 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.harvest.quantityKg).toBe(250);
     expect(parsed.harvest.originMunicipality).toBe('santa-cruz');
     expect(parsed.harvest.readyDate).toBe('2026-09-18');
+    expect(parsed.harvest.details).toEqual({
+      variety: 'Local',
+      grade: 'Grade A',
+      packaging: 'Plastic crate',
+    });
     expect(parsed.view).toBe('map');
     expect(parsed.selectedPlaceId).toBe('demo-market');
     expect(parsed.lang).toBe('fil');
