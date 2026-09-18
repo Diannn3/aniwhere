@@ -7,6 +7,7 @@ describe('Comparison Calculations', () => {
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
+    readyDate: '2026-09-18',
   };
 
   it('builds 3-way comparison with exact fixture amounts and zero bias', () => {
