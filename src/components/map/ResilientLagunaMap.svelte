@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { serializeDiscoverQuery } from '../../lib/state/url-state';
+  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { t } from '../../content/translations';
 
   interface OutletWithFit {
@@ -16,7 +16,7 @@
       crop: 'tomato',
       quantityKg: 300,
       originMunicipality: 'los-banos',
-      readyDate: '2026-09-17',
+      readyDate: todayInManila(),
     },
     selectedId = undefined,
     isDetailView = false,
