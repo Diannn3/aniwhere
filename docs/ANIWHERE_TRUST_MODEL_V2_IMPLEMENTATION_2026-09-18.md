@@ -29,7 +29,7 @@ The implementation therefore prioritizes **epistemic correctness**:
 - a reviewed place may still be discoverable when current demand is unknown;
 - the user interface shows the source and freshness of the evidence used by the matching engine.
 
-This pass intentionally does **not** connect a live Supabase project, fetch real buyer demand, or replace the resilient SVG map with a live routing dependency. Instead it establishes the contracts, security model, migration, and deterministic logic needed to do those safely next.
+This pass intentionally does **not** connect a live Supabase project, fetch real buyer demand, or replace the resilient SVG map with a live routing dependency. Instead it establishes the contracts, security model, declarative database schema scaffold, and deterministic logic needed to do those safely next.
 
 ---
 
@@ -637,11 +637,11 @@ These fields exist so the same UI and matching engine can later consume genuine 
 
 ## 13. Production database scaffold
 
-### `supabase/migrations/202609180001_market_data_v2.sql`
+### `supabase/schemas/market_data_v2.sql`
 
-A production-oriented SQL schema is now versioned in the repository.
+A production-oriented declarative SQL schema is now versioned in the repository.
 
-This migration is **not applied to a live production database in this pass**.
+This schema is **not applied to a live or local Supabase database in this pass**. A versioned migration must be generated and reviewed with the current Supabase CLI workflow once the project is intentionally initialized.
 
 ### Tables
 
@@ -755,7 +755,7 @@ This table is deliberately not the buyer-offer table.
 
 ## 14. Supabase authorization model
 
-The migration is designed around the current AniWhere operating model.
+The declarative schema is designed around the current AniWhere operating model.
 
 ### Anonymous farmer
 
@@ -785,12 +785,12 @@ Reserved for privileged administrative/verification workflows that should not be
 
 ## 15. RLS and grants
 
-The migration:
+The schema:
 
 - enables RLS on every exposed data table;
 - revokes broad defaults;
 - selectively grants operations;
-- defines `can_edit_place(uuid)`;
+- defines `private.can_edit_place(uuid)` as a tightly scoped security-definer helper outside the exposed `public` schema;
 - uses assignment/membership checks for writes;
 - hides non-current offers from anonymous public reads;
 - requires reviewed place status for public discovery;
@@ -824,6 +824,15 @@ The next security-test pass should add behavioral tests for:
 - service role can write verification records.
 
 The Supabase tests are not part of the frontend GitHub workflow yet because the repository does not currently install/run a local Supabase stack in CI.
+
+### Supabase security/workflow audit performed in this pass
+
+After the initial scaffold was written, it was re-audited against the current Supabase skill/documentation. That audit caused two important corrections before handoff:
+
+1. the RLS membership helper was moved from the exposed `public` schema into a non-exposed `private` schema, with an empty `search_path`, explicit `auth.uid()` checks, revoked public execution, and authenticated-only execute permission;
+2. the hand-authored file was moved from `supabase/migrations/` to `supabase/schemas/` because this repository has not yet initialized and verified a local Supabase project. The next implementation pass should generate the actual versioned migration through the current CLI workflow after local testing/advisors rather than pretending the scaffold is already a deployable migration.
+
+The audit also added an assigned-editor SELECT policy for `place_crop_capabilities`, because PostgreSQL RLS UPDATE behavior requires the target row to be selectable.
 
 ---
 
@@ -895,7 +904,7 @@ The new README distinguishes:
 
 ### Backend scaffold
 
-- `supabase/migrations/202609180001_market_data_v2.sql`
+- `supabase/schemas/market_data_v2.sql`
 - `supabase/tests/market_data_rls.test.sql`
 - `supabase/README.md`
 
@@ -1000,7 +1009,10 @@ A real place with unknown current demand must show:
 
 Once a target project is intentionally selected:
 
-- apply migration;
+- initialize and test the Supabase project locally;
+- generate/review a versioned migration through the current CLI workflow;
+- run database advisors and RLS tests;
+- apply the reviewed migration to the intended project;
 - generate typed client definitions;
 - validate RLS;
 - create buyer/steward invitation flow;
