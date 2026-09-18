@@ -324,15 +324,14 @@ known crop rejection
 
 A paused/non-current offer cannot become MATCH or PARTIAL.
 
-### Invariant C — known temporal conflict is a mismatch
+### Invariant C — offer-window mismatch is not automatically place rejection
 
-Examples:
+A future or expired buyer offer cannot produce MATCH/PARTIAL, but the physical place may still have another intake path that AniWhere does not know about. Therefore:
 
-- harvest ready before the buying window opens;
-- harvest ready after the buying window ends;
-- harvest date falls outside known receiving weekdays.
-
-These can become NO_MATCH because the conflict is known.
+- harvest before a recorded offer starts -> CONTACT_TO_CONFIRM;
+- harvest after a recorded offer expires -> CONTACT_TO_CONFIRM;
+- expired offer is never treated as active demand;
+- a known incompatible receiving weekday inside an otherwise-current intake rule may still become NO_MATCH because that schedule conflict is explicit.
 
 ### Invariant D — missing date information stays uncertain
 
@@ -467,8 +466,8 @@ Conceptually:
 5. date-constrained offer but ready date unknown?
    -> CONTACT_TO_CONFIRM
 
-6. known validity-window conflict?
-   -> NO_MATCH
+6. offer is future/expired for this harvest date?
+   -> CONTACT_TO_CONFIRM (offer is unusable; alternative/general intake remains unknown)
 
 7. known receiving-day conflict?
    -> NO_MATCH
@@ -503,8 +502,8 @@ The suite now explicitly covers:
 5. explicit exclusion -> no match;
 6. missing crop rule -> confirm;
 7. paused/non-current offer -> confirm;
-8. future buying window -> no match;
-9. expired buying window -> no match;
+8. future buying window -> confirm, never match;
+9. expired buying window -> confirm, never active demand;
 10. missing ready date on constrained offer -> confirm;
 11. incompatible receiving weekday -> no match;
 12. unknown price -> no fabricated proceeds;
@@ -1108,7 +1107,8 @@ Before merging this branch:
 - [ ] no current demo claim is presented as real market demand;
 - [ ] missing crop rule returns CONTACT_TO_CONFIRM;
 - [ ] explicit excluded crop returns NO_MATCH;
-- [ ] expired/future/incompatible schedule cannot return MATCH;
+- [ ] expired/future offer window cannot return MATCH and degrades to CONTACT_TO_CONFIRM unless another current intake path is known;
+- [ ] explicit incompatible receiving schedule cannot return MATCH;
 - [ ] unknown capacity does not calculate accepted/remainder values;
 - [ ] unknown price does not calculate proceeds;
 - [ ] unknown hauling does not calculate amount-after-transport;
