@@ -205,6 +205,16 @@
     if (Number.isNaN(parsed.getTime())) return value;
     return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
+
+  function priceLabelFor(fit: FitResult): string {
+    if (fit.evidenceKind === 'demo') {
+      return lang === 'fil' ? 'Halimbawang presyo' : 'Sample price';
+    }
+    if (fit.evidenceKind === 'buyer_offer') {
+      return lang === 'fil' ? 'Presyong naka-post ng buyer' : 'Buyer-posted price';
+    }
+    return lang === 'fil' ? 'Presyo' : 'Price';
+  }
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-6">
@@ -555,7 +565,7 @@
               <div class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div>
-                    <span class="block text-[11px] text-[#6B7265]">{t('samplePrice', lang)}</span>
+                    <span class="block text-[11px] text-[#6B7265]">{priceLabelFor(item.fit)}</span>
                     <span class="font-bold text-[#20251E] font-tabular">₱{item.fit.samplePricePerKg} / kg</span>
                     <span class="block text-[10px] text-[#6B7265]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
                   </div>
