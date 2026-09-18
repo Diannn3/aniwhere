@@ -63,6 +63,8 @@ export interface Outlet {
   lng: number;
   description: string;
   descriptionFil: string;
+  contactPhone?: string;
+  contactEmail?: string;
   sampleOfferDate: string;
   acceptedCrops: Partial<Record<CropKey | string, CropCondition>>;
   excludedCrops?: string[];
