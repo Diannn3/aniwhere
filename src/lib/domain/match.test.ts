@@ -103,7 +103,7 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.reasonCodes).toContain('offer_not_current');
   });
 
-  it('known future buying window yields no_match for an earlier harvest date', () => {
+  it('future buying window yields confirm because alternative intake is unknown', () => {
     const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
     const future: Outlet = {
       ...coop,
@@ -118,11 +118,12 @@ describe('Deterministic Harvest Matching', () => {
     };
 
     const result = evaluateFit(future, query300);
-    expect(result.status).toBe('no_match');
+    expect(result.status).toBe('confirm');
     expect(result.reasonCodes).toContain('offer_future');
+    expect(result.unknowns).toContain('Alternative current intake');
   });
 
-  it('known expired buying window yields no_match for a later harvest date', () => {
+  it('expired buying window yields confirm and is never treated as active demand', () => {
     const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
     const expired: Outlet = {
       ...coop,
@@ -137,8 +138,9 @@ describe('Deterministic Harvest Matching', () => {
     };
 
     const result = evaluateFit(expired, query300);
-    expect(result.status).toBe('no_match');
+    expect(result.status).toBe('confirm');
     expect(result.reasonCodes).toContain('offer_expired_for_harvest');
+    expect(result.acceptedKg).toBeNull();
   });
 
   it('missing ready date yields confirm when offer has date constraints', () => {
