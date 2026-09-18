@@ -1,6 +1,6 @@
 ﻿<script lang="ts">
   import { onMount } from 'svelte';
-  import { DEMO_OUTLETS } from '../../content/demo-outlets';
+  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -61,7 +61,7 @@
 
   const comparedOutlets = $derived(
     selectedIds
-      .map((id) => DEMO_OUTLETS.find((o) => o.id === id || o.slug === id))
+      .map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id))
       .filter((o): o is Outlet => Boolean(o))
       .slice(0, 3)
   );
