@@ -80,6 +80,20 @@ export interface PlaceRecord {
   sourceIds: string[];
 }
 
+/** Longer-lived evidence about what a place is known to handle. */
+export interface PlaceCropCapabilityRecord {
+  id: string;
+  placeId: string;
+  cropKey: CropKey | string;
+  acceptanceState: 'accepted' | 'excluded' | 'unknown';
+  minKg?: number;
+  maxKg?: number;
+  conditions: string[];
+  conditionsFil: string[];
+  verifiedAt?: string;
+  sourceId?: string;
+}
+
 /** Time-sensitive demand. This is deliberately separate from PlaceRecord. */
 export interface BuyerOfferRecord {
   id: string;
