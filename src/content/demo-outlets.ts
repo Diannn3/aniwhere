@@ -1,5 +1,14 @@
 import type { Outlet } from '../lib/domain/types';
 
+const DEMO_SOURCE = {
+  sourceKind: 'demo' as const,
+  sourceLabel: 'Demo — sample data',
+  lastUpdatedAt: '2026-09-17T08:00:00+08:00',
+  validFrom: '2026-09-17',
+  validUntil: '2026-09-30',
+  offerStatus: 'active' as const,
+};
+
 export const DEMO_OUTLETS: Outlet[] = [
   {
     id: 'demo-cooperative',
@@ -9,8 +18,10 @@ export const DEMO_OUTLETS: Outlet[] = [
     municipality: 'Santa Cruz',
     lat: 14.281,
     lng: 121.417,
-    description: 'Farmer-owned cooperative aggregation facility. Consolidates member and partner harvests for regional food terminals.',
-    descriptionFil: 'Pasilidad ng kooperatiba ng mga magsasaka. Pinagsasama-sama ang ani para sa mga rehiyonal na bagsakan.',
+    description:
+      'Farmer-owned cooperative aggregation facility. Consolidates member and partner harvests for regional food terminals.',
+    descriptionFil:
+      'Pasilidad ng kooperatiba ng mga magsasaka. Pinagsasama-sama ang ani para sa mga rehiyonal na bagsakan.',
     sampleOfferDate: '17 Sep 2026',
     isDemoFixture: true,
     acceptedCrops: {
@@ -21,6 +32,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Confirm crate cleanliness', 'Receiving 6:00 AM to 11:00 AM'],
         conditionsFil: ['Kumpirmahin ang kalinisan ng kahon', 'Pagtanggap 6:00 AM hanggang 11:00 AM'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
       eggplant: {
         maxKg: 300,
@@ -29,6 +41,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Confirm sorting by length'],
         conditionsFil: ['Kumpirmahin ang paghihiwalay ayon sa haba'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
       calamansi: {
         maxKg: 200,
@@ -37,6 +50,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Green skin, uniform size'],
         conditionsFil: ['Berdeng balat, magkakaparehong laki'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
     },
   },
@@ -48,8 +62,10 @@ export const DEMO_OUTLETS: Outlet[] = [
     municipality: 'Calamba',
     lat: 14.214,
     lng: 121.164,
-    description: 'Local agricultural sauce and puree manufacturing facility. High-volume seasonal processing plant.',
-    descriptionFil: 'Lokal na pagawaan ng sarsa at puree. Tumatanggap ng maramihang ani para sa pagpoproseso.',
+    description:
+      'Local agricultural sauce and puree manufacturing facility. High-volume seasonal processing plant.',
+    descriptionFil:
+      'Lokal na pagawaan ng sarsa at puree. Tumatanggap ng maramihang ani para sa pagpoproseso.',
     sampleOfferDate: '17 Sep 2026',
     isDemoFixture: true,
     acceptedCrops: {
@@ -60,6 +76,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Processing grade acceptable', 'Delivery scheduling required prior to dispatch'],
         conditionsFil: ['Pang-proseso na kalidad ay tinatanggap', 'Kailangang magpa-iskedyul bago ibiyahe'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
       eggplant: {
         maxKg: 200,
@@ -68,6 +85,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Firm skin without rot'],
         conditionsFil: ['Matigas na balat, walang sira'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
     },
   },
@@ -77,20 +95,23 @@ export const DEMO_OUTLETS: Outlet[] = [
     name: 'Demo Market',
     category: 'market',
     municipality: 'Los Baños',
-    lat: 14.180,
+    lat: 14.18,
     lng: 121.243,
-    description: 'Municipal trading hub and public market stall association with daily direct consumer demand.',
-    descriptionFil: 'Bagsakan at pampublikong pamilihan ng bayan na may pang-araw-araw na mamimili.',
+    description:
+      'Municipal trading hub and public market stall association with daily direct consumer demand.',
+    descriptionFil:
+      'Bagsakan at pampublikong pamilihan ng bayan na may pang-araw-araw na mamimili.',
     sampleOfferDate: '17 Sep 2026',
     isDemoFixture: true,
     acceptedCrops: {
       tomato: {
-        maxKg: 200, // Deliberately 200kg to test partial match on 300kg harvest!
+        maxKg: 200,
         pricePerKg: 30,
         defaultTransportExpense: 300,
         conditions: ['Table ripe grade 1', 'Confirm remaining stall capacity'],
         conditionsFil: ['Pang-mesa Hinog Klasik 1', 'Kumpirmahin ang natitirang espasyo sa pwesto'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
       calamansi: {
         maxKg: 150,
@@ -99,6 +120,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Freshly harvested within 24h'],
         conditionsFil: ['Bagong pitas sa loob ng 24 oras'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
     },
   },
@@ -110,18 +132,20 @@ export const DEMO_OUTLETS: Outlet[] = [
     municipality: 'San Pablo',
     lat: 14.067,
     lng: 121.325,
-    description: 'Specialty culinary workshop and farm-to-table kitchen. Capacity fluctuates based on weekly orders.',
-    descriptionFil: 'Kusina at pagawaan ng lutuin. Pabago-bago ang dami depende sa lingguhang order.',
+    description:
+      'Specialty culinary workshop and farm-to-table kitchen. Capacity fluctuates based on weekly orders.',
+    descriptionFil:
+      'Kusina at pagawaan ng lutuin. Pabago-bago ang dami depende sa lingguhang order.',
     sampleOfferDate: '17 Sep 2026',
     isDemoFixture: true,
     acceptedCrops: {
       tomato: {
-        // maxKg undefined to test "Contact to confirm"
         pricePerKg: 35,
         defaultTransportExpense: 400,
         conditions: ['Contact to confirm batch size'],
         conditionsFil: ['Makipag-ugnayan para sa laki ng batch'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
     },
   },
@@ -137,7 +161,7 @@ export const DEMO_OUTLETS: Outlet[] = [
     descriptionFil: 'Tindahan ng mga organikong gulay at sangkap.',
     sampleOfferDate: '17 Sep 2026',
     isDemoFixture: true,
-    excludedCrops: ['tomato'], // Deliberately excludes tomatoes to test "no_match"
+    excludedCrops: ['tomato'],
     acceptedCrops: {
       eggplant: {
         maxKg: 100,
@@ -145,6 +169,7 @@ export const DEMO_OUTLETS: Outlet[] = [
         conditions: ['Certified pesticide-free'],
         conditionsFil: ['Walang kemikal'],
         isActive: true,
+        ...DEMO_SOURCE,
       },
     },
   },
