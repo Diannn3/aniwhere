@@ -1,6 +1,6 @@
 ﻿<script lang="ts">
   import { onMount } from 'svelte';
-  import { DEMO_OUTLETS } from '../../content/demo-outlets';
+  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { getSavedOutletIds, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { evaluateFit } from '../../lib/domain/match';
@@ -36,7 +36,7 @@
   const isFil = $derived(lang === 'fil');
 
   const savedOutlets = $derived(
-    DEMO_OUTLETS.filter((outlet) => savedIds.includes(outlet.id))
+    CURRENT_OUTLETS.filter((outlet) => savedIds.includes(outlet.id))
   );
 
   const originMun = $derived(
