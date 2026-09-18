@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { BuyerDemoOffer, CropKey } from '../../lib/domain/types';
   import { SUPPORTED_CROPS, getCropLabel } from '../../lib/domain/crops';
+  import { todayInManila } from '../../lib/state/url-state';
 
   interface Props {
     isOpen: boolean;
@@ -44,7 +45,7 @@
         quantityKg = 300;
         pricePerKg = '28';
         status = 'published';
-        deliveryWindow = '2026-09-17';
+        deliveryWindow = todayInManila();
         location = 'Los Baños, Laguna';
         notes = '';
       }
@@ -88,7 +89,7 @@
       quantityKg: Number(quantityKg),
       pricePerKg: parsedPrice,
       status,
-      updatedAt: '2026-09-17',
+      updatedAt: todayInManila(),
       deliveryWindow: deliveryWindow.trim() || undefined,
       location: location.trim() || undefined,
       notes: notes.trim() || undefined,
@@ -327,7 +328,7 @@
               id="offer-window"
               type="text"
               bind:value={deliveryWindow}
-              placeholder="e.g. 2026-09-17 or Sept 17-20"
+              placeholder="e.g. YYYY-MM-DD or Sep 18-20"
               class="w-full px-3.5 py-2.5 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
             />
           </div>
