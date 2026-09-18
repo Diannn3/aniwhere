@@ -1272,3 +1272,128 @@ A later CI run also exposed that old comparison tests omitted `readyDate`. The s
 ### 26.6 Current rule for feature pushes
 
 From this point in the pass, each completed feature or fix is pushed immediately to `feat/trust-model-v2` instead of being accumulated locally. This gives the branch an inspectable rollback trail and makes CI feedback available feature-by-feature.
+
+
+### 26.7 Explicit demo-vs-pilot data-mode isolation
+
+**Finding:** even after separating demo places and offers, runtime components still needed an explicit guard against a future configuration accidentally showing demo fixtures under a pilot/live label.
+
+**Implemented:**
+
+- added `src/lib/data/current-market.ts`;
+- added `PUBLIC_DATA_MODE=demo` to `.env.example`;
+- runtime pages now consume `CURRENT_OUTLETS` instead of importing demo fixtures directly;
+- `demo` is the only configured runtime mode in this branch;
+- requesting `PUBLIC_DATA_MODE=pilot` fails closed with a clear error until a reviewed pilot adapter is implemented;
+- unknown data-mode values are rejected rather than silently coerced;
+- added unit tests for mode parsing and fail-closed semantics.
+
+This prevents an environment-variable change from making fictional fixture data look like a live pilot.
+
+### 26.8 Structured quality and packaging matching
+
+**Finding:** quality/packaging requirements were previously prose-only. AniWhere could display them, but could not distinguish:
+
+- requirement exists + farmer has not provided the detail; from
+- requirement exists + farmer detail is explicitly incompatible.
+
+**Implemented:**
+
+- added `StructuredRequirement` and `HarvestDetailField` domain contracts;
+- harvest queries may now carry optional `variety`, `grade`, and `packaging`;
+- buyer-offer records can carry structured requirements;
+- the Supabase declarative schema now includes a JSONB structured-requirements payload;
+- the presentation adapter carries structured requirements into the deterministic match engine;
+- matching semantics are now:
+  - required detail missing -> **CONTACT_TO_CONFIRM**;
+  - required detail present and incompatible -> **NO_MATCH**;
+  - required detail present and compatible -> continue normal schedule/capacity matching;
+- matching remains exact, deterministic, case-normalized, and auditable; no LLM inference is used;
+- added tests for missing, incompatible, and compatible structured requirements.
+
+### 26.9 Progressive optional harvest-detail UX
+
+**Finding:** machine-evaluable requirements are only useful if a farmer can provide the relevant information without turning the homepage into a long procurement form.
+
+**Implemented:**
+
+- the main four inputs remain unchanged:
+  - crop;
+  - quantity;
+  - origin;
+  - ready date;
+- added an optional collapsed **Harvest details** section for:
+  - variety;
+  - grade;
+  - packaging;
+- added English/Filipino labels;
+- optional details are serialized into URL state;
+- URL parsing/round-trip tests cover them;
+- discovery's inline harvest editor can update them;
+- outlet-detail, saved, compare, and back-navigation links preserve them;
+- the prepared inquiry message includes known harvest details instead of dropping them.
+
+This follows progressive-disclosure UX: farmers are not forced to understand procurement fields before searching, while explicit requirements can still be evaluated when relevant.
+
+### 26.10 Contact-data truth hardening
+
+**Finding:** the detail page labeled an action **Public contact** but the demo modal contained invented operating hours and a masked fictional phone line. Even with a demo notice, those operational details could be mistaken for real information.
+
+**Implemented:**
+
+- added optional `contactPhone` and `contactEmail` fields to the outlet presentation contract;
+- the place-to-outlet adapter carries verified contact values only when they exist in the underlying place record;
+- removed invented operating hours;
+- removed the fictional masked phone line;
+- if no verified public contact exists, AniWhere now says so explicitly;
+- the action label changes to **No verified contact** for records without one;
+- the modal states that AniWhere does not substitute invented contact details;
+- changed "Laguna Market Pilot" fixture wording to **Illustrative Laguna demo**.
+
+### 26.11 Evidence-aware price wording
+
+**Finding:** the UI historically used "Sample price" everywhere, which is correct for demo fixtures but would become wrong as soon as a real buyer-posted offer is connected. The inquiry template also rendered an awkward `₱---/kg` when price was unknown.
+
+**Implemented:**
+
+Price labeling now follows evidence type:
+
+- demo -> **Sample price**;
+- buyer offer -> **Buyer-posted price**;
+- other/unknown -> neutral **Price**.
+
+The prepared inquiry message now:
+
+- asks for the current price when none is known;
+- calls demo fixture prices demo/sample prices;
+- calls real buyer-offer prices posted prices;
+- never inserts `₱---` as if it were a meaningful figure.
+
+Discovery, outlet detail, and comparison use consistent evidence-aware price wording.
+
+### 26.12 Copy and sorting correctness sweep
+
+**Findings:**
+
+- homepage copy still claimed "verified local outlets" even though the runtime is demo fixtures;
+- the 404 page still referenced "verified Laguna pilot fixtures";
+- discovery transport sorting used a falsy fallback, so a legitimate zero transport value would be treated as unknown.
+
+**Implemented:**
+
+- removed unearned "verified outlet" and "verified pilot" language;
+- replaced it with potential/illustrative-data wording;
+- price/payout sorting now sends truly missing values to the bottom using nullish semantics;
+- transport sorting now preserves a legitimate `0` value and treats only null/undefined as unknown.
+
+### 26.13 Verification status during continued implementation
+
+GitHub Actions has repeatedly validated intermediate heads during this pass. CI caught:
+
+- invalid workspace configuration;
+- an old comparison test that omitted required availability date context;
+- one misplaced URL-state assertion introduced while expanding tests.
+
+Each was fixed rather than bypassed.
+
+The merge rule remains: **do not merge until the exact final branch head passes install, unit tests, Astro type checking, and production build.**
