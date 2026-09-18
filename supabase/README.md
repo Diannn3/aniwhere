@@ -13,7 +13,7 @@ The v2 schema keeps those concepts separate.
 
 ## Migration
 
-`migrations/202609180001_market_data_v2.sql` creates:
+`schemas/market_data_v2.sql` declares:
 
 - organizations and membership roles
 - stable reviewed places
@@ -23,7 +23,7 @@ The v2 schema keeps those concepts separate.
 - source/provenance records
 - verification records
 - reference prices kept separate from buyer quotes
-- RLS and least-privilege grants
+- RLS and least-privilege grants, with the privileged membership helper isolated in a non-exposed `private` schema
 
 Farmers remain anonymous readers of approved public data. Buyers/stewards may edit only assigned places/offers.
 
@@ -31,13 +31,7 @@ Farmers remain anonymous readers of approved public data. Buyers/stewards may ed
 
 `tests/market_data_rls.test.sql` is a first pgTAP contract that verifies RLS is enabled on every exposed table and that the key offer policies exist.
 
-When the Supabase CLI is added to the development environment:
-
-```bash
-supabase start
-supabase db reset
-supabase test db
-```
+This repository is not yet initialized against a live/local Supabase project. When that step is intentionally taken, use the current Supabase CLI workflow: initialize/start locally, include the declarative schema, generate a versioned migration with the CLI, run database advisors, review the generated migration, reset/apply locally, then run `supabase test db`. Do not treat the schema file itself as a deployed migration.
 
 Before production, extend the RLS suite with allow/deny behavior tests for:
 
