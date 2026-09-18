@@ -49,6 +49,7 @@
   const fitResult = $derived(evaluateFit(outlet, harvest));
 
   const isFil = $derived(lang === 'fil');
+  const hasVerifiedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
 
   function handleToggleSave() {
     saved = toggleSavedOutlet(outlet.id);
@@ -483,7 +484,11 @@
         <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
         </svg>
-        <span>{isFil ? 'Pampublikong kontak' : 'Public contact'}</span>
+        <span>
+          {hasVerifiedContact
+            ? (isFil ? 'Pampublikong kontak' : 'Public contact')
+            : (isFil ? 'Walang beripikadong kontak' : 'No verified contact')}
+        </span>
       </button>
 
       <!-- 3. Compare Options -->
@@ -501,10 +506,10 @@
     <!-- Provenance / Timestamp Attribution Footer -->
     <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#6B7265]">
       <div>
-        Source: <span class="font-medium text-[#20251E]">Sample offer &bull; {outlet.sampleOfferDate}</span>
+        Source: <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || 'Source unknown'} &bull; {outlet.sampleOfferDate}</span>
       </div>
       <div>
-        Fixture: <span class="font-medium text-[#20251E]">Laguna Market Pilot &bull; NextGen Agri Hackathon 2026</span>
+        Fixture: <span class="font-medium text-[#20251E]">Illustrative Laguna demo &bull; NextGen Agri Hackathon 2026</span>
       </div>
     </div>
   </section>
@@ -597,16 +602,36 @@
 
       <div class="space-y-3 text-xs sm:text-sm text-[#20251E]">
         <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">Receiving Facility Desk</div>
-          <div class="font-bold">{outlet.municipality}, Laguna Corridor</div>
-          <div class="text-xs text-[#4A5245]">Operating hours: Mon-Sat 6:00 AM – 2:00 PM</div>
+          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">
+            {isFil ? 'Lokasyon ng tala' : 'Recorded location'}
+          </div>
+          <div class="font-bold">{outlet.municipality}, Laguna</div>
+          <div class="text-[11px] text-[#6B7265]">
+            {isFil
+              ? 'Walang operating hours na ipinapalagay kung hindi ito beripikado.'
+              : 'No operating hours are inferred unless they are verified.'}
+          </div>
         </div>
 
-        <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">Sample Contact Line</div>
-          <div class="font-mono text-xs text-[#20251E]">(049) 536-XXXX / Local Receiving Desk</div>
-          <div class="text-[11px] text-[#6B7265]">In live production, verified buyer lines will connect here.</div>
-        </div>
+        {#if hasVerifiedContact}
+          <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-2">
+            <div class="text-[11px] font-semibold text-[#6B7265] uppercase">
+              {isFil ? 'Beripikadong pampublikong kontak' : 'Verified public contact'}
+            </div>
+            {#if outlet.contactPhone}
+              <div class="font-mono text-xs text-[#20251E]">{outlet.contactPhone}</div>
+            {/if}
+            {#if outlet.contactEmail}
+              <div class="text-xs text-[#20251E]">{outlet.contactEmail}</div>
+            {/if}
+          </div>
+        {:else}
+          <div class="p-3 rounded-xl bg-[#4E7380]/8 border border-[#4E7380]/18 text-xs text-[#2A4B56]">
+            {isFil
+              ? 'Walang beripikadong pampublikong phone o email na nakaimbak para sa record na ito. Huwag gumamit ng imbentong contact details.'
+              : 'No verified public phone or email is stored for this record. AniWhere does not substitute invented contact details.'}
+          </div>
+        {/if}
 
         <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
           <strong>Notice:</strong> This is a NextGen Agri Hackathon demo fixture. Real commercial transactions and phone calls are not executed in this prototype pass.
