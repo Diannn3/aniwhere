@@ -1397,3 +1397,23 @@ GitHub Actions has repeatedly validated intermediate heads during this pass. CI 
 Each was fixed rather than bypassed.
 
 The merge rule remains: **do not merge until the exact final branch head passes install, unit tests, Astro type checking, and production build.**
+
+
+### 26.14 Final frontend verification before PR
+
+The exact code head immediately before this documentation update was:
+
+`5b2c7e94b7cd8e30889996503fd70e064bcd415c`
+
+GitHub Actions run **35323978068** completed successfully on 18 September 2026.
+
+Verified stages:
+
+- clean `pnpm install --frozen-lockfile`;
+- full Vitest suite;
+- Astro type checking;
+- production build.
+
+Result: **success**.
+
+This verifies the frontend/application portion of the trust-model-v2 pass. It does **not** claim that the undeployed Supabase declarative schema has been applied to or tested against a live/local Supabase database; that remains an explicit next-step boundary documented in `supabase/README.md`.
