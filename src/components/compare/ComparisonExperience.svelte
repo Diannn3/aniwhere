@@ -4,7 +4,7 @@
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
-  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { t } from '../../content/translations';
@@ -21,7 +21,7 @@
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
-    readyDate: '2026-09-17',
+    readyDate: todayInManila(),
   });
 
   // Local editable transport expense overrides per outlet
@@ -78,11 +78,18 @@
     }
   }
 
-  function getTransportCost(outlet: Outlet, defaultCost: number | null): number {
+  function getTransportCost(outlet: Outlet, defaultCost: number | null): number | null {
     if (customTransports[outlet.id] !== undefined) {
       return customTransports[outlet.id];
     }
-    return defaultCost ?? 300;
+    return defaultCost;
+  }
+
+  function formatEvidenceDate(value: string | null | undefined): string {
+    if (!value) return isFil ? 'Hindi alam' : 'Unknown';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 </script>
 
@@ -179,9 +186,9 @@
       }`}
     >
       {#each comparedOutlets as outlet (outlet.id)}
-        {@const defaultTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? 300}
+        {@const defaultTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}
         {@const activeTransport = getTransportCost(outlet, defaultTransport)}
-        {@const fit = evaluateFit(outlet, harvest, activeTransport)}
+        {@const fit = evaluateFit(outlet, harvest, activeTransport ?? undefined)}
         {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
         {@const detailUrl = `/places/${outlet.slug}?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
 
@@ -236,6 +243,13 @@
               </p>
             </div>
 
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
+              <span class="font-bold text-[#20251E]">{fit.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
+              {#if fit.dataUpdatedAt}<span>{isFil ? 'Na-update' : 'Updated'} {formatEvidenceDate(fit.dataUpdatedAt)}</span>{/if}
+              {#if fit.dataValidUntil}<span>{isFil ? 'May bisa hanggang' : 'Valid until'} {formatEvidenceDate(fit.dataValidUntil)}</span>{/if}
+              {#if fit.unknowns.length > 0}<span class="text-[#4E7380] font-semibold">{isFil ? 'Kailangang kumpirmahin:' : 'Unknown:'} {(isFil ? fit.unknownsFil : fit.unknowns).join(', ')}</span>{/if}
+            </div>
+
             <!-- Quantitative Arithmetic Ledger -->
             <div class="space-y-2.5 text-xs">
               <!-- Accepted kg -->
@@ -250,7 +264,7 @@
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
                 <span class="text-[#4A5245]">{isFil ? 'Matitira:' : 'Remaining Unsold:'}</span>
                 <span class={`font-bold text-sm ${fit.remainingKg && fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#20251E]'}`}>
-                  {fit.remainingKg !== null ? `${fit.remainingKg} kg` : '0 kg'}
+                  {fit.remainingKg !== null ? `${fit.remainingKg} kg` : (isFil ? 'Kumpirmahin' : 'Confirm')}
                 </span>
               </div>
 
@@ -285,14 +299,15 @@
                     type="number"
                     min="0"
                     step="50"
-                    value={activeTransport}
+                    value={activeTransport ?? ''}
+                    placeholder="Enter your quote"
                     oninput={(e) => handleTransportChange(outlet.id, (e.target as HTMLInputElement).value)}
                     class="w-full pl-7 pr-3 py-1.5 rounded-lg border border-[#20251E]/20 text-sm font-bold text-[#6E3511] focus:outline-none focus:ring-2 focus:ring-[#597928] bg-white min-h-[44px]"
                     aria-label={`Hauling cost for ${outlet.name}`}
                   />
                 </div>
                 <div class="text-[10px] text-[#6B7265]">
-                  Entered by farmer &bull; Not a price quote
+                  {activeTransport === null ? (isFil ? 'Walang hauling estimate na nakaimbak' : 'No hauling estimate stored') : (isFil ? 'Halagang inilagay o demo default' : 'Entered amount or demo default')}
                 </div>
               </div>
 
