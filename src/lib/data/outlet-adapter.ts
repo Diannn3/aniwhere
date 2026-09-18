@@ -138,6 +138,8 @@ export function composeOutletViewModels(
         lng: place.lng,
         description: place.description ?? '',
         descriptionFil: place.descriptionFil ?? '',
+        contactPhone: place.contactPhone,
+        contactEmail: place.contactEmail,
         sampleOfferDate: formatSampleDate(sampleDate),
         acceptedCrops,
         excludedCrops: excludedCrops.length > 0 ? excludedCrops : undefined,
