@@ -5,7 +5,7 @@
   import { getSavedOutletIds, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
-  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { t } from '../../content/translations';
 
@@ -21,7 +21,7 @@
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
-    readyDate: '2026-09-17',
+    readyDate: todayInManila(),
   });
 
   onMount(() => {
