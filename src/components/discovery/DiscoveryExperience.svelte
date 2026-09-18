@@ -38,6 +38,9 @@
   let editKg = $state(initialQuery.harvest.quantityKg);
   let editOrigin = $state(initialQuery.harvest.originMunicipality);
   let editReadyDate = $state(initialQuery.harvest.readyDate || '');
+  let editVariety = $state(initialQuery.harvest.details?.variety || '');
+  let editGrade = $state(initialQuery.harvest.details?.grade || '');
+  let editPackaging = $state(initialQuery.harvest.details?.packaging || '');
 
   onMount(() => {
     savedIds = getSavedOutletIds();
@@ -55,6 +58,9 @@
       editKg = clientQuery.harvest.quantityKg;
       editOrigin = clientQuery.harvest.originMunicipality;
       editReadyDate = clientQuery.harvest.readyDate || '';
+      editVariety = clientQuery.harvest.details?.variety || '';
+      editGrade = clientQuery.harvest.details?.grade || '';
+      editPackaging = clientQuery.harvest.details?.packaging || '';
     }
   });
 
@@ -159,6 +165,14 @@
       quantityKg: Number(editKg),
       originMunicipality: editOrigin,
       readyDate: editReadyDate || undefined,
+      details:
+        editVariety.trim() || editGrade.trim() || editPackaging.trim()
+          ? {
+              ...(editVariety.trim() ? { variety: editVariety.trim() } : {}),
+              ...(editGrade.trim() ? { grade: editGrade.trim() } : {}),
+              ...(editPackaging.trim() ? { packaging: editPackaging.trim() } : {}),
+            }
+          : undefined,
     };
     isEditingHarvest = false;
 
@@ -258,6 +272,21 @@
         >
           {lang === 'fil' ? 'I-update' : 'Update results'}
         </button>
+
+        <div class="sm:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
+          <div>
+            <label for="edit-variety-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('varietyLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <input id="edit-variety-input" type="text" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          </div>
+          <div>
+            <label for="edit-grade-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('gradeLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <input id="edit-grade-input" type="text" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          </div>
+          <div>
+            <label for="edit-packaging-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('packagingLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <input id="edit-packaging-input" type="text" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          </div>
+        </div>
       </form>
     {/if}
   </div>
