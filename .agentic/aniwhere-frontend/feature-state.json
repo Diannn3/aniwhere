@@ -87,8 +87,9 @@
       "id": "11-e2e-docs-receipts",
       "name": "Automated visual/browser QA, docs, completion receipts",
       "status": "ACCEPTED",
-      "commit": "PENDING_COMMIT",
+      "commit": "a020126",
       "receipt": ".agentic/aniwhere-frontend/receipt.yaml"
     }
   ]
-}
+}
+
