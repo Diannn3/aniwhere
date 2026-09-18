@@ -3,7 +3,7 @@
   import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { validateHarvestInput } from '../../lib/domain/validation';
-  import { serializeDiscoverQuery } from '../../lib/state/url-state';
+  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { t } from '../../content/translations';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
@@ -11,7 +11,7 @@
   let crop = $state('tomato');
   let quantityKg = $state(300);
   let originMunicipality = $state('los-banos');
-  let readyDate = $state('2026-09-17');
+  let readyDate = $state(todayInManila());
   let lang = $state<'en' | 'fil'>(initialLang);
 
   let errors = $state<Record<string, string>>({});
@@ -20,10 +20,13 @@
   let cropSelectEl: HTMLSelectElement | null = $state(null);
   let quantityInputEl: HTMLInputElement | null = $state(null);
   let municipalitySelectEl: HTMLSelectElement | null = $state(null);
+  let readyDateInputEl: HTMLInputElement | null = $state(null);
 
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
+    const urlReady = urlParams.get('ready');
+    readyDate = urlReady || todayInManila();
     if (urlLang === 'fil' || urlLang === 'en') {
       lang = urlLang;
     }
@@ -48,6 +51,8 @@
         quantityInputEl.focus();
       } else if (errors.originMunicipality && municipalitySelectEl) {
         municipalitySelectEl.focus();
+      } else if (errors.readyDate && readyDateInputEl) {
+        readyDateInputEl.focus();
       }
       return;
     }
@@ -182,7 +187,7 @@
     <!-- 4. Ready Date Card -->
     <label
       for="harvest-date"
-      class="block bg-[#FFFDF8] border border-[#20251E]/15 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs"
+      class="block bg-[#FFFDF8] border rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs {errors.readyDate ? 'border-red-500 bg-red-50/20' : 'border-[#20251E]/15'}"
     >
       <div class="flex items-center gap-1.5 text-xs font-semibold text-[#20251E] mb-1">
         <svg class="w-3.5 h-3.5 text-[#597928] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -196,9 +201,17 @@
       <input
         id="harvest-date"
         type="date"
+        min={todayInManila()}
+        bind:this={readyDateInputEl}
         bind:value={readyDate}
+        aria-describedby={errors.readyDate ? 'ready-date-error' : undefined}
         class="w-full bg-transparent text-sm sm:text-base font-semibold text-[#20251E] outline-none py-1"
       />
+      {#if errors.readyDate}
+        <p id="ready-date-error" class="text-[11px] font-medium text-red-700 mt-1" role="alert">
+          {errors.readyDate}
+        </p>
+      {/if}
     </label>
 
   </div>
