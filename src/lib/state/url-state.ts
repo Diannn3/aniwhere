@@ -1,6 +1,7 @@
 import type { HarvestQuery } from '../domain/types';
 import { normalizeCrop } from '../domain/crops';
 import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
+import { isValidIsoDate } from '../domain/validation';
 
 export interface ParsedDiscoverQuery {
   harvest: HarvestQuery;
@@ -9,35 +10,41 @@ export interface ParsedDiscoverQuery {
   lang: 'en' | 'fil';
 }
 
+export function todayInManila(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDiscoverQuery {
   const search = typeof params === 'string' ? new URLSearchParams(params) : params;
 
-  // 1. Crop validation
   const rawCrop = search.get('crop') || 'tomato';
   const { key: cropKey } = normalizeCrop(rawCrop);
   const finalCrop = cropKey !== 'other' ? cropKey : rawCrop;
 
-  // 2. Quantity validation
   const rawKg = Number(search.get('kg') || 300);
   const finalKg = isNaN(rawKg) || rawKg <= 0 || rawKg > 100000 ? 300 : rawKg;
 
-  // 3. Origin validation
   const rawOrigin = search.get('origin') || 'los-banos';
   const knownMun = LAGUNA_MUNICIPALITIES.find((m) => m.id === rawOrigin);
   const finalOrigin = knownMun ? knownMun.id : 'los-banos';
 
-  // 4. Ready Date validation
-  const rawDate = search.get('ready') || '2026-09-17';
-  const finalDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : '2026-09-17';
+  const today = todayInManila();
+  const rawDate = search.get('ready') || today;
+  const finalDate = isValidIsoDate(rawDate) ? rawDate : today;
 
-  // 5. View mode validation
   const rawView = search.get('view');
   const finalView: 'list' | 'map' = rawView === 'map' ? 'map' : 'list';
 
-  // 6. Selected place
   const rawPlace = search.get('place') || undefined;
 
-  // 7. Lang
   const rawLang = search.get('lang');
   const finalLang: 'en' | 'fil' = rawLang === 'fil' ? 'fil' : 'en';
 
@@ -90,7 +97,7 @@ export function parseCompareQuery(params: URLSearchParams | string): {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
-    .slice(0, 3); // Max 3 per contract
+    .slice(0, 3);
 
   const discover = parseDiscoverQuery(search);
 
