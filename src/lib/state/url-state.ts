@@ -48,12 +48,25 @@ export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDisc
   const rawLang = search.get('lang');
   const finalLang: 'en' | 'fil' = rawLang === 'fil' ? 'fil' : 'en';
 
+  const variety = search.get('variety')?.trim() || undefined;
+  const grade = search.get('grade')?.trim() || undefined;
+  const packaging = search.get('packaging')?.trim() || undefined;
+  const details =
+    variety || grade || packaging
+      ? {
+          ...(variety ? { variety } : {}),
+          ...(grade ? { grade } : {}),
+          ...(packaging ? { packaging } : {}),
+        }
+      : undefined;
+
   return {
     harvest: {
       crop: finalCrop,
       quantityKg: finalKg,
       originMunicipality: finalOrigin,
       readyDate: finalDate,
+      details,
     },
     view: finalView,
     selectedPlaceId: rawPlace,
@@ -73,6 +86,15 @@ export function serializeDiscoverQuery(
   params.set('origin', harvest.originMunicipality);
   if (harvest.readyDate) {
     params.set('ready', harvest.readyDate);
+  }
+  if (harvest.details?.variety?.trim()) {
+    params.set('variety', harvest.details.variety.trim());
+  }
+  if (harvest.details?.grade?.trim()) {
+    params.set('grade', harvest.details.grade.trim());
+  }
+  if (harvest.details?.packaging?.trim()) {
+    params.set('packaging', harvest.details.packaging.trim());
   }
   if (view === 'map') {
     params.set('view', 'map');
