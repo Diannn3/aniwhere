@@ -4,7 +4,7 @@
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
-  import { parseDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { t } from '../../content/translations';
@@ -115,7 +115,7 @@
       </div>
 
       <a
-        href={`/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#FFFDF8] text-[#597928] border border-[#597928]/30 hover:bg-[#597928]/10 transition-colors min-h-[44px]"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@
         {@const activeTransport = getTransportCost(outlet, defaultTransport)}
         {@const fit = evaluateFit(outlet, harvest, activeTransport ?? undefined)}
         {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-        {@const detailUrl = `/places/${outlet.slug}?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        {@const detailUrl = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
 
         <article class="bg-white rounded-2xl border border-[#20251E]/12 p-6 shadow-sm flex flex-col justify-between gap-6 hover:border-[#597928]/40 transition-all">
           <div class="space-y-5">
@@ -357,7 +357,7 @@
     <!-- Additional Action / Return to Discovery -->
     <div class="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[#20251E]/10">
       <a
-        href={`/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+        href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] text-xs font-semibold hover:border-[#597928] transition-all min-h-[44px]"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,7 +368,7 @@
 
       {#if comparedOutlets.length < 3}
         <a
-          href={`/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`}
+          href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#597928] text-white text-xs font-bold hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
