@@ -86,7 +86,7 @@ See [docs/FRONTEND_LIMITATIONS.md](./docs/FRONTEND_LIMITATIONS.md).
 
 ## Production backend scaffold
 
-A production-oriented Supabase schema is now versioned under `supabase/`.
+A production-oriented **declarative Supabase schema scaffold** is now versioned under `supabase/`. It has not been applied to a local or remote project yet.
 
 It separates:
 
@@ -104,7 +104,7 @@ Row Level Security is designed around:
 - assigned buyer/editor writes;
 - steward/admin organization access.
 
-The presence of these SQL files does **not** mean a live Supabase project is configured.
+The presence of these SQL files does **not** mean a live Supabase project is configured or that a versioned migration has been generated/applied.
 
 See [supabase/README.md](./supabase/README.md).
 
