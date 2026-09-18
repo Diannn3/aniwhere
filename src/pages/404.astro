@@ -1,0 +1,43 @@
+﻿---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'AniWhere — Page Not Found';
+const description = 'The requested page or outlet was not found in Laguna fixtures.';
+---
+
+<BaseLayout title={title} description={description} currentPath="/404">
+  <div class="max-w-2xl mx-auto px-4 py-20 text-center space-y-6">
+    <div class="w-16 h-16 rounded-full bg-[#6E3511]/10 text-[#6E3511] mx-auto flex items-center justify-center">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+
+    <h1 class="text-3xl font-serif font-bold text-[#20251E]">
+      Page or Outlet Not Found
+    </h1>
+
+    <p class="text-sm text-[#4A5245] max-w-md mx-auto">
+      The market route or outlet you were looking for is not in our verified Laguna pilot fixtures.
+    </p>
+
+    <div class="pt-4 flex flex-wrap items-center justify-center gap-4">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white border border-[#20251E]/20 font-semibold text-sm hover:border-[#597928] transition-all min-h-[44px]"
+      >
+        <span>Return Home</span>
+      </a>
+
+      <a
+        href="/discover"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span>Explore Laguna Markets</span>
+      </a>
+    </div>
+  </div>
+</BaseLayout>

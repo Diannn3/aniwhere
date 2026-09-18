@@ -1,0 +1,35 @@
+task_id: ANIWHERE-FRONTEND-2026-09-18
+feature_id: 01-foundation
+status: ACCEPTED
+completed_at: 2026-09-18T03:01:00+08:00
+attempts: 1
+stop_reason: feature_acceptance_checks_passed
+
+evidence:
+  commands:
+    - command: npx astro check
+      exit_code: 0
+    - command: npx astro build
+      exit_code: 0
+  browser_checks:
+    - viewport: desktop/mobile
+      route: /
+      result: pass (clean static render)
+
+artifact:
+  branch: feat/aniwhere-frontend-prototype
+  commit: pending
+  changed_files:
+    - package.json
+    - pnpm-lock.yaml
+    - tsconfig.json
+    - astro.config.mjs
+    - vitest.config.ts
+    - .gitignore
+    - src/styles/global.css
+    - src/components/brand/BrandMark.astro
+    - src/layouts/BaseLayout.astro
+    - src/pages/index.astro
+
+known_limits:
+  - Static foundation only; Svelte interactive islands implemented in features 4-9.

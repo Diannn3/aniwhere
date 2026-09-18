@@ -1,0 +1,15 @@
+﻿---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SavedOutletsExperience from '../components/saved/SavedOutletsExperience.svelte';
+
+const title = 'AniWhere — Saved Outlets';
+const description = 'Review outlets you have saved locally on this device. Compare terms or prepare for your harvest haul.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  currentPath="/saved"
+>
+  <SavedOutletsExperience client:load />
+</BaseLayout>

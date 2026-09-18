@@ -1,0 +1,95 @@
+{
+  "task_id": "ANIWHERE-FRONTEND-2026-09-18",
+  "branch": "feat/aniwhere-frontend-prototype",
+  "current_feature_index": 11,
+  "features": [
+
+    {
+      "id": "00-preflight",
+      "name": "Preflight, branch, contract, design tokens",
+      "status": "ACCEPTED",
+      "commit": "53bb236",
+      "receipt": ".agentic/aniwhere-frontend/receipts/00-preflight.yaml"
+    },
+    {
+      "id": "01-foundation",
+      "name": "Astro/Svelte/Tailwind foundation, tokens, base layout",
+      "status": "ACCEPTED",
+      "commit": "415389e",
+      "receipt": ".agentic/aniwhere-frontend/receipts/01-foundation.yaml"
+    },
+    {
+      "id": "02-domain-fixtures",
+      "name": "Typed demo fixtures, crop aliases, validation, match & compare functions",
+      "status": "ACCEPTED",
+      "commit": "dd56ce0",
+      "receipt": ".agentic/aniwhere-frontend/receipts/02-domain-fixtures.yaml"
+    },
+    {
+      "id": "03-navigation-state",
+      "name": "Shared navigation, locale system, localStorage adapter, URL parser",
+      "status": "ACCEPTED",
+      "commit": "e5df549",
+      "receipt": ".agentic/aniwhere-frontend/receipts/03-navigation-state.yaml"
+    },
+    {
+      "id": "04-home-harvest",
+      "name": "Harvest-entry homepage, mobile & desktop composition",
+      "status": "ACCEPTED",
+      "commit": "68b8927",
+      "receipt": ".agentic/aniwhere-frontend/receipts/04-home-harvest.yaml"
+    },
+    {
+      "id": "05-discovery-results",
+      "name": "Discovery list, filters, selected outlet coordination, empty states",
+      "status": "ACCEPTED",
+      "commit": "e5a640f",
+      "receipt": ".agentic/aniwhere-frontend/receipts/05-discovery-results.yaml"
+    },
+    {
+      "id": "06-resilient-map",
+      "name": "Map adapter, local illustrative map, mobile sheet",
+      "status": "ACCEPTED",
+      "commit": "f9c9d04",
+      "receipt": ".agentic/aniwhere-frontend/receipts/06-resilient-map.yaml"
+    },
+    {
+      "id": "07-outlet-detail-saved",
+      "name": "Outlet detail and saved local outlets",
+      "status": "ACCEPTED",
+      "commit": "fe87148",
+      "receipt": ".agentic/aniwhere-frontend/receipts/07-outlet-detail-saved.yaml"
+    },
+    {
+      "id": "08-compare-transport",
+      "name": "Comparison experience and editable local transport input",
+      "status": "ACCEPTED",
+      "commit": "e2e4fc7",
+      "receipt": ".agentic/aniwhere-frontend/receipts/08-compare-transport.yaml"
+    },
+    {
+      "id": "09-buyer-workspace",
+      "name": "Buyer local-demo workspace and offer editor",
+      "status": "ACCEPTED",
+      "commit": "c5c8927",
+      "receipt": ".agentic/aniwhere-frontend/receipts/09-buyer-workspace.yaml"
+    },
+
+    {
+      "id": "10-harden-a11y-responsive",
+      "name": "Resilience, a11y, responsive polish, reference corrections",
+      "status": "ACCEPTED",
+      "commit": "a287813",
+      "receipt": ".agentic/aniwhere-frontend/receipts/10-harden-a11y-responsive.yaml"
+    },
+
+    {
+      "id": "11-e2e-docs-receipts",
+      "name": "Automated visual/browser QA, docs, completion receipts",
+      "status": "ACCEPTED",
+      "commit": "a020126",
+      "receipt": ".agentic/aniwhere-frontend/receipt.yaml"
+    }
+  ]
+}
+

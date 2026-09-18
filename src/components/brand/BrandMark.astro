@@ -1,0 +1,41 @@
+---
+interface Props {
+  size?: 'sm' | 'md' | 'lg';
+  showWordmark?: boolean;
+}
+
+const { size = 'md', showWordmark = true } = Astro.props;
+
+const dimensions = {
+  sm: 'h-7 w-7',
+  md: 'h-9 w-9',
+  lg: 'h-12 w-12',
+}[size];
+
+const textClasses = {
+  sm: 'text-lg',
+  md: 'text-xl',
+  lg: 'text-2xl',
+}[size];
+---
+
+<div class="inline-flex items-center gap-2.5 select-none">
+  <svg class={`${dimensions} shrink-0`} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- Emblem Background: Soft rounded triangular silhouette representing the 'A' and Mount Makiling -->
+    <path d="M24 4L5 42C4 44 5.5 46 8 46H40C42.5 46 44 44 43 42L24 4Z" fill="#597928" />
+    
+    <!-- Agricultural field parcel variations -->
+    <path d="M24 4L12 28L24 22L36 28L24 4Z" fill="#91AC67" opacity="0.9" />
+    <path d="M7.5 37L16 26L24 30L12 46H8C6.5 46 5.5 44.5 6.5 42.5L7.5 37Z" fill="#6E3511" opacity="0.85" />
+    <path d="M40.5 37L32 26L24 30L36 46H40C41.5 46 42.5 44.5 41.5 42.5L40.5 37Z" fill="#597928" />
+    <path d="M12 46H36L24 34L12 46Z" fill="#6E3511" />
+
+    <!-- Signature negative-space winding harvest route -->
+    <path d="M24 8C23 15 26 19 23 25C20 31 27 38 24 46" stroke="#FFFDF8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+  {showWordmark && (
+    <span class={`font-serif font-bold tracking-tight text-[#20251E] ${textClasses}`}>
+      Ani<span class="text-[#597928]">Where</span>
+    </span>
+  )}
+</div>

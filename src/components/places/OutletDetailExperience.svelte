@@ -1,0 +1,604 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import type { Outlet, HarvestQuery } from '../../lib/domain/types';
+  import { evaluateFit } from '../../lib/domain/match';
+  import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
+  import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
+  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
+  import { t } from '../../content/translations';
+  import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
+
+  interface Props {
+    outlet: Outlet;
+    initialLang?: 'en' | 'fil';
+  }
+
+  const { outlet, initialLang = 'en' } = $props();
+
+  let lang = $state<'en' | 'fil'>(initialLang);
+  let harvest = $state<HarvestQuery>({
+    crop: 'tomato',
+    quantityKg: 300,
+    originMunicipality: 'los-banos',
+    readyDate: '2026-09-17',
+  });
+
+  let saved = $state(false);
+  let showMessageModal = $state(false);
+  let showContactModal = $state(false);
+  let copiedMessage = $state(false);
+
+  onMount(() => {
+    saved = isOutletSaved(outlet.id);
+    const parsed = parseDiscoverQuery(window.location.search);
+    harvest = parsed.harvest;
+    if (parsed.lang) {
+      lang = parsed.lang;
+    }
+  });
+
+  const originMun = $derived(
+    LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]
+  );
+
+  const distanceKm = $derived(
+    calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)
+  );
+
+  const fitResult = $derived(evaluateFit(outlet, harvest));
+
+  const isFil = $derived(lang === 'fil');
+
+  function handleToggleSave() {
+    saved = toggleSavedOutlet(outlet.id);
+  }
+
+  function handleCopyMessage() {
+    const text = messageTemplate;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+      copiedMessage = true;
+      setTimeout(() => {
+        copiedMessage = false;
+      }, 2500);
+    }
+  }
+
+  const messageTemplate = $derived(
+    isFil
+      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}. Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa halimbawang presyo na ₱${fitResult.samplePricePerKg ?? '---'}/kg at ano po ang inyong grading at receiving schedule? Maraming salamat po.`
+      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}. I would like to confirm if you are currently accepting deliveries at the sample price of ₱${fitResult.samplePricePerKg ?? '---'}/kg and what your receiving schedule and grading requirements are. Thank you.`
+  );
+
+  const backUrl = $derived(
+    `/discover?crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+  );
+
+  const compareUrl = $derived(
+    `/compare?places=${encodeURIComponent(outlet.id)}&crop=${encodeURIComponent(harvest.crop)}&kg=${harvest.quantityKg}&origin=${encodeURIComponent(harvest.originMunicipality)}&ready=${encodeURIComponent(harvest.readyDate)}&lang=${lang}`
+  );
+</script>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
+  <!-- Back Link & Breadcrumbs -->
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
+    <div class="flex items-center gap-2 text-sm text-[#4A5245]">
+      <a
+        href={backUrl}
+        class="inline-flex items-center gap-1.5 font-semibold text-[#597928] hover:text-[#435c1d] transition-colors py-1 px-2 rounded-lg hover:bg-[#597928]/10"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>{isFil ? 'Bumalik sa resulta' : 'Back to discovery results'}</span>
+      </a>
+      <span class="text-[#20251E]/20">/</span>
+      <span class="hidden sm:inline text-xs text-[#6B7265]">{originMun.name}</span>
+      <span class="hidden sm:inline text-[#20251E]/20">/</span>
+      <span class="text-xs font-medium text-[#20251E] truncate max-w-[200px]">{outlet.name}</span>
+    </div>
+
+    <!-- Right Controls: Save & Share -->
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        onclick={handleToggleSave}
+        class={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all min-h-[44px] ${
+          saved
+            ? 'bg-[#597928] text-white border-[#597928] shadow-sm'
+            : 'bg-white text-[#20251E] border-[#20251E]/20 hover:border-[#597928]'
+        }`}
+        aria-label={saved ? 'Saved on this device' : 'Save outlet'}
+      >
+        <svg class="w-4 h-4" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+        <span>{saved ? (isFil ? 'Nai-save' : 'Saved on device') : (isFil ? 'I-save ang lugar' : 'Save outlet')}</span>
+      </button>
+
+      <a
+        href={compareUrl}
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-[#20251E] border border-[#20251E]/20 hover:border-[#597928] transition-all min-h-[44px]"
+      >
+        <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span>{isFil ? 'Ihambing' : 'Compare'}</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Hero Facility Card (Anti-Vibecode: Direct H1, No Kicker) -->
+  <header class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+      <div class="space-y-3 max-w-2xl">
+        <!-- Direct H1 Header (No eyebrow pill above!) -->
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#20251E] tracking-tight">
+          {outlet.name}
+        </h1>
+
+        <div class="flex flex-wrap items-center gap-3 text-sm text-[#4A5245]">
+          <span class="inline-flex items-center gap-1 text-[#6E3511] font-semibold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {outlet.municipality}, Laguna
+          </span>
+          <span class="text-[#20251E]/20">&bull;</span>
+          <span class="capitalize font-medium text-[#20251E]">{outlet.category}</span>
+          <span class="text-[#20251E]/20">&bull;</span>
+          <span class="text-xs bg-[#597928]/10 text-[#597928] px-2.5 py-0.5 rounded-full font-medium">
+            {distanceKm} km from {originMun.name}
+          </span>
+        </div>
+
+        <p class="text-sm sm:text-base text-[#4A5245] leading-relaxed pt-1">
+          {isFil ? outlet.descriptionFil : outlet.description}
+        </p>
+      </div>
+
+      <!-- Fit Status Badge Card -->
+      <div class="flex-shrink-0">
+        <div
+          class={`rounded-xl p-4 border flex flex-col gap-1.5 sm:min-w-[260px] ${
+            fitResult.status === 'match'
+              ? 'bg-[#597928]/8 border-[#597928]/25 text-[#20251E]'
+              : fitResult.status === 'partial'
+              ? 'bg-[#FCECD8]/50 border-[#6E3511]/25 text-[#20251E]'
+              : fitResult.status === 'confirm'
+              ? 'bg-[#4E7380]/10 border-[#4E7380]/25 text-[#20251E]'
+              : 'bg-red-50/80 border-red-200 text-red-900'
+          }`}
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold tracking-tight">
+              {isFil ? fitResult.statusLabelFil : fitResult.statusLabel}
+            </span>
+          </div>
+          <p class="text-xs text-[#4A5245] leading-relaxed">
+            {isFil ? fitResult.reasonFil : fitResult.reason}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Facility Attributes Tray -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
+      <div class="flex items-center gap-2.5 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
+        <div class="w-8 h-8 rounded-lg bg-[#597928]/10 text-[#597928] flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-[#20251E]">Direct Sourcing</div>
+          <div class="text-[11px] text-[#6B7265]">Buys from local smallholders</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
+        <div class="w-8 h-8 rounded-lg bg-[#6E3511]/10 text-[#6E3511] flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-[#20251E]">Active Schedule</div>
+          <div class="text-[11px] text-[#6B7265]">Sample terms as of {outlet.sampleOfferDate}</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
+        <div class="w-8 h-8 rounded-lg bg-[#4E7380]/10 text-[#4E7380] flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-[#20251E]">Verified Fixture</div>
+          <div class="text-[11px] text-[#6B7265]">Laguna Agri Hackathon 2026</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Decision Summary & Transparent Math Card -->
+  <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+    <div class="flex items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[#597928]/12 text-[#597928] flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-serif font-bold text-[#20251E]">
+          {isFil ? 'Buod ng Desisyon' : 'Decision Summary'}
+        </h2>
+      </div>
+
+      <span class="text-xs text-[#6B7265] bg-[#FCECD8]/60 text-[#6E3511] font-semibold px-2.5 py-1 rounded-full">
+        {harvest.quantityKg} kg {harvest.crop}
+      </span>
+    </div>
+
+    <!-- 6-Metric Visual Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <!-- 1. Your Produce -->
+      <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+          {isFil ? 'Ani Mo' : 'Your Produce'}
+        </div>
+        <div class="text-base sm:text-lg font-bold text-[#20251E] capitalize">{harvest.crop}</div>
+        <div class="text-[11px] text-[#6B7265]">Ready {harvest.readyDate}</div>
+      </div>
+
+      <!-- 2. Accepted Quantity -->
+      <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+          {isFil ? 'Kayang Tanggapin' : 'Accepted'}
+        </div>
+        <div class="text-base sm:text-lg font-bold text-[#597928]">
+          {fitResult.acceptedKg !== null ? `${fitResult.acceptedKg} kg` : 'Confirm'}
+        </div>
+        <div class="text-[11px] text-[#6B7265]">
+          {fitResult.remainingKg && fitResult.remainingKg > 0
+            ? `${fitResult.remainingKg} kg unallocated`
+            : 'Full harvest match'}
+        </div>
+      </div>
+
+      <!-- 3. Sample Price -->
+      <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+          {isFil ? 'Halimbawang Presyo' : 'Sample Price'}
+        </div>
+        <div class="text-base sm:text-lg font-bold text-[#20251E]">
+          {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
+        </div>
+        <div class="text-[11px] text-[#6B7265]">Based on fixture</div>
+      </div>
+
+      <!-- 4. Gross Subtotal -->
+      <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+          {isFil ? 'Kabuuang Halaga' : 'Gross Subtotal'}
+        </div>
+        <div class="text-base sm:text-lg font-bold text-[#20251E]">
+          {fitResult.grossPay !== null ? `₱${fitResult.grossPay.toLocaleString()}` : '---'}
+        </div>
+        <div class="text-[11px] text-[#6B7265]">
+          {fitResult.acceptedKg && fitResult.samplePricePerKg
+            ? `${fitResult.acceptedKg}kg × ₱${fitResult.samplePricePerKg}`
+            : 'Pending intake'}
+        </div>
+      </div>
+
+      <!-- 5. Entered Transport -->
+      <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+          {isFil ? 'Gastos sa Biyahe' : 'Hauling Expense'}
+        </div>
+        <div class="text-base sm:text-lg font-bold text-[#6E3511]">
+          {fitResult.enteredTransport !== null ? `-₱${fitResult.enteredTransport.toLocaleString()}` : '---'}
+        </div>
+        <div class="text-[11px] text-[#6B7265]">Entered default</div>
+      </div>
+
+      <!-- 6. After Entered Transport -->
+      <div class="p-3.5 rounded-xl bg-[#597928]/8 border border-[#597928]/30 space-y-1">
+        <div class="text-[11px] font-semibold text-[#597928] uppercase tracking-wider">
+          {isFil ? 'Matapos ang Biyahe' : 'After Transport'}
+        </div>
+        <div class="text-base sm:text-lg font-bold text-[#597928]">
+          {fitResult.afterTransportPay !== null ? `₱${fitResult.afterTransportPay.toLocaleString()}` : '---'}
+        </div>
+        <div class="text-[11px] text-[#4A5245]">Before farm costs</div>
+      </div>
+    </div>
+
+    <!-- Mandatory Honest Agricultural Commerce Notice -->
+    <div class="rounded-xl p-3.5 bg-[#FFFDF8] border border-[#20251E]/10 flex items-start gap-3 text-xs text-[#4A5245]">
+      <svg class="w-4 h-4 text-[#6E3511] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <span class="font-bold text-[#20251E]">Notice:</span> {t('afterTransportNote', lang)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Two Column Layout: Requirements to Confirm & Geographic Corridor -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Left: Requirements in Question Form -->
+    <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
+      <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
+        <div class="w-8 h-8 rounded-lg bg-[#6E3511]/12 text-[#6E3511] flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-serif font-bold text-[#20251E]">
+          {isFil ? 'Mga Katanungan Bago Bumiyahe' : 'Requirements to Confirm'}
+        </h2>
+      </div>
+
+      <p class="text-xs text-[#6B7265]">
+        {isFil
+          ? 'Huwag bumiyahe nang hindi pa nakukumpirma ang mga sumusunod na tanong sa mamimili:'
+          : 'Do not travel without confirming these key operational questions with the intake manager:'}
+      </p>
+
+      <ul class="space-y-3">
+        <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
+          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span>What grade and ripeness standard do you require for {harvest.crop}?</span>
+        </li>
+        <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
+          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span>What packaging or crate specification is required at delivery?</span>
+        </li>
+        <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
+          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span>What are the exact receiving hours and gate cutoffs on {harvest.readyDate}?</span>
+        </li>
+
+        {#if fitResult.conditionsToConfirm && fitResult.conditionsToConfirm.length > 0}
+          {#each isFil ? fitResult.conditionsToConfirmFil : fitResult.conditionsToConfirm as cond}
+            <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FCECD8]/40 border border-[#6E3511]/15 text-xs sm:text-sm text-[#20251E]">
+              <span class="w-5 h-5 rounded-full bg-[#6E3511]/15 text-[#6E3511] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">!</span>
+              <span>{cond}</span>
+            </li>
+          {/each}
+        {/if}
+      </ul>
+    </section>
+
+    <!-- Right: Geographic Route Preview -->
+    <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
+      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-[#4E7380]/12 text-[#4E7380] flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-serif font-bold text-[#20251E]">
+            {isFil ? 'Guhit ng Ruta' : 'Your Route'}
+          </h2>
+        </div>
+
+        <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
+          {t('illustrativeMap', lang)}
+        </span>
+      </div>
+
+      <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">
+        <ResilientLagunaMap
+          items={[{
+            outlet,
+            fit: fitResult,
+            distanceKm
+          }]}
+          harvest={harvest}
+          selectedId={outlet.id}
+          isDetailView={true}
+          lang={lang}
+          onSelect={() => {}}
+        />
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-[#6B7265] pt-1">
+        <span>Origin: <strong>{originMun.name}</strong></span>
+        <span>Distance: <strong>{distanceKm} km</strong></span>
+        <span>Destination: <strong>{outlet.municipality}</strong></span>
+      </div>
+    </section>
+  </div>
+
+  <!-- Contact & Next Steps Action Dock -->
+  <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+    <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
+      <div class="w-8 h-8 rounded-lg bg-[#597928]/12 text-[#597928] flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-serif font-bold text-[#20251E]">
+          {isFil ? 'Pakikipag-ugnayan at Susunod na Hakbang' : 'Contact & Next Steps'}
+        </h2>
+        <p class="text-xs text-[#6B7265]">
+          {isFil
+            ? 'Kumpirmahin ang mga detalye bago bumiyahe. Maaaring magbago ang presyo at kapasidad.'
+            : 'Confirm terms before travel. Availability, price, and requirements may change.'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Action Buttons with Apple HIG min-h-[48px] -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- 1. Prepare Message CTA -->
+      <button
+        type="button"
+        onclick={() => (showMessageModal = true)}
+        class="w-full min-h-[48px] px-5 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#47621f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+        <span>{isFil ? 'Ihanda ang mensahe' : 'Prepare message'}</span>
+      </button>
+
+      <!-- 2. Public Contact Details -->
+      <button
+        type="button"
+        onclick={() => (showContactModal = true)}
+        class="w-full min-h-[48px] px-5 py-3 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] font-semibold text-sm hover:bg-[#FFFDF8] hover:border-[#597928] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+        <span>{isFil ? 'Pampublikong kontak' : 'Public contact'}</span>
+      </button>
+
+      <!-- 3. Compare Options -->
+      <a
+        href={compareUrl}
+        class="w-full min-h-[48px] px-5 py-3 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] font-semibold text-sm hover:bg-[#FFFDF8] hover:border-[#597928] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4 text-[#6E3511]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span>{isFil ? 'Paghambingin ang mga opsyon' : 'Compare options'}</span>
+      </a>
+    </div>
+
+    <!-- Provenance / Timestamp Attribution Footer -->
+    <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#6B7265]">
+      <div>
+        Source: <span class="font-medium text-[#20251E]">Sample offer &bull; {outlet.sampleOfferDate}</span>
+      </div>
+      <div>
+        Fixture: <span class="font-medium text-[#20251E]">Laguna Market Pilot &bull; NextGen Agri Hackathon 2026</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal: Prepare Message -->
+{#if showMessageModal}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-2xl border border-[#20251E]/15 max-w-lg w-full p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
+        <h3 class="text-lg font-serif font-bold text-[#20251E]">
+          {isFil ? 'Ihanda ang Mensahe sa Mamimili' : 'Prepare Inquiry Message'}
+        </h3>
+        <button
+          type="button"
+          onclick={() => (showMessageModal = false)}
+          class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
+          aria-label="Close"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-[#4A5245]">
+        {isFil
+          ? 'Maaari mong kopyahin ang template na ito para i-text o ipadala sa intake coordinator bago ibiyahe ang ani:'
+          : 'Copy this ready-made template to text or message the intake coordinator before hauling:'}
+      </p>
+
+      <div class="p-4 rounded-xl bg-[#FAF7EE] border border-[#20251E]/10 text-xs sm:text-sm text-[#20251E] leading-relaxed font-sans select-all whitespace-pre-wrap">
+        {messageTemplate}
+      </div>
+
+      <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
+        <strong>Demo notice:</strong> AniWhere does not send automated SMS. Use this text on your phone.
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button
+          type="button"
+          onclick={() => (showMessageModal = false)}
+          class="px-4 py-2 rounded-full text-xs font-semibold text-[#4A5245] hover:bg-[#20251E]/5 min-h-[44px]"
+        >
+          Close
+        </button>
+
+        <button
+          type="button"
+          onclick={handleCopyMessage}
+          class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#597928] text-white hover:bg-[#435c1d] transition-all flex items-center gap-1.5 min-h-[44px]"
+        >
+          {#if copiedMessage}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Copied to clipboard!</span>
+          {:else}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <span>Copy message</span>
+          {/if}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Modal: Public Contact Details -->
+{#if showContactModal}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-2xl border border-[#20251E]/15 max-w-md w-full p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
+        <h3 class="text-lg font-serif font-bold text-[#20251E]">
+          {outlet.name}
+        </h3>
+        <button
+          type="button"
+          onclick={() => (showContactModal = false)}
+          class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
+          aria-label="Close"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-[#20251E]">
+        <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">Receiving Facility Desk</div>
+          <div class="font-bold">{outlet.municipality}, Laguna Corridor</div>
+          <div class="text-xs text-[#4A5245]">Operating hours: Mon-Sat 6:00 AM – 2:00 PM</div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
+          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">Sample Contact Line</div>
+          <div class="font-mono text-xs text-[#20251E]">(049) 536-XXXX / Local Receiving Desk</div>
+          <div class="text-[11px] text-[#6B7265]">In live production, verified buyer lines will connect here.</div>
+        </div>
+
+        <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
+          <strong>Notice:</strong> This is a NextGen Agri Hackathon demo fixture. Real commercial transactions and phone calls are not executed in this prototype pass.
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end pt-2">
+        <button
+          type="button"
+          onclick={() => (showContactModal = false)}
+          class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#597928] text-white hover:bg-[#435c1d] transition-all min-h-[44px]"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}

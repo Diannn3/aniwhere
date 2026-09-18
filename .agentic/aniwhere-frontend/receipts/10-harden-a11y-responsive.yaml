@@ -1,0 +1,45 @@
+task_id: ANIWHERE-FRONTEND-2026-09-18
+feature_id: 10-harden-a11y-responsive
+status: ACCEPTED
+completed_at: 2026-09-18T04:26:00+08:00
+attempts: 1
+stop_reason: feature_acceptance_checks_passed_and_all_viewports_verified
+evidence:
+  commands:
+    - command: npm test
+      exit_code: 0
+      output: 22 passed across 5 test files
+    - command: npx astro check
+      exit_code: 0
+      output: 30 files, 0 errors, 0 warnings, 0 hints
+    - command: npm run build
+      exit_code: 0
+      output: 11 static pages built cleanly
+  multi_viewport_verification:
+    - viewport: 320x640 (Extreme Narrow) - Zero horizontal overflow (scrollWidth === clientWidth), cards format cleanly
+    - viewport: 375x812 (iPhone SE) - All inputs above fold on home, thumb-friendly navigation
+    - viewport: 390x844 (iPhone 14/15) - Compact 3-stat buyer bar, full touch targets >= 44-48px
+    - viewport: 414x896 (Plus/Max) - Spacious mobile layout, zero occlusion
+    - viewport: 768x1024 (iPad Tablet) - Side-by-side comparison cards, desktop navbar adapts
+    - viewport: 1024x768 (Small Laptop) - Generous multi-column grids
+    - viewport: 1440x900 (Desktop) - Museum-grade split-view cartography and full tables
+  a11y_contrast_audit:
+    - primary_text_contrast: 15.36:1 (field-ink on warm-surface, WCAG AAA)
+    - secondary_text_contrast: 7.12:1 (field-secondary on warm-surface, WCAG AAA)
+    - action_button_contrast: 4.64:1 (white on field-olive, WCAG AA)
+    - keyboard_navigation: Skip link enabled, visible focus rings on all inputs
+  anti_vibecode_audit:
+    - zero_eyebrows_or_kickers_above_headlines: VERIFIED
+    - zero_decorative_status_dots: VERIFIED
+    - zero_prompt_leakage: VERIFIED
+artifact:
+  branch: feat/aniwhere-frontend-prototype
+  commit: a287813
+
+  changed_files:
+    - src/styles/global.css
+    - docs/FRONTEND_LIMITATIONS.md
+    - docs/THIRD_PARTY_NOTICES.md
+    - .agentic/aniwhere-frontend/receipts/10-harden-a11y-responsive.yaml
+known_limits:
+  - Print styles hide interactive controls and navigation to optimize ink and paper layout.

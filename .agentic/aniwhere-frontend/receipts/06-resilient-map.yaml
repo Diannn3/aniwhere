@@ -1,0 +1,26 @@
+task_id: ANIWHERE-FRONTEND-2026-09-18
+feature_id: 06-resilient-map
+status: ACCEPTED
+completed_at: 2026-09-18T03:35:30+08:00
+attempts: 2
+stop_reason: feature_acceptance_checks_passed_and_critic_scored_10.5_out_of_11
+evidence:
+  commands:
+    - command: npm test
+      exit_code: 0
+      output: 18 passed across 4 test files
+    - command: npx astro check
+      exit_code: 0
+      output: 24 files, 0 errors, 0 warnings, 0 hints
+    - command: npm run build
+      exit_code: 0
+      output: 2 pages built in static mode
+  critic_score: 10.5/11
+  critic_verdict: PASS
+artifact:
+  branch: feat/aniwhere-frontend-prototype
+  commit: f9c9d04
+  changed_files:
+    - src/components/map/ResilientLagunaMap.svelte
+known_limits:
+  - SVG projection optimized for Laguna corridor; offline fallback when tile maps fail.

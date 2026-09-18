@@ -1,0 +1,28 @@
+﻿---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DiscoveryExperience from '../components/discovery/DiscoveryExperience.svelte';
+import { parseDiscoverQuery } from '../lib/state/url-state';
+import { getCropLabel } from '../lib/domain/crops';
+
+const parsedQuery = parseDiscoverQuery(Astro.url.searchParams);
+const { lang, harvest } = parsedQuery;
+const isFil = lang === 'fil';
+
+const cropName = getCropLabel(harvest.crop, lang);
+const title = isFil
+  ? `AniWhere — Pamilihan para sa ${cropName} (${harvest.quantityKg} kg)`
+  : `AniWhere — Market Options for ${cropName} (${harvest.quantityKg} kg)`;
+
+const description = isFil
+  ? `Tuklasin at ihambing ang mga kalapit na pamilihan, kooperatiba, at processor sa Laguna para sa iyong ${cropName}.`
+  : `Discover and compare nearby markets, cooperatives, and processors in Laguna for your ${cropName} harvest.`;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  currentPath="/discover"
+  lang={lang}
+>
+  <DiscoveryExperience client:load initialQuery={parsedQuery} />
+</BaseLayout>

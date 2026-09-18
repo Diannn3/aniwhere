@@ -1,0 +1,49 @@
+task:
+  id: ANIWHERE-FRONTEND-2026-09-18
+  objective: Build a responsive, frontend-only AniWhere harvest-market discovery prototype using local fictional fixtures.
+
+scope:
+  allowed_paths:
+    - src/**
+    - public/**
+    - tests/**
+    - docs/**
+    - DESIGN.md
+    - package.json
+    - lockfile
+    - astro.config.mjs
+    - tailwind.config.mjs
+    - tsconfig.json
+    - .agentic/aniwhere-frontend/**
+  forbidden_paths:
+    - supabase/**
+    - prisma/**
+    - src/pages/api/**
+    - .github/workflows/**
+    - production-infrastructure/**
+
+acceptance:
+  assertions:
+    - Farmer can enter a local harvest and reach discovery.
+    - Fit states are deterministic and tested.
+    - Detail and comparison show correct demo arithmetic without profit claims.
+    - Map failure preserves a usable list.
+    - Buyer workspace is local-demo only and does not imply authentication or publishing.
+    - Product works at 320, 375, 390, 414, 768, 1024, and 1440 CSS pixels.
+    - Each accepted feature has a focused local commit and receipt.
+  required_commands:
+    - npm run test
+    - npm run check
+    - npm run build
+
+budget:
+  max_attempts_per_feature: 3
+  replan_after_zero_progress_attempts: 2
+  max_parallel_workers: 1
+  max_new_dependencies_without_reassessment: 3
+
+escalate_if:
+  - Current repository conflicts materially with this scope.
+  - A required feature needs a backend, credentials, deployment, or real-world data.
+  - A destructive operation or forceful Git rewrite appears necessary.
+  - Two consecutive attempts on one feature show no measurable progress.

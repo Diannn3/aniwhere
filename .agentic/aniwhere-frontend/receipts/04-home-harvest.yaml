@@ -1,0 +1,31 @@
+task_id: ANIWHERE-FRONTEND-2026-09-18
+feature_id: 04-home-harvest
+status: ACCEPTED
+completed_at: 2026-09-18T03:18:00+08:00
+attempts: 2
+stop_reason: feature_acceptance_checks_passed_and_critic_scored_10_out_of_10
+
+evidence:
+  commands:
+    - command: npm test
+      exit_code: 0
+      output: 18 passed across 4 test files
+    - command: npx astro check
+      exit_code: 0
+      output: 23 files, 0 errors, 0 warnings, 0 hints
+    - command: npm run build
+      exit_code: 0
+      output: 1 page built in static mode
+  critic_score: 10/10
+  critic_verdict: PASS
+
+artifact:
+  branch: feat/aniwhere-frontend-prototype
+  commit: 68b8927
+  changed_files:
+    - src/pages/index.astro
+    - src/layouts/BaseLayout.astro
+    - src/components/harvest/HarvestForm.svelte
+
+known_limits:
+  - Demonstrates harvest parameter entry and Laguna corridor context with illustrative fixtures.

@@ -1,0 +1,35 @@
+task_id: ANIWHERE-FRONTEND-2026-09-18
+feature_id: 02-domain-fixtures
+status: ACCEPTED
+completed_at: 2026-09-18T03:02:00+08:00
+attempts: 1
+stop_reason: feature_acceptance_checks_passed
+
+evidence:
+  commands:
+    - command: npx vitest run
+      exit_code: 0
+      output: 14 passed across 3 test files
+    - command: npx astro check
+      exit_code: 0
+      output: 18 files, 0 errors, 0 warnings, 0 hints
+
+artifact:
+  branch: feat/aniwhere-frontend-prototype
+  commit: pending
+  changed_files:
+    - src/lib/domain/types.ts
+    - src/lib/domain/crops.ts
+    - src/lib/domain/distance.ts
+    - src/lib/domain/match.ts
+    - src/lib/domain/compare.ts
+    - src/lib/domain/validation.ts
+    - src/lib/domain/match.test.ts
+    - src/lib/domain/compare.test.ts
+    - src/lib/domain/validation.test.ts
+    - src/content/demo-outlets.ts
+    - src/content/municipalities.ts
+    - src/content/translations.ts
+
+known_limits:
+  - Domain tests run in Node environment; integration with UI islands covered in subsequent features.
