@@ -8,15 +8,18 @@ create schema if not exists private;
 revoke all on schema private from public;
 grant usage on schema private to authenticated;
 
-create or replace function public.set_updated_at()
+create or replace function private.set_updated_at()
 returns trigger
 language plpgsql
-as $$
+set search_path = ''
+as $
 begin
   new.updated_at = now();
   return new;
 end;
-$$;
+$;
+
+revoke all on function private.set_updated_at() from public, anon, authenticated;
 
 create table if not exists public.organizations (
   id uuid primary key default gen_random_uuid(),
@@ -158,19 +161,19 @@ create index if not exists reference_prices_crop_period_idx on public.reference_
 
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at before update on public.profiles
-for each row execute function public.set_updated_at();
+for each row execute function private.set_updated_at();
 
 drop trigger if exists places_set_updated_at on public.places;
 create trigger places_set_updated_at before update on public.places
-for each row execute function public.set_updated_at();
+for each row execute function private.set_updated_at();
 
 drop trigger if exists capabilities_set_updated_at on public.place_crop_capabilities;
 create trigger capabilities_set_updated_at before update on public.place_crop_capabilities
-for each row execute function public.set_updated_at();
+for each row execute function private.set_updated_at();
 
 drop trigger if exists offers_set_updated_at on public.offers;
 create trigger offers_set_updated_at before update on public.offers
-for each row execute function public.set_updated_at();
+for each row execute function private.set_updated_at();
 
 create or replace function private.can_edit_place(target_place_id uuid)
 returns boolean
@@ -200,7 +203,7 @@ as $
     );
 $;
 
-revoke all on function private.can_edit_place(uuid) from public;
+revoke all on function private.can_edit_place(uuid) from public, anon;
 grant execute on function private.can_edit_place(uuid) to authenticated;
 
 alter table public.organizations enable row level security;
@@ -227,6 +230,14 @@ revoke all on table
   public.reference_prices
 from anon, authenticated;
 
+-- Keep future public-schema objects opt-in for browser roles.
+alter default privileges for role postgres in schema public
+  revoke select, insert, update, delete on tables from anon, authenticated;
+alter default privileges for role postgres in schema public
+  revoke execute on functions from public, anon, authenticated;
+alter default privileges for role postgres in schema public
+  revoke usage, select on sequences from anon, authenticated;
+
 grant select on public.organizations, public.sources, public.places,
   public.place_crop_capabilities, public.offers, public.reference_prices
 to anon, authenticated;
@@ -246,20 +257,20 @@ drop policy if exists profiles_read_self on public.profiles;
 create policy profiles_read_self
 on public.profiles for select
 to authenticated
-using (id = auth.uid());
+using (id = (select auth.uid()));
 
 drop policy if exists profiles_update_self on public.profiles;
 create policy profiles_update_self
 on public.profiles for update
 to authenticated
-using (id = auth.uid())
-with check (id = auth.uid());
+using (id = (select auth.uid()))
+with check (id = (select auth.uid()));
 
 drop policy if exists memberships_read_self on public.organization_memberships;
 create policy memberships_read_self
 on public.organization_memberships for select
 to authenticated
-using (user_id = auth.uid());
+using (user_id = (select auth.uid()));
 
 drop policy if exists sources_public_read on public.sources;
 create policy sources_public_read
@@ -290,7 +301,7 @@ drop policy if exists place_editors_read_self on public.place_editors;
 create policy place_editors_read_self
 on public.place_editors for select
 to authenticated
-using (user_id = auth.uid());
+using (user_id = (select auth.uid()));
 
 drop policy if exists capabilities_public_read on public.place_crop_capabilities;
 create policy capabilities_public_read
@@ -342,7 +353,7 @@ on public.offers for insert
 to authenticated
 with check (
   private.can_edit_place(place_id)
-  and (created_by is null or created_by = auth.uid())
+  and (created_by is null or created_by = (select auth.uid()))
 );
 
 drop policy if exists offers_assigned_update on public.offers;
