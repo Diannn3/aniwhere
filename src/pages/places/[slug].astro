@@ -1,11 +1,11 @@
 ﻿---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import OutletDetailExperience from '../../components/places/OutletDetailExperience.svelte';
-import { DEMO_OUTLETS } from '../../content/demo-outlets';
+import { CURRENT_OUTLETS } from '../../lib/data/current-market';
 import type { Outlet } from '../../lib/domain/types';
 
 export function getStaticPaths() {
-  return DEMO_OUTLETS.map((outlet) => ({
+  return CURRENT_OUTLETS.map((outlet) => ({
     params: { slug: outlet.slug },
     props: { outlet },
   }));
@@ -16,13 +16,13 @@ interface Props {
 }
 
 const { slug } = Astro.params;
-const outlet = Astro.props.outlet || DEMO_OUTLETS.find((o) => o.slug === slug);
+const outlet = Astro.props.outlet || CURRENT_OUTLETS.find((o) => o.slug === slug);
 const isFound = Boolean(outlet);
 ---
 
 <BaseLayout
   title={isFound ? `AniWhere — ${outlet!.name}` : 'AniWhere — Outlet Not Found'}
-  description={isFound ? outlet!.description : 'The requested agricultural selling outlet was not found in Laguna fixtures.'}
+  description={isFound ? outlet!.description : 'The requested agricultural selling outlet was not found in the currently configured AniWhere data source.'}
   currentPath={`/places/${slug}`}
 >
   {isFound ? (
@@ -40,7 +40,7 @@ const isFound = Boolean(outlet);
       </h1>
 
       <p class="text-sm text-[#4A5245] max-w-md mx-auto">
-        The destination outlet <code class="px-2 py-0.5 bg-[#FAF7EE] rounded border text-xs font-mono">{slug}</code> is not in our verified Laguna demo fixtures.
+        The destination outlet <code class="px-2 py-0.5 bg-[#FAF7EE] rounded border text-xs font-mono">{slug}</code> is not in the currently configured illustrative data source.
       </p>
 
       <div class="pt-4">
