@@ -83,10 +83,32 @@
       .join(', ')
   );
 
+  const priceLabel = $derived(
+    fitResult.evidenceKind === 'demo'
+      ? (isFil ? 'Halimbawang presyo' : 'Sample price')
+      : fitResult.evidenceKind === 'buyer_offer'
+        ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
+        : (isFil ? 'Presyo' : 'Price')
+  );
+
+  const priceQuestion = $derived(
+    fitResult.samplePricePerKg === null
+      ? (isFil
+          ? 'Nais ko rin pong malaman ang kasalukuyang presyo, receiving schedule, at grading requirements.'
+          : 'I would also like to confirm the current price, receiving schedule, and grading requirements.')
+      : fitResult.evidenceKind === 'demo'
+        ? (isFil
+            ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo at kung ang halimbawang presyong ₱${fitResult.samplePricePerKg}/kg ay naaangkop pa, pati ang grading at receiving schedule.`
+            : `I would like to confirm whether you are currently accepting deliveries and whether the demo price of ₱${fitResult.samplePricePerKg}/kg still applies, along with the receiving schedule and grading requirements.`)
+        : (isFil
+            ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa naka-post na presyong ₱${fitResult.samplePricePerKg}/kg at ano ang grading at receiving schedule.`
+            : `I would like to confirm whether you are currently accepting deliveries at the posted price of ₱${fitResult.samplePricePerKg}/kg and what the receiving schedule and grading requirements are.`)
+  );
+
   const messageTemplate = $derived(
     isFil
-      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa halimbawang presyo na ₱${fitResult.samplePricePerKg ?? '---'}/kg at ano po ang inyong grading at receiving schedule? Maraming salamat po.`
-      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. I would like to confirm if you are currently accepting deliveries at the sample price of ₱${fitResult.samplePricePerKg ?? '---'}/kg and what your receiving schedule and grading requirements are. Thank you.`
+      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Maraming salamat po.`
+      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Thank you.`
   );
 
   const backUrl = $derived(
@@ -290,7 +312,7 @@
       <!-- 3. Sample Price -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
         <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
-          {isFil ? 'Halimbawang Presyo' : 'Sample Price'}
+          {priceLabel}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
           {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
