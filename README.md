@@ -1,33 +1,161 @@
 # AniWhere
 
-AniWhere is a market-discovery concept for farmers. A farmer enters their crop, quantity, and approximate location, then compares nearby trading posts, cooperatives, MSMEs, restaurants, processors, and other potential buyers.
+**AniWhere: Harvest-Based Market Discovery for Farmers** is a Laguna-first agricultural market-discovery and decision-support web application developed by **Walang Ani Buseng** for the UPLB TTBDO NextGen Agri Hackathon 2026.
 
-The project is designed to help farmers find more selling options and understand whether a destination fits their harvest before making contact or travelling.
+A farmer enters:
 
-## Planning package
+- crop;
+- quantity;
+- origin;
+- harvest-ready date.
 
-Download [AniWhere-Complete-Planning-Package-2026-09-17.zip](./AniWhere-Complete-Planning-Package-2026-09-17.zip).
+AniWhere then evaluates potential outlets using explicit evidence and returns one of four states:
 
-The archive contains:
+- **Matches your harvest**
+- **Accepts part of your harvest**
+- **Contact to confirm**
+- **Does not match**
 
-- Product architecture and seven-day implementation plan
-- Complete UI/UX plan
-- Research and open-source reuse sourcebook
-- NextGen Agri Hackathon concept note
-- Three generated interface directions
-- Logo research and concept materials
-- Context handoff for continued development
+The product is deliberately a **pre-transaction decision layer**, not a checkout marketplace. A fit state describes compatibility with available information; it does not reserve capacity or guarantee acceptance.
 
-The documents distinguish reviewed public information, fictional demonstration data, product assumptions, and work that still requires validation. The repository currently contains planning materials rather than a completed application.
+## Current implementation
 
-## UI reference audit
+The repository contains a working high-fidelity frontend prototype built with:
 
-View the [published UI reference gallery](./ui-reference-audit-2026-09-17/index.html). It contains one regenerated screen for each of the ten supplied UI references, the supplied logo and reference images, exact generation prompts, and a QA record. The images are visual concepts; business names, prices, locations and maps shown in the demo screens are illustrative.
+- Astro 5
+- Svelte 5
+- TypeScript
+- Tailwind CSS 4
+- Vitest
 
-## Package integrity
+Implemented routes include:
 
-SHA-256:
+- `/` — harvest entry
+- `/discover` — matching, filtering, list/map discovery
+- `/places/[slug]` — outlet detail
+- `/saved` — locally saved outlets
+- `/compare` — compare up to three outlets
+- `/buyer` — local-only buyer workspace demo
+- `/404` — recovery page
+
+## Trust model
+
+AniWhere is designed to prefer uncertainty over fabricated certainty.
+
+Important invariants include:
+
+- missing crop-acceptance information -> **Contact to confirm**, not rejection;
+- explicit crop exclusion -> **Does not match**;
+- unknown capacity -> no fabricated accepted quantity;
+- expired, paused, or future-incompatible demand cannot become a current match;
+- ready date is evaluated against known offer validity/receiving days;
+- partial proceeds use accepted quantity only;
+- missing price -> no fabricated proceeds;
+- missing hauling estimate -> no fabricated transport deduction;
+- evidence source and freshness travel with the match result;
+- reference prices must remain separate from buyer quotes.
+
+The implementation report for this hardening pass is:
+
+[docs/ANIWHERE_TRUST_MODEL_V2_IMPLEMENTATION_2026-09-18.md](./docs/ANIWHERE_TRUST_MODEL_V2_IMPLEMENTATION_2026-09-18.md)
+
+## Demo boundary
+
+The current running frontend is still designed to be dependable during an offline hackathon demonstration.
+
+At runtime it currently uses:
+
+- explicit fictional demo outlet/offer fixtures;
+- browser `localStorage`;
+- an in-repo illustrative Laguna SVG map;
+- deterministic Haversine straight-line distance.
+
+It does **not** currently use:
+
+- a live Supabase database;
+- real-time buyer demand;
+- live authentication;
+- real buyer prices;
+- MapLibre production tiles;
+- OpenRouteService road routing;
+- payments, reservations, or checkout.
+
+The app labels demo evidence as demo data. Generated or fixture business names, capacities, prices, and transport costs must not be represented as real market facts.
+
+See [docs/FRONTEND_LIMITATIONS.md](./docs/FRONTEND_LIMITATIONS.md).
+
+## Production backend scaffold
+
+A production-oriented Supabase schema is now versioned under `supabase/`.
+
+It separates:
+
+- stable reviewed places;
+- place/crop capability facts;
+- time-sensitive buyer offers;
+- source/provenance records;
+- verification records;
+- public/reference prices;
+- organizations, memberships, and explicit place editors.
+
+Row Level Security is designed around:
+
+- anonymous farmer read access to approved public data;
+- assigned buyer/editor writes;
+- steward/admin organization access.
+
+The presence of these SQL files does **not** mean a live Supabase project is configured.
+
+See [supabase/README.md](./supabase/README.md).
+
+## Run locally
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Verification:
+
+```bash
+pnpm test
+pnpm check
+pnpm build
+```
+
+The same frontend checks run in GitHub Actions through `.github/workflows/ci.yml`.
+
+## Pilot crop scope
+
+Detailed fixture matching is currently implemented for:
+
+- tomato / kamatis;
+- eggplant / talong;
+- calamansi / kalamansi.
+
+Other crops intentionally fall back to **Contact to confirm** instead of receiving invented detailed terms.
+
+## Financial wording
+
+AniWhere does not calculate "profit."
+
+Where buyer/demo price and hauling are both known, the bounded calculation is:
 
 ```text
-31AD8D14B6C9CE0BD8DE6625558F1770DFCF4BC48CB782781FE1717654B84820
+Gross amount = accepted quantity × posted price
+Amount after transport = gross amount − known/entered hauling expense
 ```
+
+Farm production costs are outside that figure.
+
+## Planning and design archives
+
+The original planning package remains available:
+
+[AniWhere-Complete-Planning-Package-2026-09-17.zip](./AniWhere-Complete-Planning-Package-2026-09-17.zip)
+
+The UI reference audit remains under:
+
+[ui-reference-audit-2026-09-17](./ui-reference-audit-2026-09-17/)
+
+These are historical/design artifacts; the current source tree and current implementation report take precedence for implementation status.
