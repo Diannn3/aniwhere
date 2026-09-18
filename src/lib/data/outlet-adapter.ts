@@ -65,6 +65,7 @@ function buildCondition(
     sourceKind: source?.kind ?? 'unknown',
     sourceLabel: source?.label,
     lastUpdatedAt: offer?.updatedAt ?? capability.verifiedAt ?? source?.observedAt,
+    requirements: offer?.requirements,
   };
 }
 
