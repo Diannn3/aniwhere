@@ -9,6 +9,12 @@ A farmer enters:
 - origin;
 - harvest-ready date.
 
+Optional progressive details can also be supplied when known:
+
+- variety;
+- grade;
+- packaging.
+
 AniWhere then evaluates potential outlets using explicit evidence and returns one of four states:
 
 - **Matches your harvest**
@@ -49,6 +55,9 @@ Important invariants include:
 - unknown capacity -> no fabricated accepted quantity;
 - expired, paused, or future-incompatible demand cannot become a current match;
 - ready date is evaluated against known offer validity/receiving days;
+- explicit structured requirements use deterministic matching only:
+  - missing required harvest detail -> **Contact to confirm**;
+  - known incompatible detail -> **Does not match**;
 - partial proceeds use accepted quantity only;
 - missing price -> no fabricated proceeds;
 - missing hauling estimate -> no fabricated transport deduction;
@@ -65,7 +74,8 @@ The current running frontend is still designed to be dependable during an offlin
 
 At runtime it currently uses:
 
-- explicit fictional demo outlet/offer fixtures;
+- explicit fictional demo data separated into stable places, crop capabilities, time-sensitive offers, provenance, and hauling assumptions;
+- a presentation adapter that composes those records for the current UI;
 - browser `localStorage`;
 - an in-repo illustrative Laguna SVG map;
 - deterministic Haversine straight-line distance.
@@ -80,7 +90,9 @@ It does **not** currently use:
 - OpenRouteService road routing;
 - payments, reservations, or checkout.
 
-The app labels demo evidence as demo data. Generated or fixture business names, capacities, prices, and transport costs must not be represented as real market facts.
+The app labels demo evidence as demo data. Generated or fixture business names, capacities, prices, contacts, and transport costs must not be represented as real market facts.
+
+Runtime data mode is explicit through `PUBLIC_DATA_MODE`. This branch supports `demo`; requesting `pilot` fails closed until a reviewed pilot repository adapter is actually implemented, preventing fictional fixtures from silently appearing as live pilot data.
 
 See [docs/FRONTEND_LIMITATIONS.md](./docs/FRONTEND_LIMITATIONS.md).
 
@@ -93,6 +105,7 @@ It separates:
 - stable reviewed places;
 - place/crop capability facts;
 - time-sensitive buyer offers;
+- structured quality/packaging requirement payloads;
 - source/provenance records;
 - verification records;
 - public/reference prices;
@@ -111,9 +124,12 @@ See [supabase/README.md](./supabase/README.md).
 ## Run locally
 
 ```bash
+cp .env.example .env
 pnpm install
 pnpm dev
 ```
+
+The default example config uses `PUBLIC_DATA_MODE=demo`.
 
 Verification:
 
