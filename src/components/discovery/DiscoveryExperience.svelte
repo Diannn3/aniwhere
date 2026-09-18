@@ -123,13 +123,13 @@
           return a.distanceKm - b.distanceKm;
         }
         if (sortBy === 'price') {
-          return (b.fit.samplePricePerKg || 0) - (a.fit.samplePricePerKg || 0);
+          return (b.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY) - (a.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY);
         }
         if (sortBy === 'payout') {
-          return (b.fit.afterTransportPay || 0) - (a.fit.afterTransportPay || 0);
+          return (b.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY) - (a.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY);
         }
         if (sortBy === 'transport') {
-          return (a.fit.enteredTransport || 9999) - (b.fit.enteredTransport || 9999);
+          return (a.fit.enteredTransport ?? Number.POSITIVE_INFINITY) - (b.fit.enteredTransport ?? Number.POSITIVE_INFINITY);
         }
         // Default: 'fit'
         const rank = { match: 1, partial: 2, confirm: 3, no_match: 4 };
