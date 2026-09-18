@@ -37,6 +37,7 @@
   let editCrop = $state(initialQuery.harvest.crop);
   let editKg = $state(initialQuery.harvest.quantityKg);
   let editOrigin = $state(initialQuery.harvest.originMunicipality);
+  let editReadyDate = $state(initialQuery.harvest.readyDate || '');
 
   onMount(() => {
     savedIds = getSavedOutletIds();
@@ -53,6 +54,7 @@
       editCrop = clientQuery.harvest.crop;
       editKg = clientQuery.harvest.quantityKg;
       editOrigin = clientQuery.harvest.originMunicipality;
+      editReadyDate = clientQuery.harvest.readyDate || '';
     }
   });
 
@@ -156,6 +158,7 @@
       crop: editCrop,
       quantityKg: Number(editKg),
       originMunicipality: editOrigin,
+      readyDate: editReadyDate || undefined,
     };
     isEditingHarvest = false;
 
@@ -180,6 +183,13 @@
   function formatCurrency(val: number | null | undefined): string {
     if (val === null || val === undefined) return '—';
     return `₱${val.toLocaleString('en-PH', { maximumFractionDigits: 0 })}`;
+  }
+
+  function formatEvidenceDate(value: string | null | undefined): string {
+    if (!value) return lang === 'fil' ? 'Hindi alam' : 'Unknown';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 </script>
 
@@ -213,7 +223,7 @@
 
     <!-- Collapsible Quick Harvest Editor -->
     {#if isEditingHarvest}
-      <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+      <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
         <div>
           <label for="edit-crop-select" class="block text-xs font-bold text-[#20251E] mb-1">{t('cropLabel', lang)}</label>
           <select id="edit-crop-select" bind:value={editCrop} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold">
@@ -235,6 +245,11 @@
               <option value={mun.id}>{mun.name}</option>
             {/each}
           </select>
+        </div>
+
+        <div>
+          <label for="edit-ready-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('readyDateLabel', lang)}</label>
+          <input id="edit-ready-input" type="date" bind:value={editReadyDate} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
         </div>
 
         <button
@@ -348,9 +363,9 @@
           bind:value={sortBy}
           class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl px-2.5 py-1 text-xs font-semibold text-[#20251E] outline-none cursor-pointer"
         >
-          <option value="fit">{lang === 'fil' ? 'Pinakamagandang Tugma' : 'Best Fit'}</option>
+          <option value="fit">{lang === 'fil' ? 'Status ng Pagkakatugma' : 'Fit status'}</option>
           <option value="distance">{lang === 'fil' ? 'Pinakamalapit' : 'Nearest'}</option>
-          <option value="payout">{lang === 'fil' ? 'Pinakamataas na Matitira' : 'Highest Payout'}</option>
+          <option value="payout">{lang === 'fil' ? 'Halaga Matapos ang Biyahe' : 'Amount after transport'}</option>
           <option value="price">{lang === 'fil' ? 'Presyo / kg' : 'Price / kg'}</option>
           <option value="transport">{lang === 'fil' ? 'Mababang Biyahe' : 'Lowest Transport'}</option>
         </select>
@@ -491,6 +506,20 @@
             <p class="text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 border-[#597928] pl-2.5 py-1">
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
+
+            <!-- Evidence / freshness: demo, buyer-posted, reviewed, and public-reference data must stay visibly distinct. -->
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
+              <span class="font-bold text-[#20251E]">{item.fit.sourceLabel || (lang === 'fil' ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
+              {#if item.fit.dataUpdatedAt}
+                <span>{lang === 'fil' ? 'Na-update' : 'Updated'} {formatEvidenceDate(item.fit.dataUpdatedAt)}</span>
+              {/if}
+              {#if item.fit.dataValidUntil}
+                <span>{lang === 'fil' ? 'May bisa hanggang' : 'Valid until'} {formatEvidenceDate(item.fit.dataValidUntil)}</span>
+              {/if}
+              {#if item.fit.unknowns.length > 0}
+                <span class="text-[#4E7380] font-semibold">{lang === 'fil' ? 'Kailangang kumpirmahin:' : 'Unknown:'} {(lang === 'fil' ? item.fit.unknownsFil : item.fit.unknowns).join(', ')}</span>
+              {/if}
+            </div>
 
             <!-- Honest Math Transparency Box -->
             {#if item.fit.samplePricePerKg !== null}
