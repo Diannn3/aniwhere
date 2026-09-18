@@ -10,6 +10,11 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.harvest.quantityKg).toBe(300);
     expect(parsed.harvest.originMunicipality).toBe('los-banos');
     expect(parsed.harvest.readyDate).toBe('2026-09-18');
+    expect(parsed.harvest.details).toEqual({
+      variety: 'Local',
+      grade: 'Grade A',
+      packaging: 'Plastic crate',
+    });
     expect(parsed.view).toBe('map');
     expect(parsed.selectedPlaceId).toBe('demo-cooperative');
     expect(parsed.lang).toBe('fil');
@@ -30,12 +35,17 @@ describe('URL State Serialization and Parsing', () => {
     expect(todayInManila(new Date('2026-09-17T16:30:00Z'))).toBe('2026-09-18');
   });
 
-  it('round-trips serialize and parse cleanly', () => {
+  it('round-trips serialize and parse cleanly, including optional harvest details', () => {
     const harvest = {
       crop: 'calamansi',
       quantityKg: 250,
       originMunicipality: 'santa-cruz',
       readyDate: '2026-09-18',
+      details: {
+        variety: 'Local',
+        grade: 'Grade A',
+        packaging: 'Plastic crate',
+      },
     };
 
     const serialized = serializeDiscoverQuery(harvest, 'map', 'demo-market', 'fil');
