@@ -139,11 +139,11 @@ There is no universal Laguna hauling tariff in the code.
 
 The repository now includes:
 
-- `supabase/migrations/202609180001_market_data_v2.sql`
+- `supabase/schemas/market_data_v2.sql`
 - `supabase/tests/market_data_rls.test.sql`
 - `supabase/README.md`
 
-The proposed model separates:
+The declarative schema scaffold separates:
 
 - organizations;
 - people/memberships;
@@ -157,7 +157,7 @@ The proposed model separates:
 
 RLS is scaffolded so anonymous farmers can eventually read approved public information while buyers/stewards can edit only authorized records.
 
-These policies still require behavioral testing in a running Supabase local environment before production application.
+These policies still require behavioral testing in a running Supabase local environment. A proper versioned migration must be generated/reviewed through the Supabase CLI workflow before production application.
 
 ---
 
