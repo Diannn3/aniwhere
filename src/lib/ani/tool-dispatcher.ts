@@ -35,7 +35,7 @@ function outletFacts(outlet: Outlet, harvest: HarvestQuery): AniOutletFacts {
   };
 }
 
-function error(request: AniToolRequest, code: AniToolResult['error']['code'], message: string): AniToolResult {
+function error(request: AniToolRequest, code: NonNullable<AniToolResult['error']>['code'], message: string): AniToolResult {
   return { requestId: request.id, tool: request.name, ok: false, dataMode: CURRENT_DATA_MODE, error: { code, message } };
 }
 
