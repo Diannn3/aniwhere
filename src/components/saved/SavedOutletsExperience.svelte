@@ -87,7 +87,7 @@
 
         <a
           href={compareAllUrl}
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#597928] text-white text-xs font-bold hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#486320] text-white text-xs font-bold hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -133,7 +133,7 @@
       <div class="pt-2">
         <a
           href="/discover"
-          class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#486320] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -224,7 +224,7 @@
           <div class="flex items-center gap-3 pt-2 border-t border-[#20251E]/8">
             <a
               href={detailHref}
-              class="flex-1 min-h-[44px] px-4 py-2 rounded-full bg-[#597928] text-white font-semibold text-xs text-center flex items-center justify-center gap-1 hover:bg-[#435c1d] transition-all"
+              class="flex-1 min-h-[44px] px-4 py-2 rounded-full bg-[#486320] text-white font-semibold text-xs text-center flex items-center justify-center gap-1 hover:bg-[#435c1d] transition-all"
             >
               <span>{t('viewDetails', lang)}</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
