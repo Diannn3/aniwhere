@@ -128,7 +128,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
       </div>
     </nav>
 
-    {showAni && <AniAssistant client:idle initialLang={lang} />}
+    {showAni && <AniAssistant client:load initialLang={lang} />}
 
     <footer class="border-t border-[#20251E]/10 bg-[#FFFDF8]/75 px-4 py-8 sm:px-6">
       <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
