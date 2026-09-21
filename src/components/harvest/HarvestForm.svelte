@@ -6,6 +6,7 @@
   import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   type HarvestDraft = {
     cropChoice: string;
@@ -124,6 +125,20 @@
       packaging,
     });
   });
+
+  onMount(() => subscribeHarvestContext((next) => {
+    const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === next.crop);
+    cropChoice = supportedCrop ? next.crop : 'other';
+    otherCrop = supportedCrop ? '' : next.crop;
+    quantityKg = next.quantityKg;
+    originMunicipality = next.originMunicipality;
+    readyDate = next.readyDate || todayInManila();
+    variety = next.details?.variety || '';
+    grade = next.details?.grade || '';
+    packaging = next.details?.packaging || '';
+    showDetails = Boolean(variety || grade || packaging);
+    saveDraft();
+  }));
 
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
