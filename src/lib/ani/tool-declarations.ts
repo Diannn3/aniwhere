@@ -21,7 +21,7 @@ export const ANI_TOOL_DECLARATIONS = [
               },
             },
           },
-          required: ['crop', 'quantityKg', 'originMunicipality'],
+          required: ['crop', 'quantityKg', 'originMunicipality', 'readyDate'],
         },
       },
       required: ['harvest'],
