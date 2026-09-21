@@ -131,7 +131,7 @@
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
       <a
         href={backUrl}
-        class="inline-flex items-center gap-1.5 font-semibold text-[#486320] hover:text-[#435c1d] transition-colors py-1 px-2 rounded-lg hover:bg-[#597928]/10"
+        class="inline-flex items-center gap-1.5 font-semibold text-[#486320] hover:text-[#435c1d] transition-colors py-1 px-2 rounded-lg hover:bg-[#486320]/10"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -194,7 +194,7 @@
           <span class="text-[#20251E]/20">&bull;</span>
           <span class="capitalize font-medium text-[#20251E]">{outlet.category}</span>
           <span class="text-[#20251E]/20">&bull;</span>
-          <span class="text-xs bg-[#597928]/10 text-[#486320] px-2.5 py-0.5 rounded-full font-medium">
+          <span class="text-xs bg-[#486320]/10 text-[#486320] px-2.5 py-0.5 rounded-full font-medium">
             {distanceKm} km from {originMun.name}
           </span>
         </div>
@@ -209,7 +209,7 @@
         <div
           class={`rounded-xl p-4 border flex flex-col gap-1.5 sm:min-w-[260px] ${
             fitResult.status === 'match'
-              ? 'bg-[#597928]/8 border-[#597928]/25 text-[#20251E]'
+              ? 'bg-[#486320]/8 border-[#597928]/25 text-[#20251E]'
               : fitResult.status === 'partial'
               ? 'bg-[#FCECD8]/50 border-[#6E3511]/25 text-[#20251E]'
               : fitResult.status === 'confirm'
@@ -232,7 +232,7 @@
     <!-- Facility Attributes Tray -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
       <div class="flex items-center gap-2.5 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-        <div class="w-8 h-8 rounded-lg bg-[#597928]/10 text-[#486320] flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-[#486320]/10 text-[#486320] flex items-center justify-center flex-shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
@@ -273,7 +273,7 @@
   <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
     <div class="flex items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-[#597928]/12 text-[#486320] flex items-center justify-center">
+        <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
@@ -352,7 +352,7 @@
       </div>
 
       <!-- 6. After Entered Transport -->
-      <div class="p-3.5 rounded-xl bg-[#597928]/8 border border-[#597928]/30 space-y-1">
+      <div class="p-3.5 rounded-xl bg-[#486320]/8 border border-[#597928]/30 space-y-1">
         <div class="text-[11px] font-semibold text-[#486320] uppercase tracking-wider">
           {isFil ? 'Matapos ang Biyahe' : 'After Transport'}
         </div>
@@ -403,15 +403,15 @@
 
       <ul class="space-y-3">
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
-          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
           <span>What grade and ripeness standard do you require for {harvest.crop}?</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
-          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
           <span>What packaging or crate specification is required at delivery?</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
-          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
           <span>What are the exact receiving hours and gate cutoffs on {harvest.readyDate}?</span>
         </li>
 
@@ -471,7 +471,7 @@
   <!-- Contact & Next Steps Action Dock -->
   <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
     <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
-      <div class="w-8 h-8 rounded-lg bg-[#597928]/12 text-[#486320] flex items-center justify-center">
+      <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
