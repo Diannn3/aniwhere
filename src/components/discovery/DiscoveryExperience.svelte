@@ -293,7 +293,7 @@
 
         <button
           type="submit"
-          class="w-full bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] font-bold text-sm px-4 py-2 rounded-xl transition-colors cursor-pointer"
+          class="w-full bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] font-bold text-sm px-4 py-2 rounded-xl transition-colors cursor-pointer"
         >
           {lang === 'fil' ? 'I-update' : 'Update results'}
         </button>
@@ -328,7 +328,7 @@
           onclick={() => activeMobileView = 'list'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'list'
-              ? 'bg-[#597928] text-[#FFFDF8] shadow-xs'
+              ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
         >
@@ -343,7 +343,7 @@
           onclick={() => activeMobileView = 'map'}
           class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'map'
-              ? 'bg-[#597928] text-[#FFFDF8] shadow-xs'
+              ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
         >
@@ -363,7 +363,7 @@
           onclick={() => statusFilter = 'all'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'all'
-              ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
+              ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
               : 'border-[#20251E]/15 bg-[#FFFDF8] text-[#4A5245] hover:border-[#597928]/40'
           }`}
         >
@@ -375,7 +375,7 @@
           onclick={() => statusFilter = 'match'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'match'
-              ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
+              ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
               : 'border-[#91AC67]/40 bg-[#EAF3DE]/60 text-[#3B5B16] hover:border-[#597928]'
           }`}
         >
@@ -470,7 +470,7 @@
               categoryFilter = 'all';
               searchQuery = '';
             }}
-            class="px-4 py-2 bg-[#597928] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#486320] transition-colors cursor-pointer"
+            class="px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
           >
             {t('clearFilters', lang)}
           </button>
@@ -560,12 +560,12 @@
             {#if item.fit.status === 'match' || item.fit.status === 'partial'}
               <dl class="grid grid-cols-2 overflow-hidden rounded-xl border border-[#20251E]/10 bg-[#F9FBF7]">
                 <div class="p-3 sm:p-3.5">
-                  <dt class="text-[11px] font-semibold text-[#687064]">{lang === 'fil' ? 'Kayang tanggapin' : 'Can accept'}</dt>
-                  <dd class="mt-0.5 font-tabular text-xl font-bold tracking-tight text-[#20251E]">{item.fit.acceptedKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
+                  <dt class="text-[11px] font-semibold text-[#596052]">{lang === 'fil' ? 'Kayang tanggapin' : 'Can accept'}</dt>
+                  <dd class="mt-0.5 font-tabular text-xl font-bold tracking-tight text-[#20251E]">{item.fit.acceptedKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#596052]">kg</span></dd>
                 </div>
                 <div class="border-l border-[#20251E]/10 p-3 sm:p-3.5">
-                  <dt class="text-[11px] font-semibold text-[#687064]">{lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}</dt>
-                  <dd class={`mt-0.5 font-tabular text-xl font-bold tracking-tight ${item.fit.remainingKg && item.fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#486320]'}`}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
+                  <dt class="text-[11px] font-semibold text-[#596052]">{lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}</dt>
+                  <dd class={`mt-0.5 font-tabular text-xl font-bold tracking-tight ${item.fit.remainingKg && item.fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#486320]'}`}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#596052]">kg</span></dd>
                 </div>
               </dl>
             {:else if item.fit.status === 'confirm'}
@@ -648,7 +648,7 @@
               <!-- View Details Link -->
               <a
                 href={`/places/${item.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', item.outlet.id, lang)}`}
-                class="premium-control inline-flex min-h-11 items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] transition-colors shadow-xs"
+                class="premium-control inline-flex min-h-11 items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] transition-colors shadow-xs"
               >
                 <span>{t('viewDetails', lang)}</span>
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -698,7 +698,7 @@
       aria-label="Comparison dock"
     >
       <div class="flex items-center gap-2 text-xs">
-        <span class="w-6 h-6 rounded-full bg-[#597928] font-bold flex items-center justify-center text-xs font-tabular">
+        <span class="w-6 h-6 rounded-full bg-[#486320] font-bold flex items-center justify-center text-xs font-tabular">
           {comparedIds.length}
         </span>
         <span class="font-medium">
@@ -717,7 +717,7 @@
 
         <a
           href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-          class="px-4 py-1.5 rounded-xl bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+          class="px-4 py-1.5 rounded-xl bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
         >
           <span>{lang === 'fil' ? 'Ihambing' : 'Compare'}</span>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
