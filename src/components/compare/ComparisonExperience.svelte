@@ -165,17 +165,12 @@
 </div>
 
 <style>
-  .matrix-scroll { scrollbar-color: #91AC67 #FCECD8; scrollbar-width: thin; }
+  .comparison-page { width: 100%; overflow-x: clip; }
+  .matrix-scroll { width: 100%; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; scrollbar-color: #91AC67 #FCECD8; scrollbar-width: thin; }
   .matrix-scroll::-webkit-scrollbar { height: 12px; }
   .matrix-scroll::-webkit-scrollbar-track { background: #FCECD8; }
   .matrix-scroll::-webkit-scrollbar-thumb { background: #597928; border: 3px solid #FCECD8; border-radius: 999px; }
   .ledger-metric { left: 0; position: sticky; z-index: 1; }
   thead .ledger-metric { z-index: 2; }
   @media print { .matrix-scroll { overflow: visible; } .ledger-metric { position: static; } }
-</style>
-
-
-<style>
-  .comparison-page { width: 100%; overflow-x: clip; }
-  .matrix-scroll { width: 100%; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
 </style>
