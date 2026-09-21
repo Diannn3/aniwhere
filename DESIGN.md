@@ -28,7 +28,7 @@ tokens:
 :root {
   --color-text-primary: var(--field-ink);
   --color-text-secondary: #4A5245;
-  --color-text-muted: #6B7265;
+  --color-text-muted: #596052;
   --color-text-inverse: var(--warm-surface);
 
   --color-surface-base: var(--warm-surface);
