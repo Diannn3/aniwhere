@@ -86,6 +86,21 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
+          {showAni && (
+            <button
+              id="ani-mobile-trigger"
+              type="button"
+              class="grid h-11 w-11 place-items-center rounded-xl border border-[#20251E]/15 bg-white shadow-[0_10px_28px_-20px_rgba(32,37,30,.55)] md:hidden"
+              data-aria-en="Ask Ani"
+              data-aria-fil="Tanungin si Ani"
+              aria-label={isFil ? 'Tanungin si Ani' : 'Ask Ani'}
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="ani-panel"
+            >
+              <img src="/ani/ani-avatar.webp" alt="" aria-hidden="true" class="h-8 w-8 rounded-full object-cover" />
+            </button>
+          ))}
           <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" data-aria-en="Select language" data-aria-fil="Piliin ang wika" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
             <a href={languageHref('en')} data-language-target="en" class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
             <a href={languageHref('fil')} data-language-target="fil" class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
@@ -174,6 +189,11 @@ const languageHref = (targetLang: 'en' | 'fil') => {
           element.classList.toggle('text-[#FFFDF8]', selected);
           element.classList.toggle('text-[#4A5245]', !selected);
           element.classList.toggle('hover:bg-[#FCECD8]', !selected);
+        });
+
+        const aniMobileTrigger = document.getElementById('ani-mobile-trigger');
+        aniMobileTrigger?.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent('aniwhere:open-ani'));
         });
 
         document.querySelectorAll('a[data-route-href]').forEach((element) => {
