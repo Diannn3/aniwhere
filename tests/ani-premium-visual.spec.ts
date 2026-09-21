@@ -42,8 +42,10 @@ test('Ani shell is keyboard closable and restores focus', async ({ page }) => {
   await trigger.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Ani' });
   await expect(dialog).toBeVisible();
+  await expect(page.locator('main')).toHaveAttribute('inert', '');
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  await expect(page.locator('main')).not.toHaveAttribute('inert', '');
   await expect(trigger).toBeFocused();
 });
 
