@@ -56,7 +56,9 @@ export interface AniFitFacts {
   statusLabel: string;
   acceptedKg: number | null;
   remainingKg: number | null;
-  pricePerKg: number | null;
+  buyerPostedPricePerKg: number | null;
+  referencePricePerKg: number | null;
+  demoPricePerKg: number | null;
   grossAmount: number | null;
   enteredTransport: number | null;
   afterTransportAmount: number | null;
