@@ -1,5 +1,6 @@
 ---
 import BrandMark from '../components/brand/BrandMark.astro';
+import AniAssistant from '../components/ani/AniAssistant.svelte';
 import '../styles/global.css';
 
 interface Props {
@@ -17,6 +18,7 @@ const {
 } = Astro.props;
 
 const isFil = lang === 'fil';
+const showAni = !currentPath.startsWith('/buyer');
 const farmerNav = [
   { href: '/discover', label: isFil ? 'Maghanap' : 'Discover' },
   { href: '/saved', label: isFil ? 'Nai-save' : 'Saved' },
@@ -99,7 +101,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
       </div>
     </header>
 
-    <main id="main-content" class="flex-1 pb-24 md:pb-12">
+    <main id="main-content" class="page-enter flex-1 pb-24 md:pb-12">
       <slot />
     </main>
 
@@ -125,6 +127,8 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         ))}
       </div>
     </nav>
+
+    {showAni && <AniAssistant client:idle initialLang={lang} />}
 
     <footer class="border-t border-[#20251E]/10 bg-[#FFFDF8]/75 px-4 py-8 sm:px-6">
       <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
