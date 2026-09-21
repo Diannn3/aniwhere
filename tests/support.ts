@@ -65,9 +65,7 @@ export function outletCard(page: Page, outletName: string): Locator {
 }
 
 export function metricRow(table: Locator, metric: string): Locator {
-  return table.getByRole('row').filter({
-    has: table.getByRole('rowheader', { name: metric, exact: true }),
-  });
+  return table.getByRole('rowheader', { name: metric, exact: true }).locator('..');
 }
 
 export async function expectNoPageOverflow(page: Page): Promise<void> {
