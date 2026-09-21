@@ -4,11 +4,25 @@
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { validateHarvestInput } from '../../lib/domain/validation';
   import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
 
+  type HarvestDraft = {
+    cropChoice: string;
+    otherCrop: string;
+    quantityKg: number;
+    originMunicipality: string;
+    readyDate: string;
+    variety: string;
+    grade: string;
+    packaging: string;
+  };
+
+  const DRAFT_KEY = 'aniwhere:harvest-ticket:v2';
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
 
-  let crop = $state('tomato');
+  let cropChoice = $state('tomato');
+  let otherCrop = $state('');
   let quantityKg = $state(300);
   let originMunicipality = $state('los-banos');
   let readyDate = $state(todayInManila());
@@ -17,38 +31,104 @@
   let packaging = $state('');
   let showDetails = $state(false);
   let lang = $state<'en' | 'fil'>(initialLang);
-
   let errors = $state<Record<string, string>>({});
-  let formSubmitted = $state(false);
 
-  let cropSelectEl: HTMLSelectElement | null = $state(null);
+  let cropGroupEl: HTMLFieldSetElement | null = $state(null);
+  let otherCropInputEl: HTMLInputElement | null = $state(null);
   let quantityInputEl: HTMLInputElement | null = $state(null);
   let municipalitySelectEl: HTMLSelectElement | null = $state(null);
   let readyDateInputEl: HTMLInputElement | null = $state(null);
+  let errorSummaryEl: HTMLDivElement | null = $state(null);
+
+  const cropLabel = () => (cropChoice === 'other' ? otherCrop.trim() : cropChoice);
+
+  function restoreDraft(draft: HarvestDraft) {
+    cropChoice = draft.cropChoice || 'tomato';
+    otherCrop = draft.otherCrop || '';
+    quantityKg = Number(draft.quantityKg) || 300;
+    originMunicipality = draft.originMunicipality || 'los-banos';
+    readyDate = draft.readyDate || todayInManila();
+    variety = draft.variety || '';
+    grade = draft.grade || '';
+    packaging = draft.packaging || '';
+    showDetails = Boolean(variety || grade || packaging);
+  }
+
+  function saveDraft() {
+    safeStorage.setItem<HarvestDraft>(DRAFT_KEY, {
+      cropChoice,
+      otherCrop,
+      quantityKg: Number(quantityKg),
+      originMunicipality,
+      readyDate,
+      variety,
+      grade,
+      packaging,
+    });
+  }
+
+  function focusField(field: string) {
+    const target =
+      field === 'crop'
+        ? cropChoice === 'other'
+          ? otherCropInputEl
+          : cropGroupEl
+        : field === 'quantityKg'
+          ? quantityInputEl
+          : field === 'originMunicipality'
+            ? municipalitySelectEl
+            : readyDateInputEl;
+    target?.focus();
+  }
+
+  function inputLabel(field: string) {
+    if (field === 'crop') return t('cropLabel', lang);
+    if (field === 'quantityKg') return t('quantityLabel', lang);
+    if (field === 'originMunicipality') return t('locationLabel', lang);
+    return t('readyDateLabel', lang);
+  }
 
   onMount(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get('lang');
-    const urlReady = urlParams.get('ready');
-    const urlVariety = urlParams.get('variety') || '';
-    const urlGrade = urlParams.get('grade') || '';
-    const urlPackaging = urlParams.get('packaging') || '';
-    readyDate = urlReady || todayInManila();
-    variety = urlVariety;
-    grade = urlGrade;
-    packaging = urlPackaging;
-    showDetails = Boolean(urlVariety || urlGrade || urlPackaging);
-    if (urlLang === 'fil' || urlLang === 'en') {
-      lang = urlLang;
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const urlCrop = params.get('crop');
+    const urlKg = Number(params.get('kg'));
+    const urlOrigin = params.get('origin');
+    const urlReady = params.get('ready');
+    const hasHarvestQuery = Boolean(urlCrop || params.has('kg') || urlOrigin || urlReady);
+
+    if (urlLang === 'en' || urlLang === 'fil') lang = urlLang;
+
+    if (hasHarvestQuery) {
+      const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === urlCrop);
+      cropChoice = supportedCrop ? urlCrop! : urlCrop ? 'other' : cropChoice;
+      otherCrop = supportedCrop ? '' : urlCrop || '';
+      quantityKg = Number.isFinite(urlKg) && urlKg > 0 ? urlKg : quantityKg;
+      originMunicipality = LAGUNA_MUNICIPALITIES.some((item) => item.id === urlOrigin) ? urlOrigin! : originMunicipality;
+      readyDate = urlReady || readyDate;
+      variety = params.get('variety') || '';
+      grade = params.get('grade') || '';
+      packaging = params.get('packaging') || '';
+      showDetails = Boolean(variety || grade || packaging);
+      return;
     }
+
+    restoreDraft(safeStorage.getItem<HarvestDraft | null>(DRAFT_KEY, null) ?? {
+      cropChoice,
+      otherCrop,
+      quantityKg,
+      originMunicipality,
+      readyDate,
+      variety,
+      grade,
+      packaging,
+    });
   });
 
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
-    formSubmitted = true;
-
     const validation = validateHarvestInput({
-      crop,
+      crop: cropLabel(),
       quantityKg,
       originMunicipality,
       readyDate,
@@ -56,23 +136,15 @@
 
     if (!validation.isValid) {
       errors = lang === 'fil' ? validation.errorsFil : validation.errors;
-      if (errors.crop && cropSelectEl) {
-        cropSelectEl.focus();
-      } else if (errors.quantityKg && quantityInputEl) {
-        quantityInputEl.focus();
-      } else if (errors.originMunicipality && municipalitySelectEl) {
-        municipalitySelectEl.focus();
-      } else if (errors.readyDate && readyDateInputEl) {
-        readyDateInputEl.focus();
-      }
+      requestAnimationFrame(() => errorSummaryEl?.focus());
       return;
     }
 
     errors = {};
-
+    saveDraft();
     const queryString = serializeDiscoverQuery(
       {
-        crop,
+        crop: cropLabel(),
         quantityKg: Number(quantityKg),
         originMunicipality,
         readyDate,
@@ -87,228 +159,107 @@
       },
       'list',
       undefined,
-      lang
+      lang,
     );
-
     window.location.href = `/discover?${queryString}`;
   }
 </script>
 
-<form onsubmit={handleSubmit} novalidate class="space-y-4">
-  <!-- 2x2 Input Cards Grid (Maintains 2 columns across all viewports) -->
-  <div class="grid grid-cols-2 gap-2.5 sm:gap-4">
-    
-    <!-- 1. Crop Card -->
-    <label
-      for="harvest-crop"
-      class="block bg-[#FFFDF8] border rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs {errors.crop ? 'border-red-500 bg-red-50/20' : 'border-[#20251E]/15'}"
-    >
-      <div class="flex items-center gap-1.5 text-xs font-semibold text-[#20251E] mb-1">
-        <svg class="w-3.5 h-3.5 text-[#597928] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M12 2C6.5 2 2 6.5 2 12c0 5 4 9 9 9 1 0 2-.2 3-.5-1-1.5-1.5-3.5-1.5-5.5 0-4.5 3-8 7-9-1.5-2.5-4.5-4-7.5-4z" />
-        </svg>
-        <span class="truncate">{t('cropLabel', lang)}</span>
-        <span class="text-[#6E3511]" aria-hidden="true">*</span>
-      </div>
-      <div class="relative">
-        <select
-          id="harvest-crop"
-          bind:this={cropSelectEl}
-          bind:value={crop}
-          aria-describedby={errors.crop ? 'crop-error' : undefined}
-          class="w-full bg-transparent text-sm sm:text-base font-semibold text-[#20251E] outline-none cursor-pointer pr-4 py-1 truncate"
-        >
-          {#each SUPPORTED_CROPS as item}
-            <option value={item.key}>
-              {lang === 'fil' ? item.labelFil : item.labelEn}
-            </option>
-          {/each}
-          <option value="other">
-            {lang === 'fil' ? 'Iba pang pananim' : 'Other crop'}
-          </option>
-        </select>
-      </div>
-      {#if errors.crop}
-        <p id="crop-error" class="text-[11px] font-medium text-red-700 mt-1" role="alert">
-          {errors.crop}
-        </p>
-      {/if}
-    </label>
-
-    <!-- 2. Quantity Card -->
-    <label
-      for="harvest-quantity"
-      class="block bg-[#FFFDF8] border rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs {errors.quantityKg ? 'border-red-500 bg-red-50/20' : 'border-[#20251E]/15'}"
-    >
-      <div class="flex items-center gap-1.5 text-xs font-semibold text-[#20251E] mb-1">
-        <svg class="w-3.5 h-3.5 text-[#597928] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M6 3h12l2 6H4L6 3zM4 9v11a2 2 0 002 2h12a2 2 0 002-2V9" />
-        </svg>
-        <span class="truncate">{t('quantityLabel', lang)}</span>
-        <span class="text-[#6E3511]" aria-hidden="true">*</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <input
-          id="harvest-quantity"
-          type="number"
-          min="1"
-          max="100000"
-          step="1"
-          bind:this={quantityInputEl}
-          bind:value={quantityKg}
-          aria-describedby={errors.quantityKg ? 'quantity-error' : undefined}
-          class="w-full bg-transparent text-sm sm:text-base font-semibold font-tabular text-[#20251E] outline-none py-1"
-          placeholder="300"
-        />
-        <span class="text-xs sm:text-sm font-semibold text-[#6B7265] pl-1 select-none">
-          kg
-        </span>
-      </div>
-      {#if errors.quantityKg}
-        <p id="quantity-error" class="text-[11px] font-medium text-red-700 mt-1" role="alert">
-          {errors.quantityKg}
-        </p>
-      {/if}
-    </label>
-
-    <!-- 3. Location Card -->
-    <label
-      for="harvest-origin"
-      class="block bg-[#FFFDF8] border rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs {errors.originMunicipality ? 'border-red-500 bg-red-50/20' : 'border-[#20251E]/15'}"
-    >
-      <div class="flex items-center gap-1.5 text-xs font-semibold text-[#20251E] mb-1">
-        <svg class="w-3.5 h-3.5 text-[#597928] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M12 21s-8-7.5-8-12a8 8 0 1116 0c0 4.5-8 12-8 12zM12 11a3 3 0 100-6 3 3 0 000 6z" />
-        </svg>
-        <span class="truncate">{t('locationLabel', lang)}</span>
-        <span class="text-[#6E3511]" aria-hidden="true">*</span>
-      </div>
-      <div class="relative">
-        <select
-          id="harvest-origin"
-          bind:this={municipalitySelectEl}
-          bind:value={originMunicipality}
-          aria-describedby={errors.originMunicipality ? 'origin-error' : undefined}
-          class="w-full bg-transparent text-sm sm:text-base font-semibold text-[#20251E] outline-none cursor-pointer pr-4 py-1 truncate"
-        >
-          {#each LAGUNA_MUNICIPALITIES as mun}
-            <option value={mun.id}>{mun.name}</option>
-          {/each}
-        </select>
-      </div>
-      {#if errors.originMunicipality}
-        <p id="origin-error" class="text-[11px] font-medium text-red-700 mt-1" role="alert">
-          {errors.originMunicipality}
-        </p>
-      {/if}
-    </label>
-
-    <!-- 4. Ready Date Card -->
-    <label
-      for="harvest-date"
-      class="block bg-[#FFFDF8] border rounded-2xl p-3 sm:p-4 cursor-pointer transition-all hover:border-[#597928]/60 focus-within:ring-2 focus-within:ring-[#597928] focus-within:border-[#597928] shadow-xs {errors.readyDate ? 'border-red-500 bg-red-50/20' : 'border-[#20251E]/15'}"
-    >
-      <div class="flex items-center gap-1.5 text-xs font-semibold text-[#20251E] mb-1">
-        <svg class="w-3.5 h-3.5 text-[#597928] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-        <span class="truncate">{t('readyDateLabel', lang)}</span>
-      </div>
-      <input
-        id="harvest-date"
-        type="date"
-        min={todayInManila()}
-        bind:this={readyDateInputEl}
-        bind:value={readyDate}
-        aria-describedby={errors.readyDate ? 'ready-date-error' : undefined}
-        class="w-full bg-transparent text-sm sm:text-base font-semibold text-[#20251E] outline-none py-1"
-      />
-      {#if errors.readyDate}
-        <p id="ready-date-error" class="text-[11px] font-medium text-red-700 mt-1" role="alert">
-          {errors.readyDate}
-        </p>
-      {/if}
-    </label>
-
+<form onsubmit={handleSubmit} oninput={saveDraft} onchange={saveDraft} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
+  <div class="flex items-start justify-between gap-4 border-b quiet-rule pb-5">
+    <div class="max-w-xl">
+      <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
+      <p class="mt-2 text-sm leading-relaxed text-[#4A5245] sm:text-base">{lang === 'fil' ? 'Makikita mo kung saan maaaring dalhin ang ani, kung gaano karami ang kaya nilang tanggapin, at kung ano ang kailangang kumpirmahin.' : 'See where your harvest could go, how much an outlet can take, and what you still need to confirm.'}</p>
+    </div>
+    <span class="hidden shrink-0 rounded-lg bg-[#FCECD8] px-3 py-2 text-xs font-semibold text-[#6E3511] sm:inline-block">{t('demoNotice', lang)}</span>
   </div>
 
-  <div class="rounded-2xl border border-[#20251E]/10 bg-[#FAF7EE] overflow-hidden">
-    <button
-      type="button"
-      class="w-full flex items-center justify-between gap-3 px-4 py-3 text-left min-h-[48px]"
-      aria-expanded={showDetails}
-      onclick={() => (showDetails = !showDetails)}
-    >
-      <div>
-        <div class="text-sm font-semibold text-[#20251E]">{t('harvestDetailsToggle', lang)}</div>
-        <div class="text-[11px] text-[#6B7265] mt-0.5">{t('harvestDetailsHint', lang)}</div>
-      </div>
-      <svg
-        class="w-4 h-4 text-[#597928] transition-transform {showDetails ? 'rotate-180' : ''}"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        aria-hidden="true"
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </button>
+  {#if Object.keys(errors).length > 0}
+    <div bind:this={errorSummaryEl} tabindex="-1" role="alert" class="rounded-xl border border-[#6E3511]/35 bg-[#FCECD8]/60 p-4 text-sm text-[#20251E]">
+      <p class="font-bold">{lang === 'fil' ? `Suriin ang ${Object.keys(errors).length} field` : `Check ${Object.keys(errors).length} field${Object.keys(errors).length > 1 ? 's' : ''}`}</p>
+      <ul class="mt-2 list-inside list-disc space-y-1">
+        {#each Object.entries(errors) as [field, message]}
+          <li><button type="button" class="text-left font-semibold underline decoration-[#6E3511]/45 underline-offset-4" onclick={() => focusField(field)}>{inputLabel(field)}: {message}</button></li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 
+  <fieldset bind:this={cropGroupEl} tabindex="-1" class="min-w-0" aria-describedby={errors.crop ? 'crop-error' : undefined}>
+    <legend class="text-sm font-bold text-[#20251E]">{t('cropLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></legend>
+    <p class="mt-1 text-xs text-[#4A5245]">{lang === 'fil' ? 'Pumili ng pananim na aalamin para sa market fit.' : 'Choose the crop you want to check for market fit.'}</p>
+    <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {#each SUPPORTED_CROPS as item}
+        <label class="group relative cursor-pointer">
+          <input class="peer sr-only" type="radio" name="crop" value={item.key} bind:group={cropChoice} />
+          <span class="flex min-h-14 items-center justify-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-center text-sm font-semibold text-[#20251E] transition-all group-hover:border-[#597928] peer-checked:border-[#597928] peer-checked:bg-[#597928] peer-checked:text-[#FFFDF8] peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#597928]">{lang === 'fil' ? item.labelFil : item.labelEn}</span>
+        </label>
+      {/each}
+      <label class="group relative cursor-pointer">
+        <input class="peer sr-only" type="radio" name="crop" value="other" bind:group={cropChoice} />
+        <span class="flex min-h-14 items-center justify-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-center text-sm font-semibold text-[#20251E] transition-all group-hover:border-[#597928] peer-checked:border-[#597928] peer-checked:bg-[#597928] peer-checked:text-[#FFFDF8] peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#597928]">{lang === 'fil' ? 'Ibang ani' : 'Other crop'}</span>
+      </label>
+    </div>
+    {#if cropChoice === 'other'}
+      <label class="mt-3 block">
+        <span class="sr-only">{lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'}</span>
+        <input bind:this={otherCropInputEl} bind:value={otherCrop} type="text" autocomplete="off" placeholder={lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'} class={`min-h-12 w-full rounded-lg border bg-[#FFFDF8] px-3 text-base text-[#20251E] ${errors.crop ? 'border-[#6E3511]' : 'border-[#20251E]/15'} focus:border-[#597928] focus:outline-none focus:ring-2 focus:ring-[#597928]/25`} />
+      </label>
+    {/if}
+    {#if errors.crop}<p id="crop-error" class="mt-2 text-sm font-semibold text-[#6E3511]">{errors.crop}</p>{/if}
+  </fieldset>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20">
+      <span class="block text-sm font-bold text-[#20251E]">{t('quantityLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
+      <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Kabuuang timbang na handa mong dalhin.' : 'Total weight you are ready to bring.'}</span>
+      <span class="mt-3 flex items-center gap-2">
+        <input id="harvest-quantity" bind:this={quantityInputEl} bind:value={quantityKg} type="number" min="1" max="100000" step="1" inputmode="numeric" aria-describedby={errors.quantityKg ? 'quantity-error' : undefined} class="min-h-10 min-w-0 flex-1 bg-transparent text-2xl font-bold text-[#20251E] outline-none" />
+        <span class="font-tabular text-sm font-bold text-[#4A5245]">kg</span>
+      </span>
+      {#if errors.quantityKg}<span id="quantity-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.quantityKg}</span>{/if}
+    </label>
+
+    <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20">
+      <span class="block text-sm font-bold text-[#20251E]">{t('locationLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
+      <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Munisipalidad kung saan manggagaling ang ani.' : 'Municipality where the harvest will leave from.'}</span>
+      <select id="harvest-origin" bind:this={municipalitySelectEl} bind:value={originMunicipality} aria-describedby={errors.originMunicipality ? 'origin-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none">
+        {#each LAGUNA_MUNICIPALITIES as municipality}
+          <option value={municipality.id}>{municipality.name}</option>
+        {/each}
+      </select>
+      {#if errors.originMunicipality}<span id="origin-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.originMunicipality}</span>{/if}
+    </label>
+
+    <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20 sm:col-span-2">
+      <span class="block text-sm font-bold text-[#20251E]">{t('readyDateLabel', lang)}</span>
+      <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Ilagay ang petsang handa nang dalhin ang ani.' : 'Set the day the harvest will be ready to move.'}</span>
+      <input id="harvest-ready-date" bind:this={readyDateInputEl} bind:value={readyDate} type="date" min={todayInManila()} aria-describedby={errors.readyDate ? 'ready-date-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none" />
+      {#if errors.readyDate}<span id="ready-date-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.readyDate}</span>{/if}
+    </label>
+  </div>
+
+  <div class="border-t quiet-rule pt-4">
+    <button type="button" class="flex min-h-11 w-full items-center justify-between gap-4 text-left" aria-expanded={showDetails} onclick={() => (showDetails = !showDetails)}>
+      <span>
+        <span class="block text-sm font-bold text-[#20251E]">{lang === 'fil' ? 'Magdagdag ng barayti, grade, o packaging' : 'Add variety, grade, or packaging'} <span class="font-normal text-[#4A5245]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></span>
+        <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Makakatulong ito kung may partikular na requirement ang outlet.' : 'These details help when an outlet has specific requirements.'}</span>
+      </span>
+      <svg class={`h-5 w-5 shrink-0 text-[#597928] transition-transform ${showDetails ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+    </button>
     {#if showDetails}
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-4 pb-4 border-t border-[#20251E]/8 pt-3">
-        <label class="space-y-1">
-          <span class="text-xs font-semibold text-[#20251E]">{t('varietyLabel', lang)}</span>
-          <input
-            type="text"
-            bind:value={variety}
-            placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'}
-            class="w-full rounded-xl border border-[#20251E]/15 bg-[#FFFDF8] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#597928]/35"
-          />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs font-semibold text-[#20251E]">{t('gradeLabel', lang)}</span>
-          <input
-            type="text"
-            bind:value={grade}
-            placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'}
-            class="w-full rounded-xl border border-[#20251E]/15 bg-[#FFFDF8] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#597928]/35"
-          />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs font-semibold text-[#20251E]">{t('packagingLabel', lang)}</span>
-          <input
-            type="text"
-            bind:value={packaging}
-            placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'}
-            class="w-full rounded-xl border border-[#20251E]/15 bg-[#FFFDF8] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#597928]/35"
-          />
-        </label>
+      <div class="mt-4 grid grid-cols-1 gap-3 border-t quiet-rule pt-4 sm:grid-cols-3">
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('varietyLabel', lang)}</span><input bind:value={variety} type="text" placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('gradeLabel', lang)}</span><input bind:value={grade} type="text" placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('packagingLabel', lang)}</span><input bind:value={packaging} type="text" placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
       </div>
     {/if}
   </div>
 
-  <!-- Primary Submit Button: Restrained Pill matching Reference 01 -->
-  <button
-    type="submit"
-    class="w-full min-h-[52px] bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] font-semibold text-base px-6 py-3.5 rounded-full shadow-sm transition-all focus:outline-none focus:ring-3 focus:ring-[#597928]/40 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer mt-2"
-  >
+  <button type="submit" class="flex min-h-14 w-full items-center justify-center gap-3 rounded-lg bg-[#597928] px-6 py-3 text-base font-bold text-[#FFFDF8] shadow-[0_14px_28px_-18px_rgba(32,37,30,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[#486320] focus-visible:ring-4 focus-visible:ring-[#597928]/30 active:translate-y-0">
     <span>{t('findPlacesAction', lang)}</span>
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-    </svg>
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
   </button>
 
-  <!-- Explanatory Trust & Verification Note -->
-  <div class="text-center pt-2 space-y-1">
-    <p class="text-xs text-[#4A5245] font-medium">
-      {t('noAccountNeeded', lang)}
-    </p>
-    <p class="text-[11px] text-[#6E3511]">
-      {t('confirmTermsNotice', lang)}
-    </p>
-  </div>
+  <p class="text-center text-xs leading-relaxed text-[#4A5245]">{t('noAccountNeeded', lang)} <span class="text-[#6E3511]">{t('confirmTermsNotice', lang)}</span></p>
 </form>

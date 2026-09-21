@@ -18,15 +18,18 @@ interface Props {
 const { slug } = Astro.params;
 const outlet = Astro.props.outlet || CURRENT_OUTLETS.find((o) => o.slug === slug);
 const isFound = Boolean(outlet);
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
+const isFil = lang === 'fil';
 ---
 
 <BaseLayout
   title={isFound ? `AniWhere — ${outlet!.name}` : 'AniWhere — Outlet Not Found'}
   description={isFound ? outlet!.description : 'The requested agricultural selling outlet was not found in the currently configured AniWhere data source.'}
   currentPath={`/places/${slug}`}
+  lang={lang}
 >
   {isFound ? (
-    <OutletDetailExperience client:load outlet={outlet!} />
+    <OutletDetailExperience client:load outlet={outlet!} initialLang={lang} />
   ) : (
     <div class="max-w-2xl mx-auto px-4 py-16 text-center space-y-6">
       <div class="w-16 h-16 rounded-full bg-[#6E3511]/10 text-[#6E3511] mx-auto flex items-center justify-center">
@@ -36,22 +39,22 @@ const isFound = Boolean(outlet);
       </div>
 
       <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#20251E]">
-        Outlet Not Found
+        {isFil ? 'Hindi nakita ang outlet' : 'Outlet Not Found'}
       </h1>
 
       <p class="text-sm text-[#4A5245] max-w-md mx-auto">
-        The destination outlet <code class="px-2 py-0.5 bg-[#FAF7EE] rounded border text-xs font-mono">{slug}</code> is not in the currently configured illustrative data source.
+        {isFil ? 'Ang outlet na ' : 'The destination outlet '}<code class="px-2 py-0.5 bg-[#FAF7EE] rounded border text-xs font-mono">{slug}</code>{isFil ? ' ay wala sa kasalukuyang halimbawang datos.' : ' is not in the currently configured illustrative data source.'}
       </p>
 
       <div class="pt-4">
         <a
-          href="/discover"
+          href={`/discover${isFil ? '?lang=fil' : ''}`}
           class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span>Back to Market Discovery</span>
+          <span>{isFil ? 'Bumalik sa paghahanap' : 'Back to Market Discovery'}</span>
         </a>
       </div>
     </div>

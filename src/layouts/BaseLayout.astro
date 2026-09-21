@@ -17,23 +17,18 @@ const {
 } = Astro.props;
 
 const isFil = lang === 'fil';
-
-const navItems = [
-  { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', key: 'discover' },
-  { href: '/compare', label: isFil ? 'Ihambing' : 'Compare', key: 'compare' },
-  { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', key: 'saved' },
+const farmerNav = [
+  { href: '/discover', label: isFil ? 'Maghanap' : 'Discover' },
+  { href: '/saved', label: isFil ? 'Nai-save' : 'Saved' },
 ];
 
-const buyerNav = {
-  href: '/buyer',
-  label: isFil ? 'Demo ng Mamimili' : 'Buyer demo',
-  key: 'buyer',
-};
+const isActive = (path: string) =>
+  path === '/' ? currentPath === '/' : currentPath === path || currentPath.startsWith(`${path}/`);
 
-const isActive = (path: string) => {
-  if (path === '/' && currentPath === '/') return true;
-  if (path !== '/' && currentPath.startsWith(path)) return true;
-  return false;
+const languageHref = (targetLang: 'en' | 'fil') => {
+  const target = new URL(Astro.url);
+  target.searchParams.set('lang', targetLang);
+  return `${target.pathname}${target.search}${target.hash}`;
 };
 ---
 
@@ -46,55 +41,36 @@ const isActive = (path: string) => {
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
-    
-    <!-- Google Fonts: Source Serif 4 & Source Sans 3 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600&display=swap"
-      rel="stylesheet"
-    />
   </head>
-  <body class="bg-[#FFFDF8] text-[#20251E] flex flex-col min-h-screen antialiased selection:bg-[#FCECD8] selection:text-[#6E3511]">
-    <!-- Accessibility Skip Link -->
+  <body class="flex min-h-screen flex-col text-[#20251E] antialiased" data-lang={lang}>
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 z-50 px-4 py-2 bg-[#597928] text-[#FFFDF8] rounded-lg shadow-lg font-medium ring-2 ring-[#20251E]"
+      class="sr-only fixed left-3 top-3 z-50 rounded-lg bg-[#597928] px-4 py-2 font-semibold text-[#FFFDF8] shadow-lg focus:not-sr-only"
     >
       {isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}
     </a>
 
-    <!-- Top Demo Banner (Honest Hackathon Demo Context) -->
-    <div class="bg-[#FCECD8]/90 border-b border-[#20251E]/10 py-1 px-4 sm:px-6 text-[11px] text-[#6E3511]">
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-1.5">
-          <span class="px-1.5 py-0.2 rounded bg-[#6E3511]/10 font-bold uppercase tracking-wider text-[9px]">
-            Demo
-          </span>
-          <span class="font-medium truncate text-[11px]">
-            {isFil ? 'Lahat ng presyo at datos ay halimbawa lamang para sa NextGen Agri Hackathon.' : 'Illustrative fixtures for NextGen Agri Hackathon demonstration.'}
-          </span>
-        </div>
+    <div class="border-b border-[#20251E]/10 bg-[#FCECD8]/80 px-4 py-2 text-xs text-[#6E3511] sm:px-6">
+      <div class="mx-auto flex max-w-7xl items-center gap-2">
+        <strong class="font-semibold">{isFil ? 'Demo — halimbawang datos.' : 'Demo — sample data.'}</strong>
+        <span>{isFil ? 'Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.'}</span>
       </div>
     </div>
 
-    <!-- Main Navigation Header -->
-    <header class="sticky top-0 z-30 bg-[#FFFDF8]/95 backdrop-blur-md border-b border-[#20251E]/10 px-4 sm:px-6">
-      <div class="max-w-7xl mx-auto h-14 sm:h-16 flex items-center justify-between gap-3">
-        <!-- Logo / Home Link -->
-        <a href="/" class="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928] rounded-lg transition-opacity flex items-center gap-2" aria-label="AniWhere home">
+    <header class="sticky top-0 z-30 border-b border-[#20251E]/10 bg-[#FFFDF8]/92 px-4 backdrop-blur-md sm:px-6">
+      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4">
+        <a href={lang === 'fil' ? '/?lang=fil' : '/'} class="flex items-center rounded-lg transition-opacity hover:opacity-80" aria-label={isFil ? 'AniWhere tahanan' : 'AniWhere home'}>
           <BrandMark size="md" />
         </a>
 
-        <!-- Desktop Navigation -->
-        <nav class="hidden md:flex items-center gap-1.5" aria-label="Main navigation">
-          {navItems.map((item) => (
+        <nav class="hidden items-center gap-1 md:flex" aria-label={isFil ? 'Pangunahing nabigasyon' : 'Main navigation'}>
+          {farmerNav.map((item) => (
             <a
-              href={item.href}
-              class={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              href={`${item.href}${lang === 'fil' ? '?lang=fil' : ''}`}
+              class={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                 isActive(item.href)
-                  ? 'bg-[#FCECD8] text-[#597928] font-bold'
-                  : 'text-[#4A5245] hover:text-[#20251E] hover:bg-[#FCECD8]/30'
+                  ? 'bg-[#597928] text-[#FFFDF8]'
+                  : 'text-[#4A5245] hover:bg-[#FCECD8]/60 hover:text-[#20251E]'
               }`}
               aria-current={isActive(item.href) ? 'page' : undefined}
             >
@@ -103,126 +79,57 @@ const isActive = (path: string) => {
           ))}
         </nav>
 
-        <!-- Right Header Actions: Language Switcher + Buyer Demo -->
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Refined Pill Language Selector -->
-          <div class="inline-flex items-center bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 text-xs font-semibold" role="group" aria-label="Language selection">
-            <a
-              href="?lang=en"
-              class={`px-2 py-0.5 rounded-full transition-all text-[11px] ${lang === 'en' ? 'bg-[#597928] text-[#FFFDF8] shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'}`}
-              aria-current={lang === 'en' ? 'true' : undefined}
-            >
-              EN
-            </a>
-            <span class="text-[#20251E]/20 px-0.5 text-[10px]" aria-hidden="true">|</span>
-            <a
-              href="?lang=fil"
-              class={`px-2 py-0.5 rounded-full transition-all text-[11px] ${lang === 'fil' ? 'bg-[#597928] text-[#FFFDF8] shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'}`}
-              aria-current={lang === 'fil' ? 'true' : undefined}
-            >
-              FIL
-            </a>
+          <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
+            <a href={languageHref('en')} class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
+            <a href={languageHref('fil')} class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
           </div>
-
-          <!-- Buyer Demo Workspace Link -->
           <a
-            href={buyerNav.href}
-            class={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              isActive(buyerNav.href)
+            href={`/buyer${lang === 'fil' ? '?lang=fil' : ''}`}
+            class={`hidden min-h-10 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors sm:inline-flex ${
+              isActive('/buyer')
                 ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
-                : 'border-[#20251E]/20 bg-[#FFFDF8] text-[#4A5245] hover:bg-[#FCECD8]/40 hover:text-[#20251E]'
+                : 'border-[#20251E]/15 text-[#4A5245] hover:border-[#597928] hover:text-[#20251E]'
             }`}
           >
-            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-            </svg>
-            <span class="hidden xs:inline sm:inline">{buyerNav.label}</span>
-            <span class="xs:hidden sm:hidden">Buyer</span>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {isFil ? 'Para sa mamimili' : 'For buyers'}
           </a>
         </div>
       </div>
     </header>
 
-    <!-- Page Main Content -->
     <main id="main-content" class="flex-1 pb-24 md:pb-12">
       <slot />
     </main>
 
-    <!-- Mobile Bottom Navigation (Visible on mobile screens) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF8]/95 backdrop-blur-md border-t border-[#20251E]/10 px-4 py-2" aria-label="Mobile navigation">
-      <div class="flex items-center justify-around max-w-sm mx-auto">
-        <a
-          href="/"
-          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
-            isActive('/') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
-          }`}
-          aria-current={isActive('/') ? 'page' : undefined}
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          <span class="text-[11px]">{isFil ? 'Tahanan' : 'Home'}</span>
-          {isActive('/') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
-        </a>
-
-        <a
-          href="/discover"
-          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
-            isActive('/discover') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
-          }`}
-          aria-current={isActive('/discover') ? 'page' : undefined}
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <span class="text-[11px]">{isFil ? 'Maghanap' : 'Discover'}</span>
-          {isActive('/discover') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
-        </a>
-
-        <a
-          href="/compare"
-          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
-            isActive('/compare') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
-          }`}
-          aria-current={isActive('/compare') ? 'page' : undefined}
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <span class="text-[11px]">{isFil ? 'Ihambing' : 'Compare'}</span>
-          {isActive('/compare') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
-        </a>
-
-        <a
-          href="/saved"
-          class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
-            isActive('/saved') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
-          }`}
-          aria-current={isActive('/saved') ? 'page' : undefined}
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          <span class="text-[11px]">{isFil ? 'Nai-save' : 'Saved'}</span>
-          {isActive('/saved') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
-        </a>
+    <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
+      <div class="mx-auto grid max-w-sm grid-cols-3 gap-1">
+        {[
+          { href: '/', label: isFil ? 'Ani' : 'Harvest', icon: 'home' },
+          { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', icon: 'search' },
+          { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', icon: 'saved' },
+        ].map((item) => (
+          <a
+            href={`${item.href}${lang === 'fil' ? '?lang=fil' : ''}`}
+            class={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-2 text-[11px] font-semibold transition-colors ${
+              isActive(item.href) ? 'bg-[#FCECD8] text-[#6E3511]' : 'text-[#4A5245]'
+            }`}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.icon === 'home' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>}
+            {item.icon === 'search' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>}
+            {item.icon === 'saved' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>}
+            <span>{item.label}</span>
+          </a>
+        ))}
       </div>
     </nav>
 
-    <!-- Footer -->
-    <footer class="bg-[#FFFDF8] border-t border-[#20251E]/10 py-8 px-4 sm:px-6 text-sm text-[#4A5245]">
-      <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-2.5">
-          <BrandMark size="sm" />
-          <span class="text-xs text-[#6B7265]">
-            &copy; 2026 AniWhere &middot; NextGen Agri Hackathon Laguna
-          </span>
-        </div>
-        <p class="text-xs text-center md:text-right text-[#6B7265] max-w-md">
-          {isFil 
-            ? 'Ang AniWhere ay isang konsepto para sa pagtuklas ng pamilihan. Lahat ng datos ay halimbawa lamang. Kumpirmahin ang mga kondisyon bago bumiyahe.'
-            : 'AniWhere is a harvest market discovery concept. All data shown are illustrative demonstration fixtures. Confirm all terms before travel.'}
-        </p>
+    <footer class="border-t border-[#20251E]/10 bg-[#FFFDF8]/75 px-4 py-8 sm:px-6">
+      <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
+        <div class="flex items-center gap-3"><BrandMark size="sm" /><span>&copy; 2026 AniWhere · NextGen Agri Hackathon Laguna</span></div>
+        <p class="max-w-xl">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.' : 'AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity.'}</p>
       </div>
     </footer>
   </body>

@@ -1,2 +1,9 @@
 packages:
   - '.'
+
+# Native dependency builds remain opt-in. Astro/Vite need esbuild and Astro's
+# image pipeline may use sharp; all other dependency lifecycle scripts stay
+# unapproved.
+allowBuilds:
+  esbuild: true
+  sharp: true

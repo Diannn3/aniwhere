@@ -2,14 +2,22 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ComparisonExperience from '../components/compare/ComparisonExperience.svelte';
 
-const title = 'AniWhere — Compare Market Options';
-const description = 'Compare selling outlets side-by-side. Calculate proceeds after your entered hauling expense before you travel.';
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
+const title = lang === 'fil' ? 'AniWhere — Paghambingin ang mga Outlet' : 'AniWhere — Compare Market Options';
+const description = lang === 'fil'
+  ? 'Ihambing ang fit, dami, presyo, transport, at impormasyong kailangang kumpirmahin bago bumiyahe.'
+  : 'Compare fit, quantities, price evidence, transport, and what to confirm before travelling.';
+const places = Astro.url.searchParams.get('places');
+const initialPlaceIds = places === null
+  ? undefined
+  : places.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 3);
 ---
 
 <BaseLayout
   title={title}
   description={description}
   currentPath="/compare"
+  lang={lang}
 >
-  <ComparisonExperience client:load />
+  <ComparisonExperience client:load initialLang={lang} initialPlaceIds={initialPlaceIds} />
 </BaseLayout>

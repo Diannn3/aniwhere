@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
   import { onMount } from 'svelte';
   import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
@@ -6,377 +6,170 @@
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
-  import type { Outlet, HarvestQuery } from '../../lib/domain/types';
+  import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { t } from '../../content/translations';
+
+  const DEFAULT_COMPARE_IDS = ['demo-processor', 'demo-cooperative', 'demo-market'];
 
   interface Props {
     initialLang?: 'en' | 'fil';
+    initialPlaceIds?: string[];
   }
 
-  const { initialLang = 'en' } = $props();
+  const { initialLang = 'en', initialPlaceIds = DEFAULT_COMPARE_IDS } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
-  let selectedIds = $state<string[]>([]);
-  let harvest = $state<HarvestQuery>({
-    crop: 'tomato',
-    quantityKg: 300,
-    originMunicipality: 'los-banos',
-    readyDate: todayInManila(),
-  });
-
-  // Local editable transport expense overrides per outlet
-  let customTransports = $state<Record<string, number>>({});
+  let selectedIds = $state<string[]>(initialPlaceIds.slice(0, 3));
+  let harvest = $state<HarvestQuery>({ crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: todayInManila() });
+  let transportDrafts = $state<Record<string, string>>({});
+  let transportAnnouncement = $state('');
 
   onMount(() => {
     const parsed = parseDiscoverQuery(window.location.search);
     harvest = parsed.harvest;
-    if (parsed.lang) {
-      lang = parsed.lang;
+    lang = parsed.lang || lang;
+    const places = new URLSearchParams(window.location.search).get('places');
+    if (places !== null) {
+      selectedIds = places.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 3);
+      return;
     }
-
-    // Read places from URL search params first
-    const searchParams = new URLSearchParams(window.location.search);
-    const placesParam = searchParams.get('places');
-
-    if (placesParam) {
-      const ids = placesParam.split(',').map((s) => s.trim()).filter(Boolean);
-      selectedIds = ids.slice(0, 3);
-    } else {
-      // Check local storage or provide the canonical 3-outlet demo fixture
-      const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
-      if (stored && stored.length > 0) {
-        selectedIds = stored.slice(0, 3);
-      } else {
-        // Default canonical 3-option comparison
-        selectedIds = ['demo-processor', 'demo-cooperative', 'demo-market'];
-      }
-    }
+    const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
+    selectedIds = stored.length ? stored.slice(0, 3) : DEFAULT_COMPARE_IDS;
   });
 
   const isFil = $derived(lang === 'fil');
+  const originMun = $derived(LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]);
+  const comparedOutlets = $derived(selectedIds.map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id)).filter((o): o is Outlet => Boolean(o)).slice(0, 3));
 
-  const originMun = $derived(
-    LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]
-  );
-
-  const comparedOutlets = $derived(
-    selectedIds
-      .map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id))
-      .filter((o): o is Outlet => Boolean(o))
-      .slice(0, 3)
-  );
-
+  function copy(en: string, fil: string) { return isFil ? fil : en; }
+  function formatPeso(value: number | null) { return value === null ? copy('Not calculated', 'Hindi nakalkula') : `₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}`; }
+  function formatKg(value: number | null) { return value === null ? copy('Confirm', 'Kumpirmahin') : `${value.toLocaleString('en-PH')} kg`; }
+  function formatEvidenceDate(value: string | null | undefined) {
+    if (!value) return copy('Not recorded', 'Walang tala');
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(isFil ? 'fil-PH' : 'en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function evidenceKindLabel(kind: string) {
+    const labels: Record<string, [string, string]> = {
+      demo: ['Demo — sample data', 'Demo — halimbawang datos'], buyer_offer: ['Buyer-posted offer', 'Alok na naka-post ng buyer'],
+      reviewed_place: ['Reviewed place information', 'Nasuring impormasyon ng lugar'], public_reference: ['Public reference', 'Pampublikong sanggunian'],
+      unknown: ['Source type unknown', 'Hindi alam ang uri ng pinagmulan'],
+    };
+    const label = labels[kind] || labels.unknown;
+    return isFil ? label[1] : label[0];
+  }
+  function priceLabel(kind: string, value: number | null) {
+    if (value === null) return copy('No price recorded', 'Walang nakatalang presyo');
+    const prefix = kind === 'demo' ? copy('Sample price', 'Halimbawang presyo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
+    return `${prefix}: ₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}/kg`;
+  }
+  function fitTone(status: FitStatus) {
+    if (status === 'match') return 'border-[#597928]/30 bg-[#597928]/10 text-[#20251E]';
+    if (status === 'partial') return 'border-[#6E3511]/25 bg-[#FCECD8] text-[#20251E]';
+    if (status === 'confirm') return 'border-[#4E7380]/30 bg-[#4E7380]/10 text-[#20251E]';
+    return 'border-[#6E3511]/25 bg-[#FCECD8]/60 text-[#20251E]';
+  }
+  function hasTransportDraft(id: string) { return Object.prototype.hasOwnProperty.call(transportDrafts, id); }
+  function transportValue(outlet: Outlet, recorded: number | null) { return hasTransportDraft(outlet.id) ? transportDrafts[outlet.id] : recorded === null ? '' : String(recorded); }
+  function parsedTransport(outlet: Outlet, recorded: number | null) {
+    const value = transportValue(outlet, recorded).trim();
+    if (!value) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }
+  function transportProvenance(outlet: Outlet, recorded: number | null) {
+    if (!transportValue(outlet, recorded).trim()) return copy('Transport has not been entered.', 'Wala pang inilalagay na gastos sa biyahe.');
+    return hasTransportDraft(outlet.id) ? copy('Your edited transport amount.', 'Inedit mong halaga ng biyahe.') : copy('Recorded transport estimate.', 'Nakatalaang tantiya sa biyahe.');
+  }
+  function handleTransportChange(outlet: Outlet, recorded: number | null, value: string) {
+    transportDrafts = { ...transportDrafts, [outlet.id]: value };
+    const transport = parsedTransport(outlet, recorded);
+    if (transport === null) {
+      transportAnnouncement = copy(`Transport is not entered for ${outlet.name}; after transport is not calculated.`, `Wala pang gastos sa biyahe para sa ${outlet.name}; hindi nakalkula ang matapos ang biyahe.`);
+      return;
+    }
+    const nextFit = evaluateFit(outlet, harvest, transport);
+    transportAnnouncement = nextFit.afterTransportPay === null
+      ? copy(`Transport updated for ${outlet.name}; after transport cannot be calculated without a recorded price.`, `Na-update ang gastos sa biyahe para sa ${outlet.name}; hindi makalkula ang matapos ang biyahe nang walang nakatalang presyo.`)
+      : copy(`After transport updated to ${formatPeso(nextFit.afterTransportPay)} for ${outlet.name}.`, `Na-update sa ${formatPeso(nextFit.afterTransportPay)} ang matapos ang biyahe para sa ${outlet.name}.`);
+  }
   function handleRemove(id: string) {
-    selectedIds = selectedIds.filter((item) => item !== id);
+    selectedIds = selectedIds.filter((selectedId) => selectedId !== id);
     safeStorage.setItem('aniwhere_compare_ids', selectedIds);
-  }
-
-  function handleTransportChange(outletId: string, value: string) {
-    const num = Number(value);
-    if (!isNaN(num) && num >= 0) {
-      customTransports[outletId] = num;
-    }
-  }
-
-  function getTransportCost(outlet: Outlet, defaultCost: number | null): number | null {
-    if (customTransports[outlet.id] !== undefined) {
-      return customTransports[outlet.id];
-    }
-    return defaultCost;
-  }
-
-  function formatEvidenceDate(value: string | null | undefined): string {
-    if (!value) return isFil ? 'Hindi alam' : 'Unknown';
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return value;
-    return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 </script>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
-  <!-- Page Header (Anti-Vibecode: Direct H1, No Kicker) -->
-  <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#20251E]/10 pb-6">
-    <div class="space-y-2 max-w-2xl">
-      <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#20251E] tracking-tight">
-        {isFil ? 'Paghambingin ang mga Pamilihan' : 'Compare Options for Your Harvest'}
-      </h1>
-      <p class="text-sm sm:text-base text-[#4A5245]">
-        {isFil
-          ? `Suriin at paghambingin ang mga potensyal na mapagbebentahan sa Laguna para sa iyong ${harvest.quantityKg} kg na ${harvest.crop}.`
-          : `Review and compare potential selling outlets in Laguna side-by-side for your ${harvest.quantityKg} kg of ${harvest.crop}.`}
-      </p>
-    </div>
-
-    <!-- Active Harvest Badge / Edit Shortcut -->
-    <div class="bg-white rounded-2xl border border-[#20251E]/12 p-4 shadow-sm flex items-center gap-4">
-      <div class="space-y-0.5 text-xs">
-        <div class="font-bold text-[#20251E] text-sm capitalize">{harvest.quantityKg} kg {harvest.crop}</div>
-        <div class="text-[#6B7265]">{originMun.name} &bull; Ready {harvest.readyDate}</div>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+  <div class="space-y-7">
+    <header class="grid gap-5 border-b border-[#20251E]/15 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-3xl font-bold tracking-[-0.02em] text-[#20251E] sm:text-4xl">{copy('Compare options for your harvest', 'Paghambingin ang mga opsyon para sa ani mo')}</h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-[#4A5245] sm:text-base">{copy('Read the same decision facts across each outlet. AniWhere does not rank or guarantee an option.', 'Basahin ang parehong impormasyon sa bawat outlet. Hindi nagraranggo o naggagarantiya ang AniWhere ng anumang opsyon.')}</p>
       </div>
+      <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#597928]/35 bg-[#FFFDF8] px-4 py-2 text-sm font-semibold text-[#597928] transition-colors hover:bg-[#597928]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Edit harvest context', 'Baguhin ang konteksto ng ani')}</a>
+    </header>
 
-      <a
-        href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#FFFDF8] text-[#597928] border border-[#597928]/30 hover:bg-[#597928]/10 transition-colors min-h-[44px]"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-        <span>{isFil ? 'Baguhin ang Ani' : 'Edit harvest'}</span>
-      </a>
-    </div>
-  </header>
+    <section aria-label={copy('Harvest context', 'Konteksto ng ani')} class="grid gap-px overflow-hidden rounded-xl border border-[#20251E]/15 bg-[#20251E]/15 sm:grid-cols-4">
+      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#6B7265]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold capitalize text-[#20251E]">{harvest.crop}</p></div>
+      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#6B7265]">{copy('Quantity', 'Dami')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.quantityKg.toLocaleString('en-PH')} kg</p></div>
+      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#6B7265]">{copy('From', 'Mula sa')}</p><p class="mt-1 font-semibold text-[#20251E]">{originMun.name}</p></div>
+      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#6B7265]">{copy('Ready date', 'Petsa ng ani')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.readyDate}</p></div>
+    </section>
 
-  <!-- Notice Banner: Transparent Calculation -->
-  <div class="rounded-xl p-4 bg-[#FAF7EE] border border-[#20251E]/10 flex items-start gap-3 text-xs text-[#4A5245]">
-    <svg class="w-5 h-5 text-[#6E3511] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <div>
-      <span class="font-bold text-[#20251E]">Notice:</span> {t('afterTransportNote', lang)}
-      <span class="block mt-0.5 text-[#6B7265]">
-        {isFil
-          ? 'Maaari mong baguhin ang halaga ng biyahe sa bawat kahon upang makita ang muling pagkalkula.'
-          : 'You can edit the hauling expense on each card below to recalculate based on your actual travel setup.'}
-      </span>
-    </div>
+    <aside class="grid gap-3 rounded-xl border border-[#6E3511]/20 bg-[#FCECD8] p-4 text-sm text-[#4A5245] sm:grid-cols-[auto_1fr] sm:items-start" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
+      <svg class="mt-0.5 h-5 w-5 text-[#6E3511]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div><p class="font-semibold text-[#20251E]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p><p class="mt-1 leading-5">{t('afterTransportNote', lang)}</p><p class="mt-1 text-xs leading-5 text-[#4A5245]">{copy('Edit only your transport amount below. A missing transport amount keeps the after-transport figure uncalculated.', 'I-edit lamang ang gastos mo sa biyahe sa ibaba. Kapag walang inilagay na gastos, hindi kakalkulahin ang matapos ang biyahe.')}</p></div>
+    </aside>
+
+    {#if comparedOutlets.length === 0}
+      <section class="mx-auto max-w-2xl rounded-2xl border border-[#20251E]/15 bg-white px-6 py-12 text-center shadow-[0_1px_3px_rgba(32,37,30,0.05)]">
+        <h2 class="font-serif text-2xl font-bold text-[#20251E]">{copy('No outlets selected', 'Walang napiling outlet')}</h2>
+        <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-[#4A5245]">{copy('Select up to three outlets from discovery to compare the same details side by side.', 'Pumili ng hanggang tatlong outlet mula sa paghahanap upang maihambing ang parehong detalye nang magkatabi.')}</p>
+        <a href="/discover" class="mt-6 inline-flex min-h-[44px] items-center rounded-lg bg-[#597928] px-5 py-2.5 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#486320] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Find selling options', 'Maghanap ng mapagbebentahan')}</a>
+      </section>
+    {:else}
+      <section aria-labelledby="ledger-title">
+        <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div><h2 id="ledger-title" class="font-serif text-2xl font-bold tracking-[-0.02em] text-[#20251E]">{copy('Decision ledger', 'Talaan ng desisyon')}</h2><p class="mt-1 text-sm text-[#4A5245]">{copy('Each row measures the same detail across all selected outlets.', 'Pareho ang sinusukat ng bawat hanay sa lahat ng napiling outlet.')}</p></div>
+          <p id="ledger-scroll-note" class="text-xs font-medium text-[#4E7380]">{copy('On a phone, scroll the table sideways to compare.', 'Sa phone, i-scroll nang pakaliwa o pakanan ang talaan upang maghambing.')}</p>
+        </div>
+        <div class="matrix-scroll overflow-x-auto rounded-xl border border-[#20251E]/15 bg-white shadow-[0_1px_3px_rgba(32,37,30,0.05)]" tabindex="0" aria-describedby="ledger-scroll-note">
+          <table class="w-full min-w-[900px] border-collapse text-left text-sm">
+            <caption class="sr-only">{copy('Comparison ledger for selected outlets', 'Talaan ng paghahambing para sa mga napiling outlet')}</caption>
+            <thead class="bg-[#FCECD8]/70"><tr class="align-top">
+              <th scope="col" class="ledger-metric w-[190px] border-b border-r border-[#20251E]/15 bg-[#FCECD8] px-4 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#4A5245]">{copy('Metric', 'Sukatan')}</th>
+              {#each comparedOutlets as outlet (outlet.id)}
+                <th scope="col" class="min-w-[235px] border-b border-[#20251E]/15 px-4 py-4"><div class="flex items-start justify-between gap-3"><div><p class="font-serif text-lg font-bold leading-5 text-[#20251E]">{outlet.name}</p><p class="mt-1 text-xs font-medium text-[#4A5245]">{outlet.municipality}, Laguna · {outlet.category}</p></div><button type="button" onclick={() => handleRemove(outlet.id)} class="-mr-2 -mt-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-[#4A5245] transition-colors hover:bg-[#20251E]/8 hover:text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]" aria-label={copy(`Remove ${outlet.name} from comparison`, `Alisin ang ${outlet.name} sa paghahambing`)}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" /></svg></button></div></th>
+              {/each}
+            </tr></thead>
+            <tbody class="divide-y divide-[#20251E]/12">
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Fit', 'Pagkakatugma')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 align-top"><div class={`rounded-lg border px-3 py-2.5 ${fitTone(fit.status)}`}><p class="font-semibold">{isFil ? fit.statusLabelFil : fit.statusLabel}</p><p class="mt-1 text-xs leading-5 text-[#4A5245]">{isFil ? fit.reasonFil : fit.reason}</p></div></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Accepted quantity', 'Kayang tanggapin')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatKg(fit.acceptedKg)}</td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Remaining harvest', 'Natitirang ani')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatKg(fit.remainingKg)}</td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Price evidence', 'Ebidensya ng presyo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg)}</p><p class="mt-1 text-xs text-[#4A5245]">{evidenceKindLabel(fit.evidenceKind)}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Gross amount', 'Kabuuang halaga')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatPeso(fit.grossPay)}</td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Entered transport', 'Inilagay na gastos sa biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const value = transportValue(outlet, recordedTransport)}<td class="px-4 py-4 align-top"><label class="sr-only" for={`transport-${outlet.id}`}>{copy(`Transport for ${outlet.name}`, `Gastos sa biyahe para sa ${outlet.name}`)}</label><div class="relative max-w-[170px]"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span><input id={`transport-${outlet.id}`} type="number" min="0" step="50" inputmode="decimal" value={value} placeholder={copy('Not entered', 'Wala pang halaga')} oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)} class={`min-h-[44px] w-full rounded-lg border bg-white py-2 pl-7 pr-3 font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/20'}`} /></div><p class="mt-1.5 text-xs leading-4 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('After entered transport', 'Matapos ang inilagay na biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const afterTransport = transport === null ? null : fit.afterTransportPay}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{formatPeso(afterTransport)}</p><p class="mt-1 text-xs leading-4 text-[#4A5245]">{transport === null ? copy('Enter transport to calculate.', 'Maglagay ng gastos upang makalkula.') : copy('Not profit or guaranteed income.', 'Hindi ito tubo o garantisadong kita.')}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{distance.toLocaleString('en-PH')} km</p><p class="mt-1 text-xs text-[#4A5245]">{copy('Straight-line distance; not a route.', 'Tuwid na layo; hindi ito ruta.')}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Source and freshness', 'Pinagmulan at kasariwaan')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold text-[#20251E]">{fit.sourceLabel || copy('Source unknown', 'Hindi alam ang pinagmulan')}</p><dl class="mt-2 grid gap-1 text-xs text-[#4A5245]"><div class="flex justify-between gap-3"><dt>{copy('Updated', 'Na-update')}</dt><dd class="tabular-nums text-right">{formatEvidenceDate(fit.dataUpdatedAt)}</dd></div><div class="flex justify-between gap-3"><dt>{copy('Valid until', 'May bisa hanggang')}</dt><dd class="tabular-nums text-right">{formatEvidenceDate(fit.dataValidUntil)}</dd></div></dl></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Confirm before travel', 'Kumpirmahin bago bumiyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const questions = isFil ? fit.conditionsToConfirmFil : fit.conditionsToConfirm}{@const unknowns = isFil ? fit.unknownsFil : fit.unknowns}<td class="px-4 py-4 align-top">{#if unknowns.length > 0}<p class="mb-2 text-xs font-semibold text-[#4E7380]">{copy('Still unknown:', 'Hindi pa alam:')} {unknowns.join(', ')}</p>{/if}{#if questions.length > 0}<ul class="space-y-1.5 text-xs leading-5 text-[#4A5245]">{#each questions as question}<li class="flex gap-2"><span aria-hidden="true" class="text-[#6E3511]">—</span><span>{question}</span></li>{/each}</ul>{:else}<p class="text-xs leading-5 text-[#4A5245]">{copy('No additional question is recorded. Confirm current terms before travel.', 'Walang nakatalang dagdag na tanong. Kumpirmahin pa rin ang kasalukuyang kondisyon bago bumiyahe.')}</p>{/if}</td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Review', 'Suriin')}</th>{#each comparedOutlets as outlet (outlet.id)}<td class="px-4 py-4"><a href={`/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`} class="inline-flex min-h-[44px] items-center rounded-lg border border-[#597928]/35 px-3 py-2 text-xs font-semibold text-[#597928] transition-colors hover:bg-[#597928]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Review outlet', 'Suriin ang outlet')}</a></td>{/each}</tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="sr-only" aria-live="polite">{transportAnnouncement}</p>
+      </section>
+      <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-[#20251E]/15 pt-5"><a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-[44px] items-center rounded-lg border border-[#20251E]/20 px-4 py-2 text-sm font-semibold text-[#20251E] transition-colors hover:bg-[#FCECD8]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Back to discovery', 'Bumalik sa paghahanap')}</a>{#if comparedOutlets.length < 3}<a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-[44px] items-center rounded-lg bg-[#597928] px-4 py-2 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#486320] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Add an outlet', 'Magdagdag ng outlet')}</a>{/if}</footer>
+    {/if}
   </div>
-
-  <!-- Comparison Columns State -->
-  {#if comparedOutlets.length === 0}
-    <!-- Empty State -->
-    <div class="bg-white rounded-2xl border border-[#20251E]/12 p-10 sm:p-16 text-center space-y-5 shadow-sm max-w-2xl mx-auto">
-      <div class="w-16 h-16 rounded-full bg-[#6E3511]/10 text-[#6E3511] mx-auto flex items-center justify-center">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      </div>
-
-      <div class="space-y-2">
-        <h2 class="text-2xl font-serif font-bold text-[#20251E]">
-          {isFil ? 'Walang napiling pamilihan' : 'No outlets selected for comparison'}
-        </h2>
-        <p class="text-sm text-[#4A5245] max-w-md mx-auto leading-relaxed">
-          {isFil
-            ? 'Pumili ng isa hanggang tatlong lugar sa paghahanap upang makita ang magkatabing pagsusuri ng presyo at gastos.'
-            : 'Select 1 to 3 outlets from discovery to compare accepted quantities, available price evidence, and transport costs.'}
-        </p>
-      </div>
-
-      <div class="pt-2">
-        <a
-          href="/discover"
-          class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <span>{isFil ? 'Maghanap ng Pamilihan' : 'Find selling options'}</span>
-        </a>
-      </div>
-    </div>
-  {:else}
-    <!-- Side-by-Side Comparison Grid (Equal Visual Footing, 1 to 3 Cards) -->
-    <div
-      class={`grid gap-6 ${
-        comparedOutlets.length === 1
-          ? 'grid-cols-1 max-w-xl mx-auto'
-          : comparedOutlets.length === 2
-          ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto'
-          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-      }`}
-    >
-      {#each comparedOutlets as outlet (outlet.id)}
-        {@const defaultTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}
-        {@const activeTransport = getTransportCost(outlet, defaultTransport)}
-        {@const fit = evaluateFit(outlet, harvest, activeTransport ?? undefined)}
-        {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-        {@const detailUrl = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
-
-        <article class="bg-white rounded-2xl border border-[#20251E]/12 p-6 shadow-sm flex flex-col justify-between gap-6 hover:border-[#597928]/40 transition-all">
-          <div class="space-y-5">
-            <!-- Header: Title, Category & Remove Control -->
-            <div class="flex items-start justify-between gap-3 border-b border-[#20251E]/8 pb-4">
-              <div>
-                <span class="inline-block text-[11px] uppercase font-bold text-[#6E3511] tracking-wider mb-1">
-                  {outlet.category}
-                </span>
-                <h2 class="text-xl font-serif font-bold text-[#20251E] leading-snug">
-                  {outlet.name}
-                </h2>
-                <div class="flex items-center gap-1.5 text-xs text-[#4A5245] mt-1">
-                  <span>{outlet.municipality}, Laguna</span>
-                  <span>&bull;</span>
-                  <span>{dist} km away</span>
-                </div>
-              </div>
-
-              <!-- Accessible Remove Action -->
-              <button
-                type="button"
-                onclick={() => handleRemove(outlet.id)}
-                class="w-10 h-10 -mr-2 -mt-2 rounded-full flex items-center justify-center text-[#6B7265] hover:text-[#20251E] hover:bg-[#20251E]/8 transition-colors min-h-[44px]"
-                aria-label={`Remove ${outlet.name} from comparison`}
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Fit Status Banner -->
-            <div
-              class={`rounded-xl p-3 text-xs leading-relaxed ${
-                fit.status === 'match'
-                  ? 'bg-[#597928]/10 text-[#20251E] border border-[#597928]/25'
-                  : fit.status === 'partial'
-                  ? 'bg-[#FCECD8] text-[#6E3511] border border-[#6E3511]/25'
-                  : fit.status === 'confirm'
-                  ? 'bg-[#4E7380]/10 text-[#20251E] border border-[#4E7380]/25'
-                  : 'bg-red-50 text-red-900 border border-red-200'
-              }`}
-            >
-              <div class="font-bold">
-                {isFil ? fit.statusLabelFil : fit.statusLabel}
-              </div>
-              <p class="text-[11px] mt-0.5 opacity-90">
-                {isFil ? fit.reasonFil : fit.reason}
-              </p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
-              <span class="font-bold text-[#20251E]">{fit.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
-              {#if fit.dataUpdatedAt}<span>{isFil ? 'Na-update' : 'Updated'} {formatEvidenceDate(fit.dataUpdatedAt)}</span>{/if}
-              {#if fit.dataValidUntil}<span>{isFil ? 'May bisa hanggang' : 'Valid until'} {formatEvidenceDate(fit.dataValidUntil)}</span>{/if}
-              {#if fit.unknowns.length > 0}<span class="text-[#4E7380] font-semibold">{isFil ? 'Kailangang kumpirmahin:' : 'Unknown:'} {(isFil ? fit.unknownsFil : fit.unknowns).join(', ')}</span>{/if}
-            </div>
-
-            <!-- Quantitative Arithmetic Ledger -->
-            <div class="space-y-2.5 text-xs">
-              <!-- Accepted kg -->
-              <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-                <span class="text-[#4A5245]">{isFil ? 'Kayang Tanggapin:' : 'Accepted Quantity:'}</span>
-                <span class="font-bold text-sm text-[#597928]">
-                  {fit.acceptedKg !== null ? `${fit.acceptedKg} kg` : 'Confirm'}
-                </span>
-              </div>
-
-              <!-- Remaining kg -->
-              <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-                <span class="text-[#4A5245]">{isFil ? 'Matitira:' : 'Remaining Unsold:'}</span>
-                <span class={`font-bold text-sm ${fit.remainingKg && fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#20251E]'}`}>
-                  {fit.remainingKg !== null ? `${fit.remainingKg} kg` : (isFil ? 'Kumpirmahin' : 'Confirm')}
-                </span>
-              </div>
-
-              <!-- Price per kg -->
-              <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-                <span class="text-[#4A5245]">{fit.evidenceKind === 'demo' ? (isFil ? 'Halimbawang presyo/kg:' : 'Sample price/kg:') : fit.evidenceKind === 'buyer_offer' ? (isFil ? 'Buyer-posted presyo/kg:' : 'Buyer-posted price/kg:') : (isFil ? 'Presyo bawat kilo:' : 'Price per kg:')}</span>
-                <span class="font-bold text-sm text-[#20251E]">
-                  {fit.samplePricePerKg !== null ? `₱${fit.samplePricePerKg.toFixed(2)}` : 'Not posted'}
-                </span>
-              </div>
-
-              <!-- Gross Subtotal -->
-              <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-                <span class="text-[#4A5245]">{isFil ? 'Kabuuang Halaga:' : 'Gross Amount:'}</span>
-                <span class="font-bold text-sm text-[#20251E]">
-                  {fit.grossPay !== null ? `₱${fit.grossPay.toLocaleString()}` : '---'}
-                </span>
-              </div>
-
-              <!-- Editable Transport Expense -->
-              <div class="p-2.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/10 space-y-1.5">
-                <div class="flex items-center justify-between">
-                  <label for={`transport-${outlet.id}`} class="text-[#4A5245] font-medium">
-                    {isFil ? 'Gastos sa biyahe (₱):' : 'Entered transport (₱):'}
-                  </label>
-                  <span class="text-[10px] text-[#6B7265] italic">editable</span>
-                </div>
-                <div class="relative">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#6B7265] font-semibold">₱</span>
-                  <input
-                    id={`transport-${outlet.id}`}
-                    type="number"
-                    min="0"
-                    step="50"
-                    value={activeTransport ?? ''}
-                    placeholder="Enter your quote"
-                    oninput={(e) => handleTransportChange(outlet.id, (e.target as HTMLInputElement).value)}
-                    class="w-full pl-7 pr-3 py-1.5 rounded-lg border border-[#20251E]/20 text-sm font-bold text-[#6E3511] focus:outline-none focus:ring-2 focus:ring-[#597928] bg-white min-h-[44px]"
-                    aria-label={`Hauling cost for ${outlet.name}`}
-                  />
-                </div>
-                <div class="text-[10px] text-[#6B7265]">
-                  {activeTransport === null ? (isFil ? 'Walang hauling estimate na nakaimbak' : 'No hauling estimate stored') : (isFil ? 'Halagang inilagay o demo default' : 'Entered amount or demo default')}
-                </div>
-              </div>
-
-              <!-- Net Payout After Transport -->
-              <div class="flex items-center justify-between p-3 rounded-xl bg-[#597928]/10 border border-[#597928]/35">
-                <div>
-                  <div class="text-[11px] font-bold text-[#597928] uppercase tracking-wider">
-                    {isFil ? 'Matapos ang Biyahe' : 'After Transport'}
-                  </div>
-                  <div class="text-[10px] text-[#4A5245]">before farm costs</div>
-                </div>
-                <span class="text-lg font-bold text-[#597928]">
-                  {fit.afterTransportPay !== null ? `₱${fit.afterTransportPay.toLocaleString()}` : '---'}
-                </span>
-              </div>
-            </div>
-
-            <!-- Conditions to Confirm Preview -->
-            <div class="rounded-xl p-3 bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-              <div class="text-[11px] font-bold text-[#20251E]">Requirements to Confirm:</div>
-              <ul class="text-[11px] text-[#4A5245] space-y-1 list-disc list-inside">
-                <li>What grade is accepted for {harvest.crop}?</li>
-                <li>What packaging is required?</li>
-                {#if fit.conditionsToConfirm && fit.conditionsToConfirm[0]}
-                  <li>{fit.conditionsToConfirm[0]}</li>
-                {/if}
-              </ul>
-            </div>
-          </div>
-
-          <!-- Card Action Button: Apple HIG min-h-[48px] -->
-          <div class="pt-2 border-t border-[#20251E]/8">
-            <a
-              href={detailUrl}
-              class="w-full min-h-[48px] px-5 py-3 rounded-full bg-[#597928] text-white font-semibold text-xs hover:bg-[#435c1d] transition-all flex items-center justify-center gap-1.5 shadow-sm"
-            >
-              <span>{isFil ? 'Buksan ang detalye' : 'Review this option'}</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
-        </article>
-      {/each}
-    </div>
-
-    <!-- Additional Action / Return to Discovery -->
-    <div class="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[#20251E]/10">
-      <a
-        href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] text-xs font-semibold hover:border-[#597928] transition-all min-h-[44px]"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        <span>{isFil ? 'Bumalik sa Resulta ng Pamilihan' : 'Back to discovery results'}</span>
-      </a>
-
-      {#if comparedOutlets.length < 3}
-        <a
-          href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#597928] text-white text-xs font-bold hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>{isFil ? 'Magdagdag ng Ibang Pamilihan' : 'Add another outlet to compare'}</span>
-        </a>
-      {/if}
-    </div>
-  {/if}
 </div>
+
+<style>
+  .matrix-scroll { scrollbar-color: #91AC67 #FCECD8; scrollbar-width: thin; }
+  .matrix-scroll::-webkit-scrollbar { height: 12px; }
+  .matrix-scroll::-webkit-scrollbar-track { background: #FCECD8; }
+  .matrix-scroll::-webkit-scrollbar-thumb { background: #597928; border: 3px solid #FCECD8; border-radius: 999px; }
+  .ledger-metric { left: 0; position: sticky; z-index: 1; }
+  thead .ledger-metric { z-index: 2; }
+  @media print { .matrix-scroll { overflow: visible; } .ledger-metric { position: static; } }
+</style>
