@@ -58,4 +58,23 @@ describe('AniToolDispatcher', () => {
     expect(result.ok).toBe(true);
     expect(JSON.stringify(result.data).toLowerCase()).not.toContain('profit');
   });
+
+  it('rejects incomplete or invalid harvest context instead of guessing', async () => {
+    const missingDate = await dispatcher.dispatch(req('set_harvest_context', {
+      harvest: { crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos' },
+    }), harvest);
+    expect(missingDate.ok).toBe(false);
+    expect(missingDate.error?.code).toBe('invalid_arguments');
+
+    const unknownOrigin = await dispatcher.dispatch(req('set_harvest_context', {
+      harvest: { crop: 'tomato', quantityKg: 300, originMunicipality: 'made-up-place', readyDate: '2026-09-24' },
+    }), harvest);
+    expect(unknownOrigin.ok).toBe(false);
+
+    const impossibleQuantity = await dispatcher.dispatch(req('set_harvest_context', {
+      harvest: { crop: 'tomato', quantityKg: 100001, originMunicipality: 'los-banos', readyDate: '2026-09-24' },
+    }), harvest);
+    expect(impossibleQuantity.ok).toBe(false);
+  });
+
 });
