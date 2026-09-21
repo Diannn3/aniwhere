@@ -235,7 +235,7 @@
       <button
         type="button"
         onclick={() => isEditingHarvest = !isEditingHarvest}
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
+        class="premium-control inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -311,7 +311,7 @@
         <button
           type="button"
           onclick={() => activeMobileView = 'list'}
-          class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'list'
               ? 'bg-[#597928] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
@@ -346,7 +346,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'all'}
-          class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'all'
               ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
               : 'border-[#20251E]/15 bg-[#FFFDF8] text-[#4A5245] hover:border-[#597928]/40'
@@ -358,7 +358,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'match'}
-          class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'match'
               ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
               : 'border-[#91AC67]/40 bg-[#EAF3DE]/60 text-[#3B5B16] hover:border-[#597928]'
@@ -370,7 +370,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'partial'}
-          class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'partial'
               ? 'border-[#6E3511] bg-[#6E3511] text-[#FFFDF8]'
               : 'border-[#E0A96D]/40 bg-[#FCECD8]/60 text-[#6E3511] hover:border-[#6E3511]'
@@ -382,7 +382,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'confirm'}
-          class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'confirm'
               ? 'border-[#4E7380] bg-[#4E7380] text-[#FFFDF8]'
               : 'border-[#4E7380]/40 bg-[#EBF2F5]/60 text-[#2A4B56] hover:border-[#4E7380]'
@@ -400,7 +400,7 @@
         <select
           id="sort-by-select"
           bind:value={sortBy}
-          class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl px-2.5 py-1 text-xs font-semibold text-[#20251E] outline-none cursor-pointer"
+          class="min-h-11 bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl px-2.5 py-1 text-xs font-semibold text-[#20251E] outline-none cursor-pointer"
         >
           <option value="fit">{lang === 'fil' ? 'Status ng Pagkakatugma' : 'Fit status'}</option>
           <option value="distance">{lang === 'fil' ? 'Pinakamalapit' : 'Nearest'}</option>
@@ -525,7 +525,7 @@
                   type="button"
                   onclick={() => handleToggleSave(item.outlet.id)}
                   aria-label={item.isSaved ? t('removeFromSaved', lang) : t('saveOutlet', lang)}
-                  class={`p-2 rounded-full transition-colors cursor-pointer ${
+                  class={`premium-control grid min-h-11 min-w-11 place-items-center rounded-full transition-colors cursor-pointer ${
                     item.isSaved
                       ? 'text-[#597928] bg-[#EAF3DE]'
                       : 'text-[#6B7265] hover:text-[#20251E] hover:bg-[#FCECD8]/50'
@@ -540,6 +540,25 @@
                 {item.outlet.municipality}, Laguna &bull; <span class="capitalize">{item.outlet.category}</span>
               </p>
             </div>
+
+            <!-- Decision quantities stay visible even when no price exists. -->
+            {#if item.fit.status === 'match' || item.fit.status === 'partial'}
+              <dl class="grid grid-cols-2 overflow-hidden rounded-xl border border-[#20251E]/10 bg-[#F9FBF7]">
+                <div class="p-3 sm:p-3.5">
+                  <dt class="text-[11px] font-semibold text-[#687064]">{lang === 'fil' ? 'Kayang tanggapin' : 'Can accept'}</dt>
+                  <dd class="mt-0.5 font-tabular text-xl font-bold tracking-tight text-[#20251E]">{item.fit.acceptedKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
+                </div>
+                <div class="border-l border-[#20251E]/10 p-3 sm:p-3.5">
+                  <dt class="text-[11px] font-semibold text-[#687064]">{lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}</dt>
+                  <dd class="mt-0.5 font-tabular text-xl font-bold tracking-tight" class:text-[#6E3511]={Boolean(item.fit.remainingKg && item.fit.remainingKg > 0)} class:text-[#597928]={item.fit.remainingKg === 0}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
+                </div>
+              </dl>
+            {:else if item.fit.status === 'confirm'}
+              <div class="rounded-xl border border-[#4E7380]/20 bg-[#EBF2F5]/55 px-3 py-2.5">
+                <p class="text-xs font-bold text-[#2A4B56]">{lang === 'fil' ? 'Hindi pa alam ang kayang tanggapin' : 'Accepted quantity is still unknown'}</p>
+                <p class="mt-1 text-[11px] leading-relaxed text-[#4A5245]">{lang === 'fil' ? 'Kumpirmahin muna ang kapasidad bago magplano ng biyahe.' : 'Confirm capacity before planning a trip.'}</p>
+              </div>
+            {/if}
 
             <!-- Fit Reason Explanation -->
             <p class="text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 border-[#597928] pl-2.5 py-1">
@@ -614,7 +633,7 @@
               <!-- View Details Link -->
               <a
                 href={`/places/${item.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', item.outlet.id, lang)}`}
-                class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] transition-colors shadow-xs"
+                class="premium-control inline-flex min-h-11 items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] transition-colors shadow-xs"
               >
                 <span>{t('viewDetails', lang)}</span>
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
