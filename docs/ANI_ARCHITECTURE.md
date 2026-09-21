@@ -32,3 +32,26 @@ Harvest remains the same `HarvestQuery` serialized through existing discover/com
 ## Failure
 
 Provider unavailable, offline, denied microphone, quota/token failure or disconnect leaves the manual product intact. Ani shows a calm text fallback/retry state and never invents a market answer to hide failure.
+
+
+## Verified provider facts — 2026-09-22
+
+Official Google AI documentation was re-checked before the production transport pass:
+
+- `gemini-3.8-live` is the stable Gemini 3.8 Live model and was released GA on 2026-09-15.
+- Live API supports function calling and native audio.
+- Browser/client Live connections should use short-lived ephemeral tokens rather than a long-lived API key.
+- Live WebSocket connections are periodically reset; session resumption and `GoAway` handling are recommended.
+- Context-window compression is recommended for longer audio sessions.
+
+Implementation consequences:
+- the browser receives only a constrained one-use ephemeral token;
+- `GEMINI_API_KEY` remains server-only;
+- the client retains resumption handles, reconnects through fresh token provisioning, and enables sliding-window context compression;
+- CI never requires Gemini availability.
+
+Official references:
+- https://ai.google.dev/gemini-api/docs/models/gemini-3.8-live
+- https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
+- https://ai.google.dev/gemini-api/docs/live-api/session-management
+- https://ai.google.dev/api/live
