@@ -9,6 +9,8 @@ const TOOL_NAMES = new Set<string>(ANI_TOOL_DECLARATIONS.map((tool) => tool.name
 type LiveMessage = {
   setupComplete?: object;
   toolCall?: { functionCalls?: Array<{ id?: string; name?: string; args?: Record<string, unknown> }> };
+  sessionResumptionUpdate?: { resumable?: boolean; newHandle?: string };
+  goAway?: { timeLeft?: string };
   serverContent?: {
     inputTranscription?: { text?: string };
     outputTranscription?: { text?: string };
@@ -31,8 +33,20 @@ export class GeminiLiveAniProvider implements AniProvider {
   private inputTranscript = '';
   private inputTranscriptEmitted = false;
   private suppressAudio = false;
+  private sessionContext?: AniSessionContext;
+  private resumptionHandle?: string;
+  private reconnecting = false;
+  private reconnectAttempts = 0;
+  private closedByUser = false;
 
-  async connect(_context: AniSessionContext): Promise<void> {
+  async connect(context: AniSessionContext): Promise<void> {
+    this.sessionContext = context;
+    this.closedByUser = false;
+    this.reconnectAttempts = 0;
+    await this.openSocket();
+  }
+
+  private async openSocket(): Promise<void> {
     const tokenEndpoint = import.meta.env.PUBLIC_ANI_SESSION_ENDPOINT;
     if (!tokenEndpoint) {
       this.emit({ type: 'status', status: 'offline' });
@@ -72,12 +86,20 @@ export class GeminiLiveAniProvider implements AniProvider {
             tools: [{ functionDeclarations: ANI_TOOL_DECLARATIONS }],
             inputAudioTranscription: {},
             outputAudioTranscription: {},
+            sessionResumption: this.resumptionHandle ? { handle: this.resumptionHandle } : {},
+            contextWindowCompression: { slidingWindow: {} },
           },
         }));
       };
 
       socket.onmessage = (event) => {
         const message = JSON.parse(String(event.data)) as LiveMessage;
+        if (message.sessionResumptionUpdate?.resumable && message.sessionResumptionUpdate.newHandle) {
+          this.resumptionHandle = message.sessionResumptionUpdate.newHandle;
+        }
+        if (message.goAway && !this.closedByUser) {
+          void this.reconnect();
+        }
         if (message.setupComplete) {
           window.clearTimeout(timeout);
           this.emit({ type: 'status', status: 'ready' });
@@ -92,9 +114,31 @@ export class GeminiLiveAniProvider implements AniProvider {
       };
       socket.onclose = () => {
         window.clearTimeout(timeout);
+        if (this.closedByUser || this.reconnecting) return;
         this.emit({ type: 'status', status: 'offline' });
+        if (this.resumptionHandle && this.reconnectAttempts < 2) {
+          void this.reconnect();
+        }
       };
     });
+  }
+
+  private async reconnect(): Promise<void> {
+    if (this.reconnecting || this.closedByUser || !this.sessionContext) return;
+    this.reconnecting = true;
+    this.reconnectAttempts += 1;
+    this.emit({ type: 'status', status: 'connecting' });
+    try {
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        this.socket.close(1000, 'Ani session resuming');
+      }
+      await this.openSocket();
+      this.reconnectAttempts = 0;
+    } catch {
+      this.emit({ type: 'status', status: 'offline' });
+    } finally {
+      this.reconnecting = false;
+    }
   }
 
   async sendText(text: string): Promise<void> {
@@ -169,6 +213,10 @@ export class GeminiLiveAniProvider implements AniProvider {
   }
 
   async close(): Promise<void> {
+    this.closedByUser = true;
+    this.reconnecting = false;
+    this.resumptionHandle = undefined;
+    this.sessionContext = undefined;
     await this.stopMedia();
     this.socket?.close(1000, 'Ani panel closed');
     this.socket = undefined;
