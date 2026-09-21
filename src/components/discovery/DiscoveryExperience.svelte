@@ -10,6 +10,7 @@
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
     initialQuery,
@@ -63,6 +64,19 @@
       editPackaging = clientQuery.harvest.details?.packaging || '';
     }
   });
+
+  onMount(() => subscribeHarvestContext((next) => {
+    harvest = next;
+    editCrop = next.crop;
+    editKg = next.quantityKg;
+    editOrigin = next.originMunicipality;
+    editReadyDate = next.readyDate || '';
+    editVariety = next.details?.variety || '';
+    editGrade = next.details?.grade || '';
+    editPackaging = next.details?.packaging || '';
+    const newQuery = serializeDiscoverQuery(next, activeMobileView, selectedOutletId, lang);
+    window.history.replaceState({}, '', `/discover?${newQuery}`);
+  }));
 
   const originCoords = $derived(
     LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) ||
