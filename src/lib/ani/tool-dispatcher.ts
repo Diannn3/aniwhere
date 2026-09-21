@@ -1,5 +1,7 @@
 import { CURRENT_DATA_MODE, CURRENT_OUTLETS } from '../data/current-market';
 import { evaluateFit } from '../domain/match';
+import { isValidIsoDate } from '../domain/validation';
+import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
 import type { HarvestQuery, Outlet } from '../domain/types';
 import type { AniFitFacts, AniOutletFacts, AniToolRequest, AniToolResult } from './types';
 
@@ -42,12 +44,17 @@ function error(request: AniToolRequest, code: NonNullable<AniToolResult['error']
 function parseHarvest(value: unknown): HarvestQuery | null {
   if (!value || typeof value !== 'object') return null;
   const v = value as Record<string, unknown>;
-  if (typeof v.crop !== 'string' || typeof v.quantityKg !== 'number' || !Number.isFinite(v.quantityKg) || v.quantityKg <= 0 || typeof v.originMunicipality !== 'string') return null;
+  if (
+    typeof v.crop !== 'string' || !v.crop.trim() ||
+    typeof v.quantityKg !== 'number' || !Number.isFinite(v.quantityKg) || v.quantityKg <= 0 || v.quantityKg > 100000 ||
+    typeof v.originMunicipality !== 'string' || !LAGUNA_MUNICIPALITIES.some((item) => item.id === v.originMunicipality) ||
+    typeof v.readyDate !== 'string' || !isValidIsoDate(v.readyDate)
+  ) return null;
   return {
-    crop: v.crop,
+    crop: v.crop.trim(),
     quantityKg: v.quantityKg,
     originMunicipality: v.originMunicipality,
-    ...(typeof v.readyDate === 'string' ? { readyDate: v.readyDate } : {}),
+    readyDate: v.readyDate,
     ...(v.details && typeof v.details === 'object' ? { details: v.details as HarvestQuery['details'] } : {}),
   };
 }
