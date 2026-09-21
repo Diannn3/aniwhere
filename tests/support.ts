@@ -27,7 +27,10 @@ export function comparisonPath(places: string[]): string {
 }
 
 export async function clearClientState(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+  // Clear once for test isolation. An init script would clear local state again
+  // on every in-test navigation and invalidate save/compare persistence tests.
+  await page.goto('/');
+  await page.evaluate(() => {
     window.localStorage.clear();
     window.sessionStorage.clear();
   });
