@@ -1,9 +1,14 @@
+declare const Deno: {
+  env: { get(name: string): string | undefined };
+  serve(handler: (req: Request) => Response | Promise<Response>): void;
+};
+
 const MODEL = Deno.env.get('ANI_MODEL') || 'gemini-3.8-live';
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const ALLOWED_ORIGINS = new Set(
   (Deno.env.get('ANI_ALLOWED_ORIGINS') || '')
     .split(',')
-    .map((value) => value.trim())
+    .map((value: string) => value.trim())
     .filter(Boolean),
 );
 
@@ -45,7 +50,7 @@ function rateLimited(key: string) {
   return bucket.count > MAX_TOKENS_PER_WINDOW;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin');
 
   if (req.method === 'OPTIONS') {
