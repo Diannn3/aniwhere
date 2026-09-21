@@ -1,4 +1,4 @@
-import type { AniMessage, AniProvider, AniProviderEvent, AniSessionContext } from './types';
+import type { AniMessage, AniOutletFacts, AniProvider, AniProviderEvent, AniSessionContext, AniToolResult } from './types';
 
 export class MockAniProvider implements AniProvider {
   readonly kind = 'mock' as const;
@@ -10,20 +10,34 @@ export class MockAniProvider implements AniProvider {
     this.emit({ type: 'status', status: 'ready' });
   }
 
-  async sendText(text: string) {
+  async sendText(_text: string) {
     this.emit({ type: 'status', status: 'working' });
+    this.emit({
+      type: 'tool_request',
+      toolRequest: { id: `mock-tool-${Date.now()}`, name: 'find_outlets', args: {} },
+    });
+  }
+
+  async submitToolResult(result: AniToolResult) {
     const isFil = this.context?.language === 'fil';
-    const message: AniMessage = {
-      id: `mock-${Date.now()}`,
-      role: 'ani',
-      text: isFil
-        ? 'Demo assistant lang ito sa development. Gagamitin ng live Ani ang AniWhere tools para sa market facts.'
-        : 'This is the development assistant only. Live Ani will use AniWhere tools for market facts.',
-      createdAt: Date.now(),
-    };
-    this.emit({ type: 'message', message });
+    if (!result.ok) {
+      this.emit({
+        type: 'message',
+        message: this.message(isFil ? 'Preview lang ito. Hindi nakumpleto ng AniWhere ang pagsusuri.' : 'Preview only. AniWhere could not complete that check.'),
+      });
+      this.emit({ type: 'status', status: 'ready' });
+      return;
+    }
+
+    const outlets = Array.isArray(result.data) ? result.data as AniOutletFacts[] : [];
+    const matches = outlets.filter((item) => item.fit.status === 'match').length;
+    const partial = outlets.filter((item) => item.fit.status === 'partial').length;
+    const confirm = outlets.filter((item) => item.fit.status === 'confirm').length;
+    const text = isFil
+      ? `Preview lang — demo data ito. Nakakita ang AniWhere ng ${matches} full match, ${partial} partial, at ${confirm} kailangang kumpirmahin. Buksan ang Discovery para makita ang eksaktong dami at ebidensya.`
+      : `Preview only — this is demo data. AniWhere found ${matches} full match, ${partial} partial, and ${confirm} needing confirmation. Open Discovery for the exact quantities and evidence.`;
+    this.emit({ type: 'message', message: this.message(text) });
     this.emit({ type: 'status', status: 'ready' });
-    void text;
   }
 
   subscribe(listener: (event: AniProviderEvent) => void) {
@@ -34,6 +48,10 @@ export class MockAniProvider implements AniProvider {
   async close() {
     this.emit({ type: 'status', status: 'idle' });
     this.listeners.clear();
+  }
+
+  private message(text: string): AniMessage {
+    return { id: `mock-${Date.now()}`, role: 'ani', text, createdAt: Date.now() };
   }
 
   private emit(event: AniProviderEvent) {
