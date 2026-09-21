@@ -7,6 +7,10 @@ const title = lang === 'fil' ? 'AniWhere — Paghambingin ang mga Outlet' : 'Ani
 const description = lang === 'fil'
   ? 'Ihambing ang fit, dami, presyo, transport, at impormasyong kailangang kumpirmahin bago bumiyahe.'
   : 'Compare fit, quantities, price evidence, transport, and what to confirm before travelling.';
+const places = Astro.url.searchParams.get('places');
+const initialPlaceIds = places === null
+  ? undefined
+  : places.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 3);
 ---
 
 <BaseLayout
@@ -15,5 +19,5 @@ const description = lang === 'fil'
   currentPath="/compare"
   lang={lang}
 >
-  <ComparisonExperience client:load initialLang={lang} />
+  <ComparisonExperience client:load initialLang={lang} initialPlaceIds={initialPlaceIds} />
 </BaseLayout>

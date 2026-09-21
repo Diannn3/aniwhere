@@ -9,11 +9,17 @@
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { t } from '../../content/translations';
 
-  interface Props { initialLang?: 'en' | 'fil'; }
-  const { initialLang = 'en' } = $props();
+  const DEFAULT_COMPARE_IDS = ['demo-processor', 'demo-cooperative', 'demo-market'];
+
+  interface Props {
+    initialLang?: 'en' | 'fil';
+    initialPlaceIds?: string[];
+  }
+
+  const { initialLang = 'en', initialPlaceIds = DEFAULT_COMPARE_IDS } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
-  let selectedIds = $state<string[]>([]);
+  let selectedIds = $state<string[]>(initialPlaceIds.slice(0, 3));
   let harvest = $state<HarvestQuery>({ crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: todayInManila() });
   let transportDrafts = $state<Record<string, string>>({});
   let transportAnnouncement = $state('');
@@ -23,12 +29,12 @@
     harvest = parsed.harvest;
     lang = parsed.lang || lang;
     const places = new URLSearchParams(window.location.search).get('places');
-    if (places) {
+    if (places !== null) {
       selectedIds = places.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 3);
       return;
     }
     const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
-    selectedIds = stored.length ? stored.slice(0, 3) : ['demo-processor', 'demo-cooperative', 'demo-market'];
+    selectedIds = stored.length ? stored.slice(0, 3) : DEFAULT_COMPARE_IDS;
   });
 
   const isFil = $derived(lang === 'fil');
