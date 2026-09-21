@@ -200,7 +200,7 @@
     </div>
   {/if}
 
-  <fieldset bind:this={cropGroupEl} tabindex="-1" class="min-w-0" aria-describedby={errors.crop ? 'crop-error' : undefined}>
+  <fieldset id="harvest-crop" bind:this={cropGroupEl} tabindex="-1" class="min-w-0" aria-describedby={errors.crop ? 'crop-error' : undefined}>
     <legend class="text-sm font-bold text-[#20251E]">{t('cropLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></legend>
     <p class="mt-1 text-xs text-[#4A5245]">{lang === 'fil' ? 'Pumili ng pananim na aalamin para sa market fit.' : 'Choose the crop you want to check for market fit.'}</p>
     <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
