@@ -77,4 +77,13 @@ describe('AniToolDispatcher', () => {
     expect(impossibleQuantity.ok).toBe(false);
   });
 
+
+  it('keeps demo price separate from buyer-posted and reference price fields', async () => {
+    const result = await dispatcher.dispatch(req('get_outlet_details', { outletId: 'demo-market' }), harvest);
+    const fit = (result.data as any).fit;
+    expect(fit.demoPricePerKg).toBeTypeOf('number');
+    expect(fit.buyerPostedPricePerKg).toBeNull();
+    expect(fit.referencePricePerKg).toBeNull();
+  });
+
 });
