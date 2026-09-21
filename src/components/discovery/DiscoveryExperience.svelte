@@ -550,7 +550,7 @@
                 </div>
                 <div class="border-l border-[#20251E]/10 p-3 sm:p-3.5">
                   <dt class="text-[11px] font-semibold text-[#687064]">{lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}</dt>
-                  <dd class="mt-0.5 font-tabular text-xl font-bold tracking-tight" class:text-[#6E3511]={Boolean(item.fit.remainingKg && item.fit.remainingKg > 0)} class:text-[#597928]={item.fit.remainingKg === 0}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
+                  <dd class={`mt-0.5 font-tabular text-xl font-bold tracking-tight ${item.fit.remainingKg && item.fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#597928]'}`}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
                 </div>
               </dl>
             {:else if item.fit.status === 'confirm'}
