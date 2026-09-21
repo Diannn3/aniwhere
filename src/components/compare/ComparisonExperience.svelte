@@ -165,7 +165,7 @@
 </div>
 
 <style>
-  .comparison-page { width: 100%; overflow-x: clip; }
+  .comparison-page { width: 100%; max-width: 100vw; min-width: 0; overflow-x: hidden; }
   .matrix-scroll { width: 100%; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; scrollbar-color: #91AC67 #FCECD8; scrollbar-width: thin; }
   .matrix-scroll::-webkit-scrollbar { height: 12px; }
   .matrix-scroll::-webkit-scrollbar-track { background: #FCECD8; }
