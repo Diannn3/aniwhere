@@ -133,7 +133,7 @@
 
 <div class="ani-assistant" data-open={open}>
   <button bind:this={trigger} type="button" class="ani-trigger" aria-haspopup="dialog" aria-expanded={open} aria-controls="ani-panel" onclick={openAni}>
-    <AniAvatar state={open ? 'attentive' : 'idle'} size="sm" />
+    <span aria-hidden="true"><AniAvatar state={open ? 'attentive' : 'idle'} size="sm" /></span>
     <span>{isFil() ? 'Tanungin si Ani' : 'Ask Ani'}</span>
   </button>
 
