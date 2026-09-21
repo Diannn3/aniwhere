@@ -104,7 +104,7 @@
   <!-- Map Header Bar -->
   <div class="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
     <div class="bg-[#FFFDF8]/95 backdrop-blur-md border border-[#20251E]/12 px-3 py-1.5 rounded-xl shadow-xs pointer-events-auto flex items-center gap-2">
-      <svg class="w-4 h-4 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <svg class="w-4 h-4 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
       </svg>
       <span class="text-xs font-bold text-[#20251E]">
@@ -368,7 +368,7 @@
               }`}>
                 {lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}
               </span>
-              <span class="text-[11px] text-[#6B7265] font-medium">
+              <span class="text-[11px] text-[#596052] font-medium">
                 {selectedItem.distanceKm} km {lang === 'fil' ? 'mula' : 'from'} {originMun.name.split(',')[0]}
               </span>
             </div>
@@ -386,7 +386,7 @@
             type="button"
             onclick={() => onSelect('')}
             aria-label={lang === 'fil' ? 'Isara ang preview' : 'Close preview'}
-            class="w-11 h-11 flex items-center justify-center -mr-2 -mt-2 rounded-full text-[#6B7265] hover:text-[#20251E] hover:bg-[#20251E]/8 active:bg-[#20251E]/12 transition-colors cursor-pointer shrink-0"
+            class="w-11 h-11 flex items-center justify-center -mr-2 -mt-2 rounded-full text-[#596052] hover:text-[#20251E] hover:bg-[#20251E]/8 active:bg-[#20251E]/12 transition-colors cursor-pointer shrink-0"
           >
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -397,15 +397,15 @@
         <!-- Quick Financial Metric Preview -->
         <div class="flex items-center justify-between bg-[#F9FBF7] rounded-xl p-2.5 px-3 border border-[#20251E]/8 text-xs">
           <div>
-            <span class="block text-[10px] text-[#6B7265]">{t('samplePrice', lang)}</span>
+            <span class="block text-[10px] text-[#596052]">{t('samplePrice', lang)}</span>
             <span class="font-bold text-[#20251E] font-tabular">
               {selectedItem.fit.samplePricePerKg ? `₱${selectedItem.fit.samplePricePerKg}/kg` : '—'}
             </span>
           </div>
 
           <div class="text-right">
-            <span class="block text-[10px] text-[#597928] font-bold">{t('afterTransport', lang)}</span>
-            <span class="font-bold text-base text-[#597928] font-tabular">
+            <span class="block text-[10px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
+            <span class="font-bold text-base text-[#486320] font-tabular">
               {formatCurrency(selectedItem.fit.afterTransportPay)}
             </span>
           </div>
@@ -446,7 +446,7 @@
       </div>
     </div>
 
-    <span class="text-[10px] text-[#6B7265] italic">
+    <span class="text-[10px] text-[#596052] italic">
       {lang === 'fil' ? 'Tantyang distansya lamang' : 'Approximate road corridor'}
     </span>
   </div>
