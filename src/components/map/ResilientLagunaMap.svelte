@@ -126,7 +126,7 @@
       viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      role="img"
+      role="group"
       aria-label="Laguna market map with farmer origin and buyer outlets"
     >
       <!-- Base terrain contours -->
@@ -364,7 +364,7 @@
                     ? 'bg-[#FCECD8] text-[#6E3511]'
                     : selectedItem.fit.status === 'confirm'
                       ? 'bg-[#EBF2F5] text-[#2A4B56]'
-                      : 'bg-[#F0F2EE] text-[#6B7265]'
+                      : 'bg-[#F0F2EE] text-[#555D50]'
               }`}>
                 {lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}
               </span>
