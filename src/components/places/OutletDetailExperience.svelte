@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -37,6 +38,10 @@
       lang = parsed.lang;
     }
   });
+
+  onMount(() => subscribeHarvestContext((next) => {
+    harvest = next;
+  }));
 
   const originMun = $derived(
     LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]
