@@ -46,13 +46,14 @@ const languageHref = (targetLang: 'en' | 'fil') => {
   </head>
   <body class="flex min-h-screen flex-col text-[#20251E] antialiased" data-lang={lang}>
     <a
+      data-ani-background
       href="#main-content"
       class="sr-only fixed left-3 top-3 z-50 rounded-lg bg-[#597928] px-4 py-2 font-semibold text-[#FFFDF8] shadow-lg focus:not-sr-only"
     >
       <span data-i18n-en="Skip to main content" data-i18n-fil="Lumaktaw sa nilalaman">{isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}</span>
     </a>
 
-    <div class="border-b border-[#20251E]/10 bg-[#FCECD8]/80 px-4 py-2 text-xs text-[#6E3511] sm:px-6">
+    <div data-ani-background class="border-b border-[#20251E]/10 bg-[#FCECD8]/80 px-4 py-2 text-xs text-[#6E3511] sm:px-6">
       <div class="mx-auto flex max-w-7xl items-center gap-2">
         <strong class="font-semibold" data-i18n-en="Demo — sample data." data-i18n-fil="Demo — halimbawang datos.">{isFil ? 'Demo — halimbawang datos.' : 'Demo — sample data.'}</strong>
         <span data-i18n-en="Confirm price, capacity, and receiving terms before travelling." data-i18n-fil="Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.">{isFil ? 'Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.'}</span>
@@ -105,7 +106,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
       </div>
     </header>
 
-    <main id="main-content" class="page-enter min-w-0 flex-1 overflow-x-clip pb-24 md:pb-12">
+    <main data-ani-background id="main-content" class="page-enter min-w-0 flex-1 overflow-x-clip pb-24 md:pb-12">
       <slot />
     </main>
 
