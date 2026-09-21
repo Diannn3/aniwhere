@@ -249,13 +249,14 @@
       <button
         type="button"
         onclick={() => isEditingHarvest = !isEditingHarvest}
+        aria-label={isEditingHarvest ? (lang === 'fil' ? 'Isara ang pag-edit ng ani' : 'Close harvest editor') : t('editHarvest', lang)}
         class="premium-control inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        <span class="hidden xs:inline">{isEditingHarvest ? (lang === 'fil' ? 'Isara' : 'Close') : t('editHarvest', lang)}</span>
+        <span>{isEditingHarvest ? (lang === 'fil' ? 'Isara' : 'Close') : t('editHarvest', lang)}</span>
       </button>
     </div>
 
@@ -510,7 +511,7 @@
                   <span>{lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}</span>
                 </div>
               {:else}
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#F0F2EE] text-[#6B7265] border border-[#D4D8D0]">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#F0F2EE] text-[#555D50] border border-[#D4D8D0]">
                   <svg class="w-3.5 h-3.5 text-[#6B7265]" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                   </svg>
