@@ -24,7 +24,7 @@ export class GeminiLiveAniProvider implements AniProvider {
   private socket?: WebSocket;
   private micStream?: MediaStream;
   private micContext?: AudioContext;
-  private micProcessor?: ScriptProcessorNode;
+  private micNode?: AudioWorkletNode;
   private playbackContext?: AudioContext;
   private playbackAt = 0;
   private outputTranscript = '';
@@ -121,23 +121,23 @@ export class GeminiLiveAniProvider implements AniProvider {
     this.suppressAudio = false;
     this.micStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
     this.micContext = new AudioContext({ sampleRate: 16_000 });
+    await this.micContext.audioWorklet.addModule('/ani/pcm-capture-worklet.js');
     const source = this.micContext.createMediaStreamSource(this.micStream);
-    this.micProcessor = this.micContext.createScriptProcessor(2048, 1, 1);
-    this.micProcessor.onaudioprocess = (event) => {
+    this.micNode = new AudioWorkletNode(this.micContext, 'ani-pcm-capture', { numberOfInputs: 1, numberOfOutputs: 0 });
+    this.micNode.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
       if (this.socket?.readyState !== WebSocket.OPEN) return;
-      const pcm = floatToPcm16(event.inputBuffer.getChannelData(0));
+      const pcm = floatToPcm16(new Float32Array(event.data));
       this.socket.send(JSON.stringify({
         realtimeInput: { audio: { data: bytesToBase64(new Uint8Array(pcm.buffer)), mimeType: 'audio/pcm;rate=16000' } },
       }));
     };
-    source.connect(this.micProcessor);
-    this.micProcessor.connect(this.micContext.destination);
+    source.connect(this.micNode);
     this.emit({ type: 'status', status: 'listening' });
   }
 
   async stopListening(): Promise<void> {
-    this.micProcessor?.disconnect();
-    this.micProcessor = undefined;
+    this.micNode?.disconnect();
+    this.micNode = undefined;
     this.micStream?.getTracks().forEach((track) => track.stop());
     this.micStream = undefined;
     await this.micContext?.close();
@@ -262,9 +262,9 @@ export class GeminiLiveAniProvider implements AniProvider {
   }
 
   private async stopMedia() {
-    this.micProcessor?.disconnect();
+    this.micNode?.disconnect();
     this.micStream?.getTracks().forEach((track) => track.stop());
-    this.micProcessor = undefined;
+    this.micNode = undefined;
     this.micStream = undefined;
     await this.micContext?.close();
     this.micContext = undefined;
