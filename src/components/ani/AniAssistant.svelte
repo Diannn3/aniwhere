@@ -34,9 +34,12 @@
         closeAni();
       }
     };
+    const handleOpenRequest = () => void openAni();
     window.addEventListener('keydown', handleWindowKeydown);
+    window.addEventListener('aniwhere:open-ani', handleOpenRequest);
     return () => {
       window.removeEventListener('keydown', handleWindowKeydown);
+      window.removeEventListener('aniwhere:open-ani', handleOpenRequest);
       document.documentElement.style.overflow = '';
       setBackgroundInert(false);
       unsubscribe?.();
@@ -74,7 +77,9 @@
   }
 
   async function openAni() {
+    if (open) return;
     open = true;
+    document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'true');
     document.documentElement.style.overflow = 'hidden';
     setBackgroundInert(true);
     status = 'connecting';
@@ -104,6 +109,7 @@
 
   function closeAni() {
     open = false;
+    document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'false');
     document.documentElement.style.overflow = '';
     setBackgroundInert(false);
     notice = '';
@@ -111,7 +117,11 @@
     unsubscribe?.();
     provider = undefined;
     unsubscribe = undefined;
-    requestAnimationFrame(() => trigger?.focus());
+    requestAnimationFrame(() => {
+      const mobileTrigger = document.getElementById('ani-mobile-trigger') as HTMLButtonElement | null;
+      if (mobileTrigger && mobileTrigger.offsetParent !== null) mobileTrigger.focus();
+      else trigger?.focus();
+    });
   }
 
   async function submit() {
@@ -235,7 +245,7 @@
   @media(min-width:768px){ .ani-assistant{bottom:1.25rem;right:1.25rem}.ani-panel{right:1.25rem;bottom:1.25rem}.ani-scrim{background:rgba(32,37,30,.06)} }
   @media(max-width:767px){
     :global(body:has([aria-label="Comparison dock"])) .ani-assistant { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
-    .ani-trigger { width:3.25rem; height:3.25rem; min-height:3.25rem; padding:.35rem; justify-content:center; }
+    .ani-trigger { display:none; }
     .ani-trigger__label { display:none; }
     .ani-panel{inset:auto 0 0 0;width:100%;max-height:min(44rem,calc(100dvh - 2rem));border-radius:1.5rem 1.5rem 0 0;padding-bottom:env(safe-area-inset-bottom)} .ani-trigger span{font-size:.82rem}.ani-assistant[data-open="true"] .ani-trigger{visibility:hidden} }
   @media(prefers-reduced-motion:reduce){.ani-panel,.ani-scrim,.ani-trigger{animation:none!important;transition:none!important}}
