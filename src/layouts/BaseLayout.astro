@@ -18,7 +18,7 @@ const {
 } = Astro.props;
 
 const isFil = lang === 'fil';
-const showAni = !currentPath.startsWith('/buyer');
+const showAni = import.meta.env.PUBLIC_ANI_ENABLED !== 'false' && !currentPath.startsWith('/buyer');
 const farmerNav = [
   { href: '/discover', label: isFil ? 'Maghanap' : 'Discover' },
   { href: '/saved', label: isFil ? 'Nai-save' : 'Saved' },
