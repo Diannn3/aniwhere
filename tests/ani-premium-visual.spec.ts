@@ -5,6 +5,7 @@ const compare = '/compare?places=demo-processor,demo-market,demo-msme-confirm&cr
 
 for (const viewport of [
   { name: '320x568', width: 320, height: 568 },
+  { name: '360x800', width: 360, height: 800 },
   { name: '390x844', width: 390, height: 844 },
   { name: '768x1024', width: 768, height: 1024 },
   { name: '1440x900', width: 1440, height: 900 },
@@ -66,5 +67,27 @@ test('Ani shell and discovery do not introduce narrow-screen overflow', async ({
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, path).toBeLessThanOrEqual(1);
+  }
+});
+
+
+test('surface audit matrix at mobile width', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const cases = [
+    ['discovery-map', '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=map&lang=en'],
+    ['outlet-detail', '/places/demo-market?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en'],
+    ['saved-empty', '/saved?lang=en'],
+    ['buyer', '/buyer?lang=en'],
+    ['filipino-home', '/?lang=fil'],
+    ['not-found', '/this-route-does-not-exist'],
+  ] as const;
+
+  for (const [name, path] of cases) {
+    await page.goto(path);
+    await expect(page.locator('body')).toBeVisible();
+    await page.screenshot({ path: `tests/.artifacts/visual/390x844-${name}.png`, fullPage: true });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, name).toBeLessThanOrEqual(1);
   }
 });
