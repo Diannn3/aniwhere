@@ -49,26 +49,29 @@ const languageHref = (targetLang: 'en' | 'fil') => {
       href="#main-content"
       class="sr-only fixed left-3 top-3 z-50 rounded-lg bg-[#597928] px-4 py-2 font-semibold text-[#FFFDF8] shadow-lg focus:not-sr-only"
     >
-      {isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}
+      <span data-i18n-en="Skip to main content" data-i18n-fil="Lumaktaw sa nilalaman">{isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}</span>
     </a>
 
     <div class="border-b border-[#20251E]/10 bg-[#FCECD8]/80 px-4 py-2 text-xs text-[#6E3511] sm:px-6">
       <div class="mx-auto flex max-w-7xl items-center gap-2">
-        <strong class="font-semibold">{isFil ? 'Demo — halimbawang datos.' : 'Demo — sample data.'}</strong>
-        <span>{isFil ? 'Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.'}</span>
+        <strong class="font-semibold" data-i18n-en="Demo — sample data." data-i18n-fil="Demo — halimbawang datos.">{isFil ? 'Demo — halimbawang datos.' : 'Demo — sample data.'}</strong>
+        <span data-i18n-en="Confirm price, capacity, and receiving terms before travelling." data-i18n-fil="Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.">{isFil ? 'Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.'}</span>
       </div>
     </div>
 
     <header class="sticky top-0 z-30 border-b border-[#20251E]/10 bg-[#FFFDF8]/92 px-4 backdrop-blur-md sm:px-6">
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4">
-        <a href={lang === 'fil' ? '/?lang=fil' : '/'} class="flex items-center rounded-lg transition-opacity hover:opacity-80" aria-label={isFil ? 'AniWhere tahanan' : 'AniWhere home'}>
+        <a href={lang === 'fil' ? '/?lang=fil' : '/'} data-route-href="/" data-aria-en="AniWhere home" data-aria-fil="AniWhere tahanan" class="flex items-center rounded-lg transition-opacity hover:opacity-80" aria-label={isFil ? 'AniWhere tahanan' : 'AniWhere home'}>
           <BrandMark size="md" />
         </a>
 
-        <nav class="hidden items-center gap-1 md:flex" aria-label={isFil ? 'Pangunahing nabigasyon' : 'Main navigation'}>
+        <nav class="hidden items-center gap-1 md:flex" data-aria-en="Main navigation" data-aria-fil="Pangunahing nabigasyon" aria-label={isFil ? 'Pangunahing nabigasyon' : 'Main navigation'}>
           {farmerNav.map((item) => (
             <a
               href={`${item.href}${lang === 'fil' ? '?lang=fil' : ''}`}
+              data-route-href={item.href}
+              data-i18n-en={item.href === '/discover' ? 'Discover' : 'Saved'}
+              data-i18n-fil={item.href === '/discover' ? 'Maghanap' : 'Nai-save'}
               class={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                 isActive(item.href)
                   ? 'bg-[#597928] text-[#FFFDF8]'
@@ -82,12 +85,13 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
-            <a href={languageHref('en')} class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
-            <a href={languageHref('fil')} class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
+          <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" data-aria-en="Select language" data-aria-fil="Piliin ang wika" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
+            <a href={languageHref('en')} data-language-target="en" class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
+            <a href={languageHref('fil')} data-language-target="fil" class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
           </div>
           <a
             href={`/buyer${lang === 'fil' ? '?lang=fil' : ''}`}
+            data-route-href="/buyer"
             class={`hidden min-h-10 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors sm:inline-flex ${
               isActive('/buyer')
                 ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
@@ -95,17 +99,17 @@ const languageHref = (targetLang: 'en' | 'fil') => {
             }`}
           >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            {isFil ? 'Para sa mamimili' : 'For buyers'}
+            <span data-i18n-en="For buyers" data-i18n-fil="Para sa mamimili">{isFil ? 'Para sa mamimili' : 'For buyers'}</span>
           </a>
         </div>
       </div>
     </header>
 
-    <main id="main-content" class="page-enter flex-1 pb-24 md:pb-12">
+    <main id="main-content" class="page-enter min-w-0 flex-1 overflow-x-clip pb-24 md:pb-12">
       <slot />
     </main>
 
-    <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
+    <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" data-aria-en="Mobile navigation" data-aria-fil="Nabigasyon sa mobile" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
       <div class="mx-auto grid max-w-sm grid-cols-3 gap-1">
         {[
           { href: '/', label: isFil ? 'Ani' : 'Harvest', icon: 'home' },
@@ -114,6 +118,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         ].map((item) => (
           <a
             href={`${item.href}${lang === 'fil' ? '?lang=fil' : ''}`}
+            data-route-href={item.href}
             class={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-2 text-[11px] font-semibold transition-colors ${
               isActive(item.href) ? 'bg-[#FCECD8] text-[#6E3511]' : 'text-[#4A5245]'
             }`}
@@ -122,7 +127,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
             {item.icon === 'home' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>}
             {item.icon === 'search' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>}
             {item.icon === 'saved' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>}
-            <span>{item.label}</span>
+            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : 'Saved'} data-i18n-fil={item.href === '/' ? 'Ani' : item.href === '/discover' ? 'Maghanap' : 'Nai-save'}>{item.label}</span>
           </a>
         ))}
       </div>
@@ -133,8 +138,43 @@ const languageHref = (targetLang: 'en' | 'fil') => {
     <footer class="border-t border-[#20251E]/10 bg-[#FFFDF8]/75 px-4 py-8 sm:px-6">
       <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
         <div class="flex items-center gap-3"><BrandMark size="sm" /><span>&copy; 2026 AniWhere · NextGen Agri Hackathon Laguna</span></div>
-        <p class="max-w-xl">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.' : 'AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity.'}</p>
+        <p class="max-w-xl" data-i18n-en="AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity." data-i18n-fil="Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.' : 'AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity.'}</p>
       </div>
     </footer>
+
+    <script is:inline>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const activeLang = params.get('lang') === 'fil' ? 'fil' : 'en';
+        document.documentElement.lang = activeLang;
+        document.body.dataset.lang = activeLang;
+
+        document.querySelectorAll('[data-i18n-en][data-i18n-fil]').forEach((element) => {
+          const value = element.getAttribute(activeLang === 'fil' ? 'data-i18n-fil' : 'data-i18n-en');
+          if (value !== null) element.textContent = value;
+        });
+
+        document.querySelectorAll('[data-aria-en][data-aria-fil]').forEach((element) => {
+          const value = element.getAttribute(activeLang === 'fil' ? 'data-aria-fil' : 'data-aria-en');
+          if (value !== null) element.setAttribute('aria-label', value);
+        });
+
+        document.querySelectorAll('a[data-language-target]').forEach((element) => {
+          const target = element.getAttribute('data-language-target');
+          if (!target) return;
+          const url = new URL(window.location.href);
+          url.searchParams.set('lang', target);
+          element.setAttribute('href', url.pathname + url.search + url.hash);
+        });
+
+        document.querySelectorAll('a[data-route-href]').forEach((element) => {
+          const route = element.getAttribute('data-route-href');
+          if (!route) return;
+          const url = new URL(route, window.location.origin);
+          if (activeLang === 'fil') url.searchParams.set('lang', 'fil');
+          element.setAttribute('href', url.pathname + url.search);
+        });
+      })();
+    </script>
   </body>
 </html>
