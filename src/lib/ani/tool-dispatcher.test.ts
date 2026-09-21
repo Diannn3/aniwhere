@@ -8,6 +8,27 @@ const harvest = { crop: 'tomato', quantityKg: 300, originMunicipality: 'los-bano
 const req = (name: AniToolRequest['name'], args: Record<string, unknown> = {}): AniToolRequest => ({ id: 'test', name, args });
 
 describe('AniToolDispatcher', () => {
+  it.each([
+    ['demo-processor', 'match', 300, 0],
+    ['demo-market', 'partial', 200, 100],
+    ['demo-msme-confirm', 'confirm', null, null],
+    ['demo-organic-shop', 'no_match', 0, 300],
+  ])('preserves %s deterministic fit as %s', async (outletId, status, acceptedKg, remainingKg) => {
+    const result = await dispatcher.dispatch(req('get_outlet_details', { outletId }), harvest);
+    expect(result.ok).toBe(true);
+    const fit = (result.data as any).fit;
+    expect(fit.status).toBe(status);
+    expect(fit.acceptedKg).toBe(acceptedKg);
+    expect(fit.remainingKg).toBe(remainingKg);
+    expect(result.dataMode).toBe('demo');
+  });
+
+  it('rejects malformed harvest updates instead of guessing', async () => {
+    const result = await dispatcher.dispatch(req('set_harvest_context', { harvest: { crop: 'tomato', quantityKg: 0 } }), harvest);
+    expect(result.ok).toBe(false);
+    expect(result.error?.code).toBe('invalid_arguments');
+  });
+
   it('preserves deterministic partial quantities', async () => {
     const result = await dispatcher.dispatch(req('get_outlet_details', { outletId: 'demo-market' }), harvest);
     expect(result.ok).toBe(true);
