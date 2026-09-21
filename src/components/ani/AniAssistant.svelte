@@ -25,7 +25,7 @@
   const isFil = () => initialLang === 'fil';
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
 
-  onMount(() => () => { unsubscribe?.(); void provider?.close(); });
+  onMount(() => () => { document.documentElement.style.overflow = ''; unsubscribe?.(); void provider?.close(); });
 
   function currentHarvest() {
     return parseDiscoverQuery(window.location.search).harvest;
@@ -50,6 +50,7 @@
 
   async function openAni() {
     open = true;
+    document.documentElement.style.overflow = 'hidden';
     status = 'connecting';
     notice = isFil() ? 'Binubuksan si Ani.' : 'Opening Ani.';
     await tick();
@@ -76,6 +77,7 @@
 
   function closeAni() {
     open = false;
+    document.documentElement.style.overflow = '';
     notice = '';
     void provider?.close();
     unsubscribe?.();
