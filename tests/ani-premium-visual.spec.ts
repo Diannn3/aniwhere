@@ -47,6 +47,35 @@ test('Ani shell is keyboard closable and restores focus', async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
+
+
+test('Ani text mode uses deterministic tools through the explicit mock provider', async ({ page }) => {
+  await page.goto(discovery);
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+  await expect(page.getByText(/Preview mode\. This is not live market AI\./i)).toBeVisible();
+
+  const input = page.getByLabel('Message Ani');
+  await input.fill('What outlets fit this harvest?');
+  await page.getByRole('button', { name: 'Send' }).click();
+
+  await expect(page.getByText('What outlets fit this harvest?')).toBeVisible();
+  await expect(page.getByText(/Preview only — this is demo data\./i)).toBeVisible();
+  await expect(page.getByText(/full match/i)).toBeVisible();
+});
+
+test('Ani follows Filipino URL language in the static build', async ({ page }) => {
+  await page.goto('/?lang=fil');
+  const trigger = page.getByRole('button', { name: 'Tanungin si Ani' });
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+
+  const input = page.getByLabel('Mensahe kay Ani');
+  await input.fill('Saan puwedeng dalhin ang ani ko?');
+  await page.getByRole('button', { name: 'Ipadala' }).click();
+
+  await expect(page.getByText(/Preview lang — demo data ito\./i)).toBeVisible();
+});
+
 test('Ani microphone denial keeps text fallback visible', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'mediaDevices', {
