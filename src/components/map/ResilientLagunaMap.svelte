@@ -127,7 +127,7 @@
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Laguna market map with farmer origin and buyer outlets"
+      aria-label={lang === 'fil' ? 'Mapa ng Laguna na may pinagmulan ng ani at mga pamilihan' : 'Laguna market map with farmer origin and buyer outlets'}
     >
       <!-- Base terrain contours -->
       <defs>
@@ -254,7 +254,7 @@
           class="cursor-pointer transition-transform duration-150 {isSelected ? 'scale-110' : 'hover:scale-105'}"
           tabindex="0"
           role="button"
-          aria-label={`${item.outlet.name}: ${item.fit.statusLabel}, ${item.distanceKm} km`}
+          aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km`}
           onclick={(e) => {
             e.stopPropagation();
             onSelect(item.outlet.id);
@@ -319,7 +319,7 @@
       <g
         transform={`translate(${originPos.x}, ${originPos.y})`}
         role="region"
-        aria-label={`Your location: ${originMun.name}`}
+        aria-label={lang === 'fil' ? `Iyong lugar: ${originMun.name}` : `Your location: ${originMun.name}`}
       >
         <circle cx="0" cy="0" r="14" fill="#6E3511" fill-opacity="0.2" />
         <circle cx="0" cy="0" r="8" fill="#6E3511" stroke="#FFFDF8" stroke-width="2" />
@@ -447,7 +447,7 @@
     </div>
 
     <span class="text-[10px] text-[#6B7265] italic">
-      {lang === 'fil' ? 'Tantyang distansya lamang' : 'Approximate road corridor'}
+      {lang === 'fil' ? 'Tuwirang distansya lamang, hindi ruta sa kalsada' : 'Straight-line distance, not a road route'}
     </span>
   </div>
 

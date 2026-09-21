@@ -1,3 +1,22 @@
+import type { FitResult, OutletCategory } from '../lib/domain/types';
+
+export function outletCategoryLabel(category: OutletCategory, lang: 'en' | 'fil'): string {
+  const labels: Record<OutletCategory, { en: string; fil: string }> = {
+    cooperative: { en: 'Cooperative', fil: 'Kooperatiba' },
+    processor: { en: 'Processor', fil: 'Tagaproseso' },
+    market: { en: 'Market', fil: 'Pamilihan' },
+    msme: { en: 'MSME', fil: 'Maliit na negosyo' },
+    restaurant: { en: 'Restaurant', fil: 'Restawran' },
+    consolidator: { en: 'Consolidator', fil: 'Tagapagtipon' },
+  };
+  return labels[category][lang];
+}
+
+export function evidenceLabel(fit: FitResult, lang: 'en' | 'fil'): string {
+  if (fit.evidenceKind === 'demo') return lang === 'fil' ? 'Demo — halimbawang datos' : 'Demo — sample data';
+  return fit.sourceLabel || (lang === 'fil' ? 'Pinagmulan hindi alam' : 'Source unknown');
+}
+
 export const TRANSLATIONS = {
   en: {
     heroTitle: 'What are you harvesting?',

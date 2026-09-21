@@ -26,7 +26,9 @@ const isFound = Boolean(outlet);
   currentPath={`/places/${slug}`}
 >
   {isFound ? (
-    <OutletDetailExperience client:load outlet={outlet!} />
+    <OutletDetailExperience client:only="svelte" outlet={outlet!}>
+      <p slot="fallback" role="status" class="mx-auto max-w-5xl px-4 py-8 text-base">Binubuksan ang detalye… / Opening outlet details…</p>
+    </OutletDetailExperience>
   ) : (
     <div class="max-w-2xl mx-auto px-4 py-16 text-center space-y-6">
       <div class="w-16 h-16 rounded-full bg-[#6E3511]/10 text-[#6E3511] mx-auto flex items-center justify-center">

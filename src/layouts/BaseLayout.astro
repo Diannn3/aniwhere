@@ -13,7 +13,7 @@ const {
   title = 'AniWhere — Harvest-Based Market Discovery for Farmers',
   description = 'Tell us your harvest. We show where it can realistically go. Market discovery and decision support for farmers in Laguna, Philippines.',
   currentPath = Astro.url.pathname,
-  lang = 'en',
+  lang = 'fil',
 } = Astro.props;
 
 const isFil = lang === 'fil';
@@ -59,19 +59,19 @@ const isActive = (path: string) => {
     <!-- Accessibility Skip Link -->
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 z-50 px-4 py-2 bg-[#597928] text-[#FFFDF8] rounded-lg shadow-lg font-medium ring-2 ring-[#20251E]"
+      data-label-en="Skip to main content" data-label-fil="Lumaktaw sa nilalaman" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 z-50 px-4 py-2 bg-[#597928] text-[#FFFDF8] rounded-lg shadow-lg font-medium ring-2 ring-[#20251E]"
     >
       {isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}
     </a>
 
     <!-- Top Demo Banner (Honest Hackathon Demo Context) -->
-    <div class="bg-[#FCECD8]/90 border-b border-[#20251E]/10 py-1 px-4 sm:px-6 text-[11px] text-[#6E3511]">
+    <div class="bg-[#FCECD8]/90 border-b border-[#20251E]/10 py-1 px-4 sm:px-6 text-[11px] text-[#6E3511] overflow-hidden">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-1.5">
-          <span class="px-1.5 py-0.2 rounded bg-[#6E3511]/10 font-bold uppercase tracking-wider text-[9px]">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="px-1.5 py-0.2 rounded bg-[#6E3511]/10 font-bold uppercase tracking-wider text-[9px] shrink-0">
             Demo
           </span>
-          <span class="font-medium truncate text-[11px]">
+          <span class="font-medium truncate text-sm min-w-0 block" data-label-en="Demo information only. Confirm terms before travel." data-label-fil="Halimbawang datos lamang. Kumpirmahin bago bumiyahe.">
             {isFil ? 'Lahat ng presyo at datos ay halimbawa lamang para sa NextGen Agri Hackathon.' : 'Illustrative fixtures for NextGen Agri Hackathon demonstration.'}
           </span>
         </div>
@@ -82,7 +82,7 @@ const isActive = (path: string) => {
     <header class="sticky top-0 z-30 bg-[#FFFDF8]/95 backdrop-blur-md border-b border-[#20251E]/10 px-4 sm:px-6">
       <div class="max-w-7xl mx-auto h-14 sm:h-16 flex items-center justify-between gap-3">
         <!-- Logo / Home Link -->
-        <a href="/" class="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928] rounded-lg transition-opacity flex items-center gap-2" aria-label="AniWhere home">
+        <a href="/" data-context-nav class="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928] rounded-lg transition-opacity flex items-center gap-2" aria-label="AniWhere home">
           <BrandMark size="md" />
         </a>
 
@@ -91,6 +91,9 @@ const isActive = (path: string) => {
           {navItems.map((item) => (
             <a
               href={item.href}
+              data-context-nav
+              data-label-en={item.key === 'discover' ? 'Discover' : item.key === 'compare' ? 'Compare' : 'Saved'}
+              data-label-fil={item.key === 'discover' ? 'Maghanap' : item.key === 'compare' ? 'Ihambing' : 'Nai-save'}
               class={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive(item.href)
                   ? 'bg-[#FCECD8] text-[#597928] font-bold'
@@ -109,7 +112,8 @@ const isActive = (path: string) => {
           <div class="inline-flex items-center bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 text-xs font-semibold" role="group" aria-label="Language selection">
             <a
               href="?lang=en"
-              class={`px-2 py-0.5 rounded-full transition-all text-[11px] ${lang === 'en' ? 'bg-[#597928] text-[#FFFDF8] shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'}`}
+              data-language-choice="en"
+              class={`min-w-11 min-h-11 inline-flex items-center justify-center rounded-full transition-all text-sm ${lang === 'en' ? 'bg-[#597928] text-[#FFFDF8] shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'}`}
               aria-current={lang === 'en' ? 'true' : undefined}
             >
               EN
@@ -117,7 +121,8 @@ const isActive = (path: string) => {
             <span class="text-[#20251E]/20 px-0.5 text-[10px]" aria-hidden="true">|</span>
             <a
               href="?lang=fil"
-              class={`px-2 py-0.5 rounded-full transition-all text-[11px] ${lang === 'fil' ? 'bg-[#597928] text-[#FFFDF8] shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'}`}
+              data-language-choice="fil"
+              class={`min-w-11 min-h-11 inline-flex items-center justify-center rounded-full transition-all text-sm ${lang === 'fil' ? 'bg-[#597928] text-[#FFFDF8] shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'}`}
               aria-current={lang === 'fil' ? 'true' : undefined}
             >
               FIL
@@ -127,7 +132,8 @@ const isActive = (path: string) => {
           <!-- Buyer Demo Workspace Link -->
           <a
             href={buyerNav.href}
-            class={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+            data-context-nav
+            class={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
               isActive(buyerNav.href)
                 ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
                 : 'border-[#20251E]/20 bg-[#FFFDF8] text-[#4A5245] hover:bg-[#FCECD8]/40 hover:text-[#20251E]'
@@ -136,8 +142,8 @@ const isActive = (path: string) => {
             <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
             </svg>
-            <span class="hidden xs:inline sm:inline">{buyerNav.label}</span>
-            <span class="xs:hidden sm:hidden">Buyer</span>
+            <span class="hidden xs:inline sm:inline" data-label-en="Buyer demo" data-label-fil="Demo ng Mamimili">{buyerNav.label}</span>
+            <span class="xs:hidden sm:hidden" data-label-en="Buyer" data-label-fil="Mamimili">{isFil ? 'Mamimili' : 'Buyer'}</span>
           </a>
         </div>
       </div>
@@ -153,6 +159,7 @@ const isActive = (path: string) => {
       <div class="flex items-center justify-around max-w-sm mx-auto">
         <a
           href="/"
+          data-context-nav
           class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
             isActive('/') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -161,12 +168,13 @@ const isActive = (path: string) => {
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          <span class="text-[11px]">{isFil ? 'Tahanan' : 'Home'}</span>
+          <span class="text-sm" data-label-en="Home" data-label-fil="Tahanan">{isFil ? 'Tahanan' : 'Home'}</span>
           {isActive('/') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
         </a>
 
         <a
           href="/discover"
+          data-context-nav
           class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
             isActive('/discover') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -175,12 +183,13 @@ const isActive = (path: string) => {
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <span class="text-[11px]">{isFil ? 'Maghanap' : 'Discover'}</span>
+          <span class="text-sm" data-label-en="Discover" data-label-fil="Maghanap">{isFil ? 'Maghanap' : 'Discover'}</span>
           {isActive('/discover') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
         </a>
 
         <a
           href="/compare"
+          data-context-nav
           class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
             isActive('/compare') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -189,12 +198,13 @@ const isActive = (path: string) => {
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <span class="text-[11px]">{isFil ? 'Ihambing' : 'Compare'}</span>
+          <span class="text-sm" data-label-en="Compare" data-label-fil="Ihambing">{isFil ? 'Ihambing' : 'Compare'}</span>
           {isActive('/compare') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
         </a>
 
         <a
           href="/saved"
+          data-context-nav
           class={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg min-w-[64px] min-h-[44px] justify-center transition-colors relative ${
             isActive('/saved') ? 'text-[#597928] font-bold' : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -203,7 +213,7 @@ const isActive = (path: string) => {
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
-          <span class="text-[11px]">{isFil ? 'Nai-save' : 'Saved'}</span>
+          <span class="text-sm" data-label-en="Saved" data-label-fil="Nai-save">{isFil ? 'Nai-save' : 'Saved'}</span>
           {isActive('/saved') && <span class="absolute bottom-0 w-6 h-0.5 bg-[#597928] rounded-full" aria-hidden="true"></span>}
         </a>
       </div>
@@ -218,12 +228,58 @@ const isActive = (path: string) => {
             &copy; 2026 AniWhere &middot; NextGen Agri Hackathon Laguna
           </span>
         </div>
-        <p class="text-xs text-center md:text-right text-[#6B7265] max-w-md">
+        <p class="text-xs text-center md:text-right text-[#6B7265] max-w-md" data-label-en="AniWhere is a market discovery concept. All data are illustrative. Confirm terms before travel." data-label-fil="Ang AniWhere ay konsepto sa pagtuklas ng pamilihan. Halimbawa lamang ang lahat ng datos. Kumpirmahin ang kondisyon bago bumiyahe.">
           {isFil 
             ? 'Ang AniWhere ay isang konsepto para sa pagtuklas ng pamilihan. Lahat ng datos ay halimbawa lamang. Kumpirmahin ang mga kondisyon bago bumiyahe.'
             : 'AniWhere is a harvest market discovery concept. All data shown are illustrative demonstration fixtures. Confirm all terms before travel.'}
         </p>
       </div>
     </footer>
+    <script is:inline>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        let stored = null;
+        try { stored = window.localStorage.getItem('aniwhere_language'); } catch {}
+        const explicit = params.get('lang');
+        const language = explicit === 'en' || explicit === 'fil' ? explicit : stored === 'en' ? 'en' : 'fil';
+        document.documentElement.lang = language;
+        const path = window.location.pathname;
+        const pageTitles = {
+          '/': { fil: 'AniWhere — Ano ang aanihin mo?', en: 'AniWhere — What are you harvesting?' },
+          '/discover': { fil: 'AniWhere — Mga pamilihan para sa ani mo', en: 'AniWhere — Market options for your harvest' },
+          '/compare': { fil: 'AniWhere — Paghambingin ang mga opsyon', en: 'AniWhere — Compare market options' },
+          '/saved': { fil: 'AniWhere — Mga nai-save na lugar', en: 'AniWhere — Saved outlets' },
+          '/buyer': { fil: 'AniWhere — Demo ng mamimili', en: 'AniWhere — Buyer demo' },
+        };
+        if (pageTitles[path]) document.title = pageTitles[path][language];
+        try { window.localStorage.setItem('aniwhere_language', language); } catch {}
+        document.querySelectorAll('[data-label-en][data-label-fil]').forEach((element) => {
+          element.textContent = element.getAttribute(language === 'fil' ? 'data-label-fil' : 'data-label-en');
+        });
+        const syncContextLinks = () => {
+          const current = new URLSearchParams(window.location.search);
+          document.querySelectorAll('[data-context-nav]').forEach((anchor) => {
+            const destination = new URL(anchor.getAttribute('href'), window.location.origin);
+            const context = new URLSearchParams(current);
+            context.delete('place');
+            context.set('lang', language);
+            destination.search = context.toString();
+            anchor.href = destination.pathname + destination.search;
+          });
+          document.querySelectorAll('[data-language-choice]').forEach((anchor) => {
+            const next = new URLSearchParams(current);
+            next.set('lang', anchor.getAttribute('data-language-choice'));
+            anchor.href = window.location.pathname + '?' + next.toString();
+            const selected = anchor.getAttribute('data-language-choice') === language;
+            anchor.setAttribute('aria-current', selected ? 'true' : 'false');
+            anchor.classList.toggle('bg-[#597928]', selected);
+            anchor.classList.toggle('text-[#FFFDF8]', selected);
+          });
+        };
+        syncContextLinks();
+        window.addEventListener('aniwhere:context-updated', syncContextLinks);
+        window.addEventListener('popstate', syncContextLinks);
+      })();
+    </script>
   </body>
 </html>

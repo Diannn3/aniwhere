@@ -7,16 +7,19 @@
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
-  import { t } from '../../content/translations';
+  import { t, outletCategoryLabel } from '../../content/translations';
 
   interface Props {
     initialLang?: 'en' | 'fil';
   }
 
-  const { initialLang = 'en' } = $props();
+  const { initialLang = 'fil' } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let savedIds = $state<string[]>([]);
+  let saveError = $state(false);
+  let comparisonIds = $state<string[]>([]);
+  let queryIssues = $state<string[]>([]);
   let harvest = $state<HarvestQuery>({
     crop: 'tomato',
     quantityKg: 300,
@@ -26,7 +29,9 @@
 
   onMount(() => {
     savedIds = getSavedOutletIds();
+    comparisonIds = new URLSearchParams(window.location.search).get('places')?.split(',').filter(Boolean) ?? [];
     const parsed = parseDiscoverQuery(window.location.search);
+    queryIssues = parsed.issues;
     harvest = parsed.harvest;
     if (parsed.lang) {
       lang = parsed.lang;
@@ -36,7 +41,7 @@
   const isFil = $derived(lang === 'fil');
 
   const savedOutlets = $derived(
-    CURRENT_OUTLETS.filter((outlet) => savedIds.includes(outlet.id))
+    queryIssues.length ? [] : CURRENT_OUTLETS.filter((outlet) => savedIds.includes(outlet.id))
   );
 
   const originMun = $derived(
@@ -44,12 +49,13 @@
   );
 
   function handleRemove(id: string) {
-    toggleSavedOutlet(id);
+    const result = toggleSavedOutlet(id);
+    saveError = !result.persisted;
     savedIds = getSavedOutletIds();
   }
 
   function handleClearAll() {
-    savedIds.forEach((id) => toggleSavedOutlet(id));
+    saveError = savedIds.map((id) => toggleSavedOutlet(id).persisted).some((persisted) => !persisted);
     savedIds = [];
   }
 
@@ -58,7 +64,9 @@
   );
 </script>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+<div class="farmer-screen max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 space-y-6">
+  {#if queryIssues.length > 0}<p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{isFil ? 'May di-wastong detalye sa link. Itama ang ani bago tingnan ang mga na-save na lugar.' : 'The shared link has invalid harvest details. Correct them before reviewing saved outlets.'}</p>{/if}
+  {#if saveError}<p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{isFil ? 'Sa tab na ito lang napanatili ang pagbabago. Maaaring mawala ito kapag isinara ang browser.' : 'This change is held in this tab only and may be lost when you close the browser.'}</p>{/if}
   <!-- Page Header (Anti-Vibecode: Direct H1, No Kicker) -->
   <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#20251E]/10 pb-6">
     <div class="space-y-2">
@@ -118,22 +126,22 @@
 
       <div class="space-y-1.5 max-w-md mx-auto">
         <h2 class="text-xl sm:text-2xl font-serif font-bold text-[#20251E]">
-          {t('noSavedTitle', lang)}
+          {queryIssues.length ? (isFil ? 'Itama muna ang detalye ng ani' : 'Correct harvest details first') : t('noSavedTitle', lang)}
         </h2>
         <p class="text-xs sm:text-sm text-[#4A5245] leading-relaxed">
-          {t('noSavedSubtitle', lang)}
+          {queryIssues.length ? (isFil ? 'Hindi pa ipinapakita ang mga nai-save na lugar dahil mali ang detalye sa link.' : 'Saved outlets are hidden until the invalid link details are corrected.') : t('noSavedSubtitle', lang)}
         </p>
       </div>
 
       <div class="pt-2">
         <a
-          href="/discover"
+          href={queryIssues.length ? '/' : `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}&places=${encodeURIComponent(comparisonIds.join(','))}`}
           class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <span>{t('exploreOutlets', lang)}</span>
+          <span>{queryIssues.length ? (isFil ? 'Itama ang detalye ng ani' : 'Correct harvest details') : t('exploreOutlets', lang)}</span>
         </a>
       </div>
     </div>
@@ -143,8 +151,8 @@
       {#each savedOutlets as outlet (outlet.id)}
         {@const fit = evaluateFit(outlet, harvest)}
         {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-        {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
-        {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
+        {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}&places=${encodeURIComponent(comparisonIds.join(','))}`}
+        {@const compareHref = `/compare?places=${encodeURIComponent([...new Set([...comparisonIds, outlet.id])].slice(0, 3).join(','))}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
 
         <article class="bg-white rounded-2xl border border-[#20251E]/12 p-6 shadow-sm hover:border-[#597928]/40 transition-all flex flex-col justify-between gap-6">
           <div class="space-y-4">
@@ -186,30 +194,30 @@
               <div class="flex items-center gap-2 text-xs text-[#4A5245] mt-1">
                 <span class="font-medium text-[#6E3511]">{outlet.municipality}, Laguna</span>
                 <span>&bull;</span>
-                <span class="capitalize">{outlet.category}</span>
+                <span>{outletCategoryLabel(outlet.category, lang)}</span>
                 <span>&bull;</span>
-                <span>{dist} km away</span>
+                <span>{dist} km {isFil ? 'tuwirang layo' : 'straight-line'}</span>
               </div>
             </div>
 
             <!-- Transparent Math Ledger -->
             <div class="rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 p-3.5 grid grid-cols-3 gap-2 text-center">
               <div>
-                <div class="text-[10px] uppercase font-semibold text-[#6B7265]">Sample Price</div>
+                <div class="text-[10px] uppercase font-semibold text-[#6B7265]">{fit.dataValidUntil && fit.dataValidUntil < todayInManila() ? (isFil ? 'Lumang halimbawang presyo' : 'Expired sample price') : (isFil ? 'Halimbawang presyo' : 'Sample price')}</div>
                 <div class="text-sm font-bold text-[#20251E]">
-                  {fit.samplePricePerKg ? `₱${fit.samplePricePerKg}/kg` : '---'}
+                  {fit.samplePricePerKg !== null ? `₱${fit.samplePricePerKg}/kg` : (isFil ? 'Walang tala' : 'Not posted')}
                 </div>
               </div>
               <div>
-                <div class="text-[10px] uppercase font-semibold text-[#6B7265]">Accepted</div>
+                <div class="text-[10px] uppercase font-semibold text-[#6B7265]">{isFil ? 'Tatanggapin' : 'Accepted'}</div>
                 <div class="text-sm font-bold text-[#597928]">
-                  {fit.acceptedKg !== null ? `${fit.acceptedKg} kg` : 'Confirm'}
+                  {fit.acceptedKg !== null ? `${fit.acceptedKg} kg` : (isFil ? 'Kumpirmahin' : 'Confirm')}
                 </div>
               </div>
               <div>
-                <div class="text-[10px] uppercase font-semibold text-[#597928]">After Transport</div>
+                <div class="text-[10px] uppercase font-semibold text-[#597928]">{isFil ? 'Matapos ang biyahe' : 'After transport'}</div>
                 <div class="text-sm font-bold text-[#597928]">
-                  {fit.afterTransportPay ? `₱${fit.afterTransportPay.toLocaleString()}` : '---'}
+                  {fit.afterTransportPay !== null ? `₱${fit.afterTransportPay.toLocaleString()}` : '---'}
                 </div>
               </div>
             </div>

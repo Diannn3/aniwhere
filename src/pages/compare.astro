@@ -11,5 +11,7 @@ const description = 'Compare selling outlets side-by-side. Calculate proceeds af
   description={description}
   currentPath="/compare"
 >
-  <ComparisonExperience client:load />
+  <ComparisonExperience client:only="svelte">
+    <p slot="fallback" role="status" class="mx-auto max-w-5xl px-4 py-8 text-base">Binubuksan ang paghahambing… / Opening comparison…</p>
+  </ComparisonExperience>
 </BaseLayout>

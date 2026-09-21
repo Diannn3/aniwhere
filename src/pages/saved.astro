@@ -11,5 +11,7 @@ const description = 'Review outlets you have saved locally on this device. Compa
   description={description}
   currentPath="/saved"
 >
-  <SavedOutletsExperience client:load />
+  <SavedOutletsExperience client:only="svelte">
+    <p slot="fallback" role="status" class="mx-auto max-w-5xl px-4 py-8 text-base">Binubuksan ang mga na-save… / Opening saved outlets…</p>
+  </SavedOutletsExperience>
 </BaseLayout>

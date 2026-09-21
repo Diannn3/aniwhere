@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseDiscoverQuery, serializeDiscoverQuery, parseCompareQuery, todayInManila } from './url-state';
+import { parseDiscoverQuery, serializeDiscoverQuery, parseCompareQuery, comparisonIds, todayInManila } from './url-state';
 
 describe('URL State Serialization and Parsing', () => {
   it('correctly parses full valid query string', () => {
@@ -24,7 +24,8 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.harvest.originMunicipality).toBe('los-banos');
     expect(parsed.harvest.readyDate).toBe(todayInManila());
     expect(parsed.view).toBe('list');
-    expect(parsed.lang).toBe('en');
+    expect(parsed.lang).toBe('fil');
+    expect(parsed.issues).toEqual(['quantity', 'origin', 'ready date']);
   });
 
   it('uses Manila local date instead of a hard-coded prototype date', () => {
@@ -66,5 +67,15 @@ describe('URL State Serialization and Parsing', () => {
     const parsed = parseCompareQuery(query);
 
     expect(parsed.placeIds).toEqual(['place1', 'place2', 'place3']);
+  });
+
+  it('keeps an explicitly empty comparison empty and de-duplicates choices', () => {
+    expect(parseCompareQuery('places=&lang=fil').placeIds).toEqual([]);
+    expect(comparisonIds('one,two,one,three,four')).toEqual(['one', 'two', 'three']);
+  });
+
+  it('flags blank harvest fields in a shared link', () => {
+    const parsed = parseDiscoverQuery('kg=&origin=&ready=');
+    expect(parsed.issues).toEqual(['quantity', 'origin', 'ready date']);
   });
 });

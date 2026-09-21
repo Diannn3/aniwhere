@@ -4,9 +4,10 @@
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
+  import { getCropLabel } from '../../lib/domain/crops';
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
-  import { t } from '../../content/translations';
+  import { t, outletCategoryLabel, evidenceLabel } from '../../content/translations';
   import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
 
   interface Props {
@@ -14,7 +15,7 @@
     initialLang?: 'en' | 'fil';
   }
 
-  const { outlet, initialLang = 'en' } = $props();
+  const { outlet, initialLang = 'fil' } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let harvest = $state<HarvestQuery>({
@@ -23,16 +24,25 @@
     originMunicipality: 'los-banos',
     readyDate: todayInManila(),
   });
+  const historicalHarvest = $derived(Boolean(harvest.readyDate && harvest.readyDate < todayInManila()));
 
   let saved = $state(false);
   let showMessageModal = $state(false);
   let showContactModal = $state(false);
   let copiedMessage = $state(false);
+  let copyError = $state(false);
+  let saveError = $state(false);
+  let dialogTrigger: HTMLElement | null = null;
+  let activeDialog: HTMLElement | null = $state(null);
+  let comparedIds = $state<string[]>([]);
+  let queryIssues = $state<string[]>([]);
 
   onMount(() => {
     saved = isOutletSaved(outlet.id);
     const parsed = parseDiscoverQuery(window.location.search);
+    queryIssues = parsed.issues;
     harvest = parsed.harvest;
+    comparedIds = new URLSearchParams(window.location.search).get('places')?.split(',').filter(Boolean) ?? [];
     if (parsed.lang) {
       lang = parsed.lang;
     }
@@ -52,7 +62,41 @@
   const hasVerifiedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
 
   function handleToggleSave() {
-    saved = toggleSavedOutlet(outlet.id);
+    const result = toggleSavedOutlet(outlet.id);
+    saved = result.saved;
+    saveError = !result.persisted;
+  }
+
+  function closeDialog() {
+    showMessageModal = false;
+    showContactModal = false;
+    requestAnimationFrame(() => dialogTrigger?.focus());
+  }
+
+  function openDialog(kind: 'message' | 'contact', event: MouseEvent) {
+    dialogTrigger = event.currentTarget as HTMLElement;
+    showMessageModal = kind === 'message';
+    showContactModal = kind === 'contact';
+    requestAnimationFrame(() => activeDialog?.querySelector<HTMLButtonElement>('button')?.focus());
+  }
+
+  function handleDialogKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeDialog();
+    }
+    if (event.key !== 'Tab' || !activeDialog) return;
+    const focusable = [...activeDialog.querySelectorAll<HTMLElement>('button, a[href], textarea, input')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function formatEvidenceDate(value: string | null | undefined): string {
@@ -62,14 +106,18 @@
     return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function handleCopyMessage() {
-    const text = messageTemplate;
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(text);
+  async function handleCopyMessage() {
+    copyError = false;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(messageTemplate);
       copiedMessage = true;
       setTimeout(() => {
         copiedMessage = false;
       }, 2500);
+    } catch {
+      copiedMessage = false;
+      copyError = true;
     }
   }
 
@@ -84,7 +132,9 @@
   );
 
   const priceLabel = $derived(
-    fitResult.evidenceKind === 'demo'
+    fitResult.dataValidUntil && fitResult.dataValidUntil < todayInManila()
+      ? (isFil ? 'Lumang halimbawang presyo' : 'Expired sample price')
+      : fitResult.evidenceKind === 'demo'
       ? (isFil ? 'Halimbawang presyo' : 'Sample price')
       : fitResult.evidenceKind === 'buyer_offer'
         ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
@@ -107,20 +157,30 @@
 
   const messageTemplate = $derived(
     isFil
-      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Maraming salamat po.`
-      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Thank you.`
+      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${getCropLabel(harvest.crop, lang)} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Maraming salamat po.`
+      : `Good day. I have ${harvest.quantityKg} kg of ${getCropLabel(harvest.crop, lang)} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Thank you.`
   );
 
   const backUrl = $derived(
-    `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
+    `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}&places=${encodeURIComponent(comparedIds.join(','))}`
   );
 
   const compareUrl = $derived(
-    `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
+    `/compare?places=${encodeURIComponent([...new Set([...comparedIds, outlet.id])].slice(0, 3).join(','))}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 </script>
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
+<div class="farmer-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-6">
+  {#if queryIssues.length > 0}
+    <p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{isFil ? 'May di-wastong detalye sa link. Suriin ang ani, dami, lugar, at petsa bago magpatuloy.' : 'The shared link has invalid harvest details. Check the crop, quantity, location, and date before continuing.'}</p>
+  {/if}
+  {#if historicalHarvest}<p role="status" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{isFil ? 'Lumipas na ang petsa ng ani. Makasaysayang halimbawa lamang ang mga halagang ito.' : 'The harvest date is past. These figures are a historical example.'}</p>{/if}
+  {#if saveError}
+    <p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{isFil ? 'Napanatili lamang ang pagpili sa tab na ito. Maaaring mawala ito kapag isinara ang browser.' : 'Your saved choice is available in this tab only and may be lost when you close the browser.'}</p>
+  {/if}
+  {#if queryIssues.length > 0}
+    <a href="/" class="inline-flex min-h-[44px] items-center rounded-xl bg-[#597928] px-5 py-2 text-base font-semibold text-white">{isFil ? 'Itama ang detalye ng ani' : 'Correct harvest details'}</a>
+  {:else}
   <!-- Back Link & Breadcrumbs -->
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
@@ -149,7 +209,8 @@
             ? 'bg-[#597928] text-white border-[#597928] shadow-sm'
             : 'bg-white text-[#20251E] border-[#20251E]/20 hover:border-[#597928]'
         }`}
-        aria-label={saved ? 'Saved on this device' : 'Save outlet'}
+        aria-label={saved ? (isFil ? 'Nai-save sa device' : 'Saved on this device') : (isFil ? 'I-save ang lugar' : 'Save outlet')}
+        aria-pressed={saved}
       >
         <svg class="w-4 h-4" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -187,10 +248,10 @@
             {outlet.municipality}, Laguna
           </span>
           <span class="text-[#20251E]/20">&bull;</span>
-          <span class="capitalize font-medium text-[#20251E]">{outlet.category}</span>
+          <span class="font-medium text-[#20251E]">{outletCategoryLabel(outlet.category, lang)}</span>
           <span class="text-[#20251E]/20">&bull;</span>
           <span class="text-xs bg-[#597928]/10 text-[#597928] px-2.5 py-0.5 rounded-full font-medium">
-            {distanceKm} km from {originMun.name}
+            {distanceKm} km {isFil ? 'tuwirang layo mula sa' : 'straight-line from'} {originMun.name}
           </span>
         </div>
 
@@ -234,7 +295,7 @@
         </div>
         <div>
           <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Uri ng Ebidensya' : 'Evidence Type'}</div>
-          <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
+          <div class="text-[11px] text-[#6B7265]">{evidenceLabel(fitResult, lang)}</div>
         </div>
       </div>
 
@@ -279,7 +340,7 @@
       </div>
 
       <span class="text-xs text-[#6B7265] bg-[#FCECD8]/60 text-[#6E3511] font-semibold px-2.5 py-1 rounded-full">
-        {harvest.quantityKg} kg {harvest.crop}
+        {harvest.quantityKg} kg {getCropLabel(harvest.crop, lang)}
       </span>
     </div>
 
@@ -290,8 +351,8 @@
         <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
           {isFil ? 'Ani Mo' : 'Your Produce'}
         </div>
-        <div class="text-base sm:text-lg font-bold text-[#20251E] capitalize">{harvest.crop}</div>
-        <div class="text-[11px] text-[#6B7265]">Ready {harvest.readyDate}</div>
+        <div class="text-base sm:text-lg font-bold text-[#20251E] capitalize">{getCropLabel(harvest.crop, lang)}</div>
+        <div class="text-sm text-[#6B7265]">{isFil ? 'Handa' : 'Ready'} {harvest.readyDate}</div>
       </div>
 
       <!-- 2. Accepted Quantity -->
@@ -300,12 +361,14 @@
           {isFil ? 'Kayang Tanggapin' : 'Accepted'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#597928]">
-          {fitResult.acceptedKg !== null ? `${fitResult.acceptedKg} kg` : 'Confirm'}
+          {fitResult.acceptedKg !== null ? `${fitResult.acceptedKg} kg` : (isFil ? 'Kumpirmahin' : 'Confirm')}
         </div>
         <div class="text-[11px] text-[#6B7265]">
-          {fitResult.remainingKg && fitResult.remainingKg > 0
-            ? `${fitResult.remainingKg} kg unallocated`
-            : 'Full harvest match'}
+          {fitResult.remainingKg === null
+            ? (isFil ? 'Hindi pa alam kung ilan ang matatanggap' : 'Accepted amount is unknown')
+            : fitResult.remainingKg > 0
+              ? (isFil ? `${fitResult.remainingKg} kg ang matitira` : `${fitResult.remainingKg} kg would remain`)
+              : (isFil ? 'Maaaring tanggapin ang buong ani; kumpirmahin muna' : 'May accept the full harvest; confirm first')}
         </div>
       </div>
 
@@ -315,9 +378,9 @@
           {priceLabel}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
-          {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
+          {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : (isFil ? 'Walang tala' : 'Not posted')}
         </div>
-        <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
+        <div class="text-[11px] text-[#6B7265]">{evidenceLabel(fitResult, lang)}</div>
       </div>
 
       <!-- 4. Gross Subtotal -->
@@ -331,7 +394,7 @@
         <div class="text-[11px] text-[#6B7265]">
           {fitResult.acceptedKg && fitResult.samplePricePerKg
             ? `${fitResult.acceptedKg}kg × ₱${fitResult.samplePricePerKg}`
-            : 'Pending intake'}
+            : (isFil ? 'Kailangan pang kumpirmahin' : 'Pending intake')}
         </div>
       </div>
 
@@ -343,7 +406,7 @@
         <div class="text-base sm:text-lg font-bold text-[#6E3511]">
           {fitResult.enteredTransport !== null ? `-₱${fitResult.enteredTransport.toLocaleString()}` : '---'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">Entered default</div>
+        <div class="text-sm text-[#6B7265]">{isFil ? 'Halimbawang tantiya' : 'Sample estimate'}</div>
       </div>
 
       <!-- 6. After Entered Transport -->
@@ -354,7 +417,7 @@
         <div class="text-base sm:text-lg font-bold text-[#597928]">
           {fitResult.afterTransportPay !== null ? `₱${fitResult.afterTransportPay.toLocaleString()}` : '---'}
         </div>
-        <div class="text-[11px] text-[#4A5245]">Before farm costs</div>
+        <div class="text-sm text-[#4A5245]">{isFil ? 'Bago gastos sa bukid' : 'Before farm costs'}</div>
       </div>
     </div>
 
@@ -364,7 +427,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <div>
-        <span class="font-bold text-[#20251E]">Notice:</span> {t('afterTransportNote', lang)}
+        <span class="font-bold text-[#20251E]">{isFil ? 'Paalala:' : 'Notice:'}</span> {t('afterTransportNote', lang)}
       </div>
     </div>
   </section>
@@ -399,15 +462,15 @@
       <ul class="space-y-3">
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
           <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
-          <span>What grade and ripeness standard do you require for {harvest.crop}?</span>
+          <span>{isFil ? `Anong kalidad at antas ng pagkahinog ang kailangan para sa ${getCropLabel(harvest.crop, lang)}?` : `What grade and ripeness standard do you require for ${getCropLabel(harvest.crop, lang)}?`}</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
           <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
-          <span>What packaging or crate specification is required at delivery?</span>
+          <span>{isFil ? 'Anong balot o lalagyan ang kailangan sa paghahatid?' : 'What packaging or crate specification is required at delivery?'}</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
           <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
-          <span>What are the exact receiving hours and gate cutoffs on {harvest.readyDate}?</span>
+          <span>{isFil ? `Anong eksaktong oras ng pagtanggap at huling oras ng pagpasok sa ${harvest.readyDate}?` : `What are the exact receiving hours and gate cutoffs on ${harvest.readyDate}?`}</span>
         </li>
 
         {#if fitResult.conditionsToConfirm && fitResult.conditionsToConfirm.length > 0}
@@ -431,7 +494,7 @@
             </svg>
           </div>
           <h2 class="text-xl font-serif font-bold text-[#20251E]">
-            {isFil ? 'Guhit ng Ruta' : 'Your Route'}
+            {isFil ? 'Guhit ng Tuwirang Layo' : 'Straight-Line View'}
           </h2>
         </div>
 
@@ -456,9 +519,9 @@
       </div>
 
       <div class="flex items-center justify-between text-xs text-[#6B7265] pt-1">
-        <span>Origin: <strong>{originMun.name}</strong></span>
-        <span>Distance: <strong>{distanceKm} km</strong></span>
-        <span>Destination: <strong>{outlet.municipality}</strong></span>
+        <span>{isFil ? 'Pinagmulan:' : 'Origin:'} <strong>{originMun.name}</strong></span>
+        <span>{isFil ? 'Tuwirang layo:' : 'Straight-line distance:'} <strong>{distanceKm} km</strong></span>
+        <span>{isFil ? 'Patutunguhan:' : 'Destination:'} <strong>{outlet.municipality}</strong></span>
       </div>
     </section>
   </div>
@@ -488,7 +551,7 @@
       <!-- 1. Prepare Message CTA -->
       <button
         type="button"
-        onclick={() => (showMessageModal = true)}
+        onclick={(event) => openDialog('message', event)}
         class="w-full min-h-[48px] px-5 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#47621f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -500,7 +563,7 @@
       <!-- 2. Public Contact Details -->
       <button
         type="button"
-        onclick={() => (showContactModal = true)}
+        onclick={(event) => openDialog('contact', event)}
         class="w-full min-h-[48px] px-5 py-3 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] font-semibold text-sm hover:bg-[#FFFDF8] hover:border-[#597928] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
       >
         <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,28 +591,29 @@
     <!-- Provenance / Timestamp Attribution Footer -->
     <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#6B7265]">
       <div>
-        Source: <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || 'Source unknown'} &bull; {outlet.sampleOfferDate}</span>
+        {isFil ? 'Pinagmulan:' : 'Source:'} <span class="font-medium text-[#20251E]">{evidenceLabel(fitResult, lang)} &bull; {outlet.sampleOfferDate}</span>
       </div>
       <div>
-        Fixture: <span class="font-medium text-[#20251E]">Illustrative Laguna demo &bull; NextGen Agri Hackathon 2026</span>
+        {isFil ? 'Halimbawang datos:' : 'Fixture:'} <span class="font-medium text-[#20251E]">{isFil ? 'Demo sa Laguna' : 'Illustrative Laguna demo'} &bull; NextGen Agri Hackathon 2026</span>
       </div>
     </div>
   </section>
+  {/if}
 </div>
 
 <!-- Modal: Prepare Message -->
 {#if showMessageModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true">
+  <div bind:this={activeDialog} onkeydown={handleDialogKeydown} class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="message-dialog-title">
     <div class="bg-white rounded-2xl border border-[#20251E]/15 max-w-lg w-full p-6 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
-        <h3 class="text-lg font-serif font-bold text-[#20251E]">
+        <h3 id="message-dialog-title" class="text-lg font-serif font-bold text-[#20251E]">
           {isFil ? 'Ihanda ang Mensahe sa Mamimili' : 'Prepare Inquiry Message'}
         </h3>
         <button
           type="button"
-          onclick={() => (showMessageModal = false)}
+          onclick={closeDialog}
           class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
-          aria-label="Close"
+          aria-label={isFil ? 'Isara' : 'Close'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -568,16 +632,16 @@
       </div>
 
       <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
-        <strong>Demo notice:</strong> AniWhere does not send automated SMS. Use this text on your phone.
+        <strong>{isFil ? 'Demo lamang:' : 'Demo notice:'}</strong> {isFil ? 'Hindi nagpapadala ng SMS ang AniWhere. Kopyahin ang tekstong ito at ipadala gamit ang iyong telepono.' : 'AniWhere does not send automated SMS. Copy this text and send it using your phone.'}
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-2">
         <button
           type="button"
-          onclick={() => (showMessageModal = false)}
+          onclick={closeDialog}
           class="px-4 py-2 rounded-full text-xs font-semibold text-[#4A5245] hover:bg-[#20251E]/5 min-h-[44px]"
         >
-          Close
+          {isFil ? 'Isara' : 'Close'}
         </button>
 
         <button
@@ -589,32 +653,33 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            <span>Copied to clipboard!</span>
+            <span>{isFil ? 'Nakopya ang mensahe' : 'Copied to clipboard!'}</span>
           {:else}
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
             </svg>
-            <span>Copy message</span>
+            <span>{isFil ? 'Kopyahin ang mensahe' : 'Copy message'}</span>
           {/if}
         </button>
       </div>
+      {#if copyError}<p role="alert" class="text-sm text-[#6E3511]">{isFil ? 'Hindi nakopya. Piliin at kopyahin nang manu-mano ang mensahe sa itaas.' : 'Copy failed. Select and copy the message above manually.'}</p>{/if}
     </div>
   </div>
 {/if}
 
 <!-- Modal: Public Contact Details -->
 {#if showContactModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true">
+  <div bind:this={activeDialog} onkeydown={handleDialogKeydown} class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="contact-dialog-title">
     <div class="bg-white rounded-2xl border border-[#20251E]/15 max-w-md w-full p-6 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
-        <h3 class="text-lg font-serif font-bold text-[#20251E]">
+        <h3 id="contact-dialog-title" class="text-lg font-serif font-bold text-[#20251E]">
           {outlet.name}
         </h3>
         <button
           type="button"
-          onclick={() => (showContactModal = false)}
+          onclick={closeDialog}
           class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
-          aria-label="Close"
+          aria-label={isFil ? 'Isara' : 'Close'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -656,17 +721,17 @@
         {/if}
 
         <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
-          <strong>Notice:</strong> This is a NextGen Agri Hackathon demo fixture. Real commercial transactions and phone calls are not executed in this prototype pass.
+          <strong>{isFil ? 'Paalala:' : 'Notice:'}</strong> {isFil ? 'Halimbawang datos ito para sa hackathon. Walang totoong transaksiyon o tawag na ginagawa ang prototype.' : 'This is hackathon sample data. The prototype does not make transactions or phone calls.'}
         </div>
       </div>
 
       <div class="flex items-center justify-end pt-2">
         <button
           type="button"
-          onclick={() => (showContactModal = false)}
+          onclick={closeDialog}
           class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#597928] text-white hover:bg-[#435c1d] transition-all min-h-[44px]"
         >
-          Done
+          {isFil ? 'Tapos' : 'Done'}
         </button>
       </div>
     </div>

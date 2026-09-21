@@ -32,10 +32,11 @@ export const INITIAL_BUYER_OFFERS: BuyerDemoOffer[] = [
 ];
 
 export function getBuyerOffers(): BuyerDemoOffer[] {
-  return safeStorage.getItem<BuyerDemoOffer[]>(STORAGE_KEY, INITIAL_BUYER_OFFERS);
+  const value = safeStorage.getItem<unknown>(STORAGE_KEY, INITIAL_BUYER_OFFERS);
+  return Array.isArray(value) ? value.filter((offer): offer is BuyerDemoOffer => offer && typeof offer === 'object' && typeof offer.id === 'string' && typeof offer.cropKey === 'string') : INITIAL_BUYER_OFFERS;
 }
 
-export function saveBuyerOffer(offer: BuyerDemoOffer): void {
+export function saveBuyerOffer(offer: BuyerDemoOffer): boolean {
   const current = getBuyerOffers();
   const existingIdx = current.findIndex((o) => o.id === offer.id);
   let updated: BuyerDemoOffer[];
@@ -47,7 +48,7 @@ export function saveBuyerOffer(offer: BuyerDemoOffer): void {
     updated = [offer, ...current];
   }
 
-  safeStorage.setItem(STORAGE_KEY, updated);
+  return safeStorage.setItem(STORAGE_KEY, updated);
 }
 
 export function getBuyerOfferCounts(): { published: number; inReview: number; draft: number } {
@@ -59,13 +60,13 @@ export function getBuyerOfferCounts(): { published: number; inReview: number; dr
   };
 }
 
-export function deleteBuyerOffer(id: string): void {
+export function deleteBuyerOffer(id: string): boolean {
   const current = getBuyerOffers();
   const updated = current.filter((o) => o.id !== id);
-  safeStorage.setItem(STORAGE_KEY, updated);
+  return safeStorage.setItem(STORAGE_KEY, updated);
 }
 
-export function resetBuyerOffers(): void {
-  safeStorage.setItem(STORAGE_KEY, INITIAL_BUYER_OFFERS);
+export function resetBuyerOffers(): boolean {
+  return safeStorage.setItem(STORAGE_KEY, INITIAL_BUYER_OFFERS);
 }
 

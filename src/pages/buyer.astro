@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BuyerWorkspace from '../components/buyer/BuyerWorkspace.svelte';
 
-const lang = (Astro.url.searchParams.get('lang') as 'en' | 'fil') || 'en';
+const lang = Astro.url.searchParams.get('lang') === 'en' ? 'en' : 'fil';
 const isFil = lang === 'fil';
 
 const title = isFil

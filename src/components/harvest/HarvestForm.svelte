@@ -3,10 +3,10 @@
   import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { validateHarvestInput } from '../../lib/domain/validation';
-  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { t } from '../../content/translations';
 
-  let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
+  let { initialLang = 'fil' }: { initialLang?: 'en' | 'fil' } = $props();
 
   let crop = $state('tomato');
   let quantityKg = $state(300);
@@ -17,6 +17,7 @@
   let packaging = $state('');
   let showDetails = $state(false);
   let lang = $state<'en' | 'fil'>(initialLang);
+  let linkIssues = $state<string[]>([]);
 
   let errors = $state<Record<string, string>>({});
   let formSubmitted = $state(false);
@@ -28,19 +29,17 @@
 
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get('lang');
-    const urlReady = urlParams.get('ready');
-    const urlVariety = urlParams.get('variety') || '';
-    const urlGrade = urlParams.get('grade') || '';
-    const urlPackaging = urlParams.get('packaging') || '';
-    readyDate = urlReady || todayInManila();
-    variety = urlVariety;
-    grade = urlGrade;
-    packaging = urlPackaging;
-    showDetails = Boolean(urlVariety || urlGrade || urlPackaging);
-    if (urlLang === 'fil' || urlLang === 'en') {
-      lang = urlLang;
-    }
+    const parsed = parseDiscoverQuery(urlParams);
+    linkIssues = parsed.issues;
+    crop = parsed.harvest.crop;
+    quantityKg = parsed.harvest.quantityKg;
+    originMunicipality = parsed.harvest.originMunicipality;
+    readyDate = parsed.harvest.readyDate || todayInManila();
+    variety = parsed.harvest.details?.variety || '';
+    grade = parsed.harvest.details?.grade || '';
+    packaging = parsed.harvest.details?.packaging || '';
+    showDetails = Boolean(variety || grade || packaging);
+    lang = parsed.lang;
   });
 
   function handleSubmit(event: SubmitEvent) {
@@ -94,9 +93,10 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} novalidate class="space-y-4">
+<form onsubmit={handleSubmit} novalidate class="farmer-screen space-y-4">
+  {#if linkIssues.length > 0}<p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{lang === 'fil' ? 'May di-wastong detalye sa link. Suriin ang ani, dami, lugar, at petsa bago maghanap.' : 'The shared link has invalid details. Check the crop, quantity, location, and date before searching.'}</p>{/if}
   <!-- 2x2 Input Cards Grid (Maintains 2 columns across all viewports) -->
-  <div class="grid grid-cols-2 gap-2.5 sm:gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
     
     <!-- 1. Crop Card -->
     <label

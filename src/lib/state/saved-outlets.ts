@@ -3,7 +3,8 @@ import { safeStorage } from './storage';
 const STORAGE_KEY = 'aniwhere_saved_outlets';
 
 export function getSavedOutletIds(): string[] {
-  return safeStorage.getItem<string[]>(STORAGE_KEY, []);
+  const value = safeStorage.getItem<unknown>(STORAGE_KEY, []);
+  return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
 }
 
 export function isOutletSaved(id: string): boolean {
@@ -11,7 +12,7 @@ export function isOutletSaved(id: string): boolean {
   return ids.includes(id);
 }
 
-export function toggleSavedOutlet(id: string): boolean {
+export function toggleSavedOutlet(id: string): { saved: boolean; persisted: boolean } {
   const ids = getSavedOutletIds();
   const index = ids.indexOf(id);
   let newIds: string[];
@@ -22,6 +23,6 @@ export function toggleSavedOutlet(id: string): boolean {
     newIds = [...ids, id];
   }
 
-  safeStorage.setItem(STORAGE_KEY, newIds);
-  return index < 0; // returns true if now saved, false if removed
+  const persisted = safeStorage.setItem(STORAGE_KEY, newIds);
+  return { saved: index < 0, persisted };
 }

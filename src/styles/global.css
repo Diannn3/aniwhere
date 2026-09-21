@@ -68,6 +68,21 @@
   animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Farmer actions remain readable and usable on narrow, inexpensive phones. */
+@media (max-width: 640px) {
+  .farmer-screen :is(button, input:not([type="checkbox"]), select, textarea) {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .farmer-screen :is([class~="text-xs"], [class~="text-[11px]"], [class~="text-[10px]"]) {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .farmer-screen p { font-size: 1rem; }
+}
+
 /* Print Optimization for Farmer Run-Sheets & Buyer Comparison Printouts */
 @media print {
   header,

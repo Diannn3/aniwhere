@@ -64,7 +64,7 @@ function requirementMatches(value: string, acceptedValues: string[]): boolean {
 export function evaluateFit(
   outlet: Outlet,
   query: HarvestQuery,
-  customTransport?: number
+  customTransport?: number | null
 ): FitResult {
   const { key: normalizedCrop, isSupported } = normalizeCrop(query.crop);
   const requestedKg = query.quantityKg;

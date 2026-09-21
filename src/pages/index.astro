@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HarvestForm from '../components/harvest/HarvestForm.svelte';
 
 const langParam = Astro.url.searchParams.get('lang');
-const lang = langParam === 'fil' ? 'fil' : 'en';
+const lang = langParam === 'en' ? 'en' : 'fil';
 const isFil = lang === 'fil';
 ---
 
@@ -16,11 +16,8 @@ const isFil = lang === 'fil';
     
     <!-- Hero Header: Direct H1 without Eyebrow (Strict Anti-Vibecode Rule #9) -->
     <div class="max-w-2xl mb-6 sm:mb-8">
-      <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#20251E] leading-[1.12]">
-        {isFil ? 'Ano ang ' : 'What are you '}
-        <span class="text-[#597928]">{isFil ? 'aanihin mo?' : 'harvesting?'}</span>
-      </h1>
-      <p class="mt-3 text-base sm:text-xl text-[#4A5245] font-normal leading-relaxed">
+      <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#20251E] leading-[1.12]" data-label-en="What are you harvesting?" data-label-fil="Ano ang aanihin mo?">{isFil ? 'Ano ang aanihin mo?' : 'What are you harvesting?'}</h1>
+      <p class="mt-3 text-base sm:text-xl text-[#4A5245] font-normal leading-relaxed" data-label-en="Find places to sell your harvest in Laguna." data-label-fil="Maghanap ng mapagbibilhan ng ani mo sa Laguna.">
         {isFil ? 'Maghanap ng mapagbibilhan ng ani mo sa Laguna.' : 'Find places to sell your harvest in Laguna.'}
       </p>
     </div>
@@ -53,15 +50,17 @@ const isFil = lang === 'fil';
 
           <!-- Honest Demo Label Badge on Bottom Right -->
           <div class="absolute bottom-3 right-3 bg-[#FFFDF8]/95 backdrop-blur-sm border border-[#20251E]/15 px-2.5 py-1 rounded-full text-xs font-semibold text-[#6E3511] shadow-xs">
-            Demo — sample data
+            <span data-label-en="Demo — sample data" data-label-fil="Demo — halimbawang datos">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'}</span>
           </div>
           <div class="absolute top-3 left-3 bg-[#597928]/90 text-[#FFFDF8] px-2.5 py-1 rounded-full text-xs font-medium">
-            {isFil ? 'Kamatis, Talong, Kalamansi' : 'Tomatoes, Eggplant, Calamansi'}
+            <span data-label-en="Tomatoes, Eggplant, Calamansi" data-label-fil="Kamatis, Talong, Kalamansi">{isFil ? 'Kamatis, Talong, Kalamansi' : 'Tomatoes, Eggplant, Calamansi'}</span>
           </div>
         </div>
 
         <!-- The Harvest Entry Form -->
-        <HarvestForm client:load initialLang={lang} />
+        <HarvestForm client:only="svelte" initialLang={lang}>
+          <p slot="fallback" role="status" class="rounded-2xl border border-[#20251E]/12 bg-[#FFFDF8] p-4 text-base">Binubuksan ang form ng ani… / Opening harvest form…</p>
+        </HarvestForm>
       </div>
 
       <!-- Map & Regional Context Column (5 cols on desktop, secondary on mobile) -->
@@ -74,10 +73,10 @@ const isFil = lang === 'fil';
               <svg class="w-4 h-4 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
-              <span>{isFil ? 'Laguna Pamilihan Corridor' : 'Laguna Market Corridor'}</span>
+              <span data-label-en="Laguna Market Corridor" data-label-fil="Mga Pamilihan sa Laguna">{isFil ? 'Mga Pamilihan sa Laguna' : 'Laguna Market Corridor'}</span>
             </h2>
             <span class="text-[10px] font-semibold text-[#6E3511] bg-[#FCECD8] px-2 py-0.5 rounded-full uppercase tracking-wider">
-              {isFil ? 'Guhit-mapa' : 'Illustrative map'}
+              <span data-label-en="Illustrative map" data-label-fil="Halimbawang mapa">{isFil ? 'Halimbawang mapa' : 'Illustrative map'}</span>
             </span>
           </div>
 
@@ -121,7 +120,7 @@ const isFil = lang === 'fil';
             </svg>
           </div>
 
-          <p class="text-xs text-[#6B7265] mt-3 leading-relaxed">
+          <p class="text-sm text-[#6B7265] mt-3 leading-relaxed" data-label-en="This map shows approximate locations and straight-line connections, not driving routes. Confirm terms before travel." data-label-fil="Tantiyang lokasyon at tuwirang guhit lamang ito, hindi ruta sa kalsada. Kumpirmahin ang kondisyon bago bumiyahe.">
             {isFil 
               ? 'Ang mga distansya at biyahe ay tinatantya lamang. Kumpirmahin muna ang kondisyon ng pagtanggap bago magkarga ng sasakyan.'
               : 'Locations and routes are schematic illustrations. Confirm receiving capacity with buyers prior to dispatch.'}
@@ -137,10 +136,10 @@ const isFil = lang === 'fil';
               </svg>
             </div>
             <div>
-              <h3 class="text-sm font-bold text-[#20251E]">
+              <h3 class="text-base font-bold text-[#20251E]" data-label-en="Find nearby options" data-label-fil="Maghanap ng kalapit na opsyon">
                 {isFil ? 'Maghanap ng kalapit na opsyon' : 'Find nearby options'}
               </h3>
-              <p class="text-xs text-[#4A5245] mt-0.5">
+              <p class="text-sm text-[#4A5245] mt-0.5" data-label-en="Explore potential local outlets and see what still needs confirmation." data-label-fil="Tuklasin ang mga potensyal na pamilihan at alamin ang kailangan pang kumpirmahin.">
                 {isFil ? 'Tuklasin ang mga potensyal na pamilihan at makita kung ano ang kailangan pang kumpirmahin.' : 'Explore potential local outlets and see what still needs confirmation.'}
               </p>
             </div>
@@ -153,10 +152,10 @@ const isFil = lang === 'fil';
               </svg>
             </div>
             <div>
-              <h3 class="text-sm font-bold text-[#20251E]">
+              <h3 class="text-base font-bold text-[#20251E]" data-label-en="Check your harvest fit" data-label-fil="Suriin ang antas ng tugma">
                 {isFil ? 'Suriin ang antas ng tugma' : 'Check your harvest fit'}
               </h3>
-              <p class="text-xs text-[#4A5245] mt-0.5">
+              <p class="text-sm text-[#4A5245] mt-0.5" data-label-en="See whether a place may accept all or only part of your crop." data-label-fil="Alamin kung buo o bahagi lamang ng ani ang maaaring tanggapin.">
                 {isFil ? 'Alamin kung buo o bahagi lamang ng ani ang kayang tanggapin.' : 'Know immediately whether a destination takes all or part of your crop.'}
               </p>
             </div>
@@ -169,10 +168,10 @@ const isFil = lang === 'fil';
               </svg>
             </div>
             <div>
-              <h3 class="text-sm font-bold text-[#20251E]">
+              <h3 class="text-base font-bold text-[#20251E]" data-label-en="Compare before you travel" data-label-fil="Ihambing bago bumiyahe">
                 {isFil ? 'Ihambing bago bumiyahe' : 'Compare before you travel'}
               </h3>
-              <p class="text-xs text-[#4A5245] mt-0.5">
+              <p class="text-sm text-[#4A5245] mt-0.5" data-label-en="Review estimated proceeds after hauling, before farm costs." data-label-fil="Tingnan ang tantiyang matitira matapos ang biyahe, bago ang gastos sa bukid.">
                 {isFil ? 'Tingnan ang matitira matapos ibawas ang gastos sa pamasahe o transportasyon.' : 'Review gross proceeds minus entered hauling expense without false profit claims.'}
               </p>
             </div>

@@ -6,16 +6,16 @@
     saveBuyerOffer,
     deleteBuyerOffer,
     resetBuyerOffers,
-    getBuyerOfferCounts,
   } from '../../lib/state/buyer-demo';
   import BuyerOfferEditorModal from './BuyerOfferEditorModal.svelte';
+  import { preferredLanguage } from '../../lib/state/url-state';
   import { t } from '../../content/translations';
 
   interface Props {
     initialLang?: 'en' | 'fil';
   }
 
-  const { initialLang = 'en' } = $props();
+  const { initialLang = 'fil' } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let offers = $state<BuyerDemoOffer[]>([]);
@@ -28,10 +28,7 @@
 
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get('lang');
-    if (urlLang === 'fil' || urlLang === 'en') {
-      lang = urlLang;
-    }
+    lang = preferredLanguage(urlParams);
     refreshOffers();
   });
 
@@ -41,7 +38,11 @@
 
   const isFil = $derived(lang === 'fil');
 
-  const counts = $derived(getBuyerOfferCounts());
+  const counts = $derived({
+    published: offers.filter((offer) => offer.status === 'published').length,
+    inReview: offers.filter((offer) => offer.status === 'in_review').length,
+    draft: offers.filter((offer) => offer.status === 'draft').length,
+  });
 
   const filteredOffers = $derived(
     offers.filter((o) => {
@@ -71,10 +72,10 @@
   }
 
   function handleSaveOffer(updated: BuyerDemoOffer) {
-    saveBuyerOffer(updated);
+    const persisted = saveBuyerOffer(updated);
     refreshOffers();
     isModalOpen = false;
-    showToast(isFil ? 'Nai-save sa device na ito para sa demo' : 'Saved on this device for demo');
+    showToast(persisted ? (isFil ? 'Nai-save sa device na ito para sa demo' : 'Saved on this device for demo') : (isFil ? 'Sa tab na ito lamang ang pagbabago; maaaring mawala sa pagsara.' : 'This change is in this tab only and may be lost on close.'));
   }
 
   function confirmDelete(offer: BuyerDemoOffer) {
@@ -83,19 +84,19 @@
 
   function executeDelete() {
     if (offerToDelete) {
-      deleteBuyerOffer(offerToDelete.id);
+      const persisted = deleteBuyerOffer(offerToDelete.id);
       refreshOffers();
       offerToDelete = null;
-      showToast(isFil ? 'Naalis ang alok sa device na ito' : 'Offer removed from this device');
+      showToast(persisted ? (isFil ? 'Naalis ang alok sa device na ito' : 'Offer removed from this device') : (isFil ? 'Sa tab na ito lamang ang pagbabago; maaaring mawala sa pagsara.' : 'This change is in this tab only and may be lost on close.'));
     }
   }
 
   function handleReset() {
-    resetBuyerOffers();
+    const persisted = resetBuyerOffers();
     refreshOffers();
     activeFilter = 'all';
     searchQuery = '';
-    showToast(isFil ? 'Naibalik sa 3 orihinal na halimbawang alok' : 'Reset to original 3 sample offers');
+    showToast(persisted ? (isFil ? 'Naibalik sa 3 orihinal na halimbawang alok' : 'Reset to original 3 sample offers') : (isFil ? 'Sa tab na ito lamang ang pagbabago; maaaring mawala sa pagsara.' : 'This change is in this tab only and may be lost on close.'));
   }
 
   function showToast(msg: string) {
@@ -619,16 +620,16 @@
                     {#if offer.pricePerKg !== undefined && offer.pricePerKg > 0}
                       <span class="text-[#597928] font-bold">PHP {offer.pricePerKg}/kg</span>
                     {:else}
-                      <span class="text-[#6B7265] italic font-normal">Price not posted</span>
+                      <span class="text-[#6B7265] italic font-normal">{isFil ? 'Walang presyo' : 'Price not posted'}</span>
                     {/if}
                   </div>
                   <div class="text-[11px] text-[#6B7265] mt-0.5 truncate">
                     {#if offer.status === 'published'}
-                      Sample offer &middot; 17 Sep 2026
+                      {isFil ? 'Halimbawang alok' : 'Sample offer'} &middot; 17 Sep 2026
                     {:else if offer.status === 'in_review'}
-                      Needs review before publication
+                      {isFil ? 'Kailangan pang suriin' : 'Needs review'}
                     {:else}
-                      Internal draft
+                      {isFil ? 'Burador lamang' : 'Demo draft'}
                     {/if}
                   </div>
                 </div>
@@ -638,27 +639,30 @@
               <div class="flex items-center gap-2 shrink-0">
                 {#if offer.status === 'published'}
                   <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBF3DF] text-[#47661E] border border-[#D1E3BA]">
-                    Published
+                    {isFil ? 'Demo na nailathala' : 'Demo published'}
                   </span>
                 {:else if offer.status === 'in_review'}
                   <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FCECD8] text-[#6E3511] border border-[#F6D3AD]">
-                    In review
+                    {isFil ? 'Sinusuri' : 'In review'}
                   </span>
                 {:else}
                   <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB]">
-                    Draft
+                    {isFil ? 'Burador' : 'Draft'}
                   </span>
                 {/if}
 
                 <button
                   type="button"
                   onclick={() => openEditModal(offer)}
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7265] hover:text-[#20251E] transition-colors"
-                  aria-label="Edit offer"
+                  class="w-11 h-11 flex items-center justify-center rounded-lg text-[#6B7265] hover:text-[#20251E] transition-colors"
+                  aria-label={isFil ? `Baguhin ang alok para sa ${offer.cropLabel}` : `Edit offer for ${offer.cropLabel}`}
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
+                </button>
+                <button type="button" onclick={() => confirmDelete(offer)} class="w-11 h-11 flex items-center justify-center rounded-lg text-[#6E3511] hover:bg-[#FCECD8]" aria-label={isFil ? `Alisin ang alok para sa ${offer.cropLabel}` : `Delete offer for ${offer.cropLabel}`}>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
               </div>
             </div>
@@ -681,7 +685,7 @@
             {isFil ? 'Pagsusuri bago Ilathala' : 'Review before publication'}
           </h3>
           <ul class="mt-2 text-xs sm:text-sm text-[#4A5245] space-y-1.5 list-disc list-inside">
-            <li>{isFil ? 'Tanging ang mga nailathalang alok ang makikita sa pagtuklas ng magsasaka.' : 'Only published offers appear in farmer discovery.'}</li>
+            <li>{isFil ? 'Sa device na ito lamang ang demo editor; hindi nito binabago ang listahan ng magsasaka.' : 'This device-only demo editor does not update farmer discovery.'}</li>
             <li>{isFil ? 'Panatilihing napapanahon ang dami, kondisyon ng pananim, at petsa ng bisa.' : 'Keep quantity, crop requirements, and validity current.'}</li>
           </ul>
         </div>

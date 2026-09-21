@@ -26,6 +26,20 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.evidenceKind).toBe('demo');
   });
 
+  it('distinguishes unknown, zero, and over-gross transport costs', () => {
+    const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
+    const unknown = evaluateFit(coop, query300, null);
+    expect(unknown.enteredTransport).toBeNull();
+    expect(unknown.afterTransportPay).toBeNull();
+
+    const free = evaluateFit(coop, query300, 0);
+    expect(free.enteredTransport).toBe(0);
+    expect(free.afterTransportPay).toBe(8400);
+
+    const expensive = evaluateFit(coop, query300, 9000);
+    expect(expensive.afterTransportPay).toBe(-600);
+  });
+
   it('300 kg tomatoes vs Demo Processor yields exact match and P9,300 after transport', () => {
     const proc = DEMO_OUTLETS.find((o) => o.id === 'demo-processor')!;
     const result = evaluateFit(proc, query300, 300);

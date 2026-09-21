@@ -4,11 +4,13 @@
   import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
+  import { validateHarvestInput } from '../../lib/domain/validation';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { SUPPORTED_CROPS, getCropLabel } from '../../lib/domain/crops';
-  import { serializeDiscoverQuery, parseDiscoverQuery, type ParsedDiscoverQuery } from '../../lib/state/url-state';
+  import { serializeDiscoverQuery, parseDiscoverQuery, comparisonIds, todayInManila, type ParsedDiscoverQuery } from '../../lib/state/url-state';
+  import { safeStorage } from '../../lib/state/storage';
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
-  import { t } from '../../content/translations';
+  import { t, outletCategoryLabel, evidenceLabel } from '../../content/translations';
   import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
 
   let {
@@ -18,6 +20,7 @@
   } = $props();
 
   let harvest = $state<HarvestQuery>(initialQuery.harvest);
+  const historicalHarvest = $derived(Boolean(harvest.readyDate && harvest.readyDate < todayInManila()));
   let lang = $state<'en' | 'fil'>(initialQuery.lang);
   let activeMobileView = $state<'list' | 'map'>(initialQuery.view);
   let selectedOutletId = $state<string | undefined>(initialQuery.selectedPlaceId);
@@ -31,7 +34,10 @@
   // Local state
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
-  let isEditingHarvest = $state(false);
+  let saveError = $state(false);
+  let queryIssues = $state(initialQuery.issues);
+  let editError = $state('');
+  let isEditingHarvest = $state(initialQuery.issues.length > 0);
 
   // Editable harvest draft
   let editCrop = $state(initialQuery.harvest.crop);
@@ -44,10 +50,16 @@
 
   onMount(() => {
     savedIds = getSavedOutletIds();
+    const search = new URLSearchParams(window.location.search);
+    comparedIds = search.has('places')
+      ? comparisonIds(search.get('places'))
+      : comparisonIds((safeStorage.getItem<string[]>('aniwhere_compare_ids', []) || []).join(','));
 
     // Hydrate client-side query parameters if present in browser
     if (typeof window !== 'undefined' && window.location.search) {
       const clientQuery = parseDiscoverQuery(window.location.search);
+      queryIssues = clientQuery.issues;
+      if (queryIssues.length > 0) isEditingHarvest = true;
       harvest = clientQuery.harvest;
       lang = clientQuery.lang;
       activeMobileView = clientQuery.view;
@@ -140,8 +152,9 @@
   );
 
   function handleToggleSave(id: string) {
-    const isNowSaved = toggleSavedOutlet(id);
-    if (isNowSaved) {
+    const result = toggleSavedOutlet(id);
+    saveError = !result.persisted;
+    if (result.saved) {
       savedIds = [...savedIds, id];
     } else {
       savedIds = savedIds.filter((item) => item !== id);
@@ -155,10 +168,31 @@
       if (comparedIds.length >= 3) return; // Cap at 3 per contract
       comparedIds = [...comparedIds, id];
     }
+    syncComparison();
+  }
+
+  function syncComparison() {
+    safeStorage.setItem('aniwhere_compare_ids', comparedIds);
+    const url = new URL(window.location.href);
+    url.searchParams.set('places', comparedIds.join(','));
+    window.history.replaceState({}, '', url);
+    window.dispatchEvent(new Event('aniwhere:context-updated'));
+  }
+
+  function clearComparison() {
+    comparedIds = [];
+    syncComparison();
   }
 
   function handleApplyHarvestEdit(e: SubmitEvent) {
     e.preventDefault();
+    const validation = validateHarvestInput({ crop: editCrop, quantityKg: Number(editKg), originMunicipality: editOrigin, readyDate: editReadyDate });
+    if (!validation.isValid) {
+      editError = Object.values(lang === 'fil' ? validation.errorsFil : validation.errors)[0] || (lang === 'fil' ? 'Suriin ang detalye ng ani.' : 'Check your harvest details.');
+      return;
+    }
+    editError = '';
+    queryIssues = [];
     harvest = {
       ...harvest,
       crop: editCrop,
@@ -178,7 +212,8 @@
 
     // Sync URL without reload
     const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    window.history.replaceState({}, '', `/discover?${newQuery}&places=${encodeURIComponent(comparedIds.join(','))}`);
+    window.dispatchEvent(new Event('aniwhere:context-updated'));
   }
 
   function handleSelectPin(id: string) {
@@ -186,12 +221,26 @@
     if (activeMobileView === 'map') {
       activeMobileView = 'list';
     }
+    const url = new URL(window.location.href);
+    url.searchParams.set('place', id);
+    url.searchParams.delete('view');
+    window.history.replaceState({}, '', url);
+    window.dispatchEvent(new Event('aniwhere:context-updated'));
     setTimeout(() => {
       const el = document.getElementById(`outlet-card-${id}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 50);
+  }
+
+  function setMobileView(view: 'list' | 'map') {
+    activeMobileView = view;
+    const url = new URL(window.location.href);
+    if (view === 'map') url.searchParams.set('view', 'map');
+    else url.searchParams.delete('view');
+    window.history.replaceState({}, '', url);
+    window.dispatchEvent(new Event('aniwhere:context-updated'));
   }
 
   function formatCurrency(val: number | null | undefined): string {
@@ -207,6 +256,7 @@
   }
 
   function priceLabelFor(fit: FitResult): string {
+    if (fit.dataValidUntil && fit.dataValidUntil < todayInManila()) return lang === 'fil' ? 'Lumang halimbawang presyo' : 'Expired sample price';
     if (fit.evidenceKind === 'demo') {
       return lang === 'fil' ? 'Halimbawang presyo' : 'Sample price';
     }
@@ -217,16 +267,27 @@
   }
 </script>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-6">
+<div class="farmer-screen max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-6">
   
   <!-- 1. Harvest Context Header & Quick Editor Bar (Compact & Ergonomic) -->
+  {#if queryIssues.length > 0}
+    <p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">
+      {lang === 'fil' ? 'May di-wastong detalye sa link. Mungkahing halaga lamang ang nasa form; itama ang ani, dami, lugar, at petsa, saka pindutin ang I-update bago makita ang mga resulta.' : 'The shared link has invalid harvest details. The form shows suggested values, not your original entry. Correct the crop, quantity, location, and date, then select Update results to view matches.'}
+    </p>
+  {/if}
+  {#if historicalHarvest}<p role="status" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">{lang === 'fil' ? 'Lumipas na ang petsa ng ani sa paghahanap na ito. Makasaysayang halimbawa lamang ang mga resulta; baguhin ang petsa para sa kasalukuyang paghahanap.' : 'This search uses a past harvest date. Results are a historical example; update the date for a current search.'}</p>{/if}
+  {#if saveError}
+    <p role="alert" class="rounded-xl border border-[#6E3511]/30 bg-[#FCECD8] p-4 text-base text-[#6E3511]">
+      {lang === 'fil' ? 'Napanatili lamang ang pagpili sa tab na ito. Maaaring mawala ito kapag isinara ang browser.' : 'Your selection is available in this tab only and may be lost when you close the browser.'}
+    </p>
+  {/if}
   <div class="bg-[#FFFDF8] border border-[#20251E]/12 rounded-2xl p-3.5 sm:p-5 shadow-xs">
     <div class="flex items-center justify-between gap-3">
       <div>
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
           {harvest.quantityKg.toLocaleString()} kg {getCropLabel(harvest.crop, lang)}
           <span class="text-[#4A5245] font-normal text-xs sm:text-sm block sm:inline sm:ml-2">
-            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull; {filteredOutlets.length} {lang === 'fil' ? 'lugar na natagpuan' : 'places found'}
+            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name}{#if queryIssues.length === 0}{' · '}{filteredOutlets.length} {lang === 'fil' ? 'lugar na natagpuan' : 'places found'}{/if}
           </span>
         </h1>
       </div>
@@ -235,6 +296,8 @@
       <button
         type="button"
         onclick={() => isEditingHarvest = !isEditingHarvest}
+        aria-label={isEditingHarvest ? (lang === 'fil' ? 'Isara ang pag-edit ng ani' : 'Close harvest editor') : t('editHarvest', lang)}
+        aria-expanded={isEditingHarvest}
         class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -248,6 +311,7 @@
     <!-- Collapsible Quick Harvest Editor -->
     {#if isEditingHarvest}
       <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+        {#if editError}<p role="alert" class="sm:col-span-5 text-base text-[#6E3511]">{editError}</p>{/if}
         <div>
           <label for="edit-crop-select" class="block text-xs font-bold text-[#20251E] mb-1">{t('cropLabel', lang)}</label>
           <select id="edit-crop-select" bind:value={editCrop} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold">
@@ -301,16 +365,18 @@
     {/if}
   </div>
 
+  {#if queryIssues.length === 0}
   <!-- 2. Controls Row: Mobile View Switcher + Filter Pills + Sort -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
       <!-- Mobile Segmented Toggle -->
-      <div class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs" role="group" aria-label="View toggle">
+      <div class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs" role="group" aria-label={lang === 'fil' ? 'Pagtingin sa resulta' : 'Results view'}>
         <button
           type="button"
-          onclick={() => activeMobileView = 'list'}
+          onclick={() => setMobileView('list')}
+          aria-pressed={activeMobileView === 'list'}
           class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'list'
               ? 'bg-[#597928] text-[#FFFDF8] shadow-xs'
@@ -325,7 +391,8 @@
 
         <button
           type="button"
-          onclick={() => activeMobileView = 'map'}
+          onclick={() => setMobileView('map')}
+          aria-pressed={activeMobileView === 'map'}
           class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'map'
               ? 'bg-[#597928] text-[#FFFDF8] shadow-xs'
@@ -342,10 +409,11 @@
       <div class="h-4 w-px bg-[#20251E]/15 hidden sm:block shrink-0"></div>
 
       <!-- Filter Pills (Horizontally scrollable on mobile) -->
-      <div class="flex items-center gap-1.5 shrink-0" role="group" aria-label="Status filter">
+      <div class="flex items-center gap-1.5 shrink-0" role="group" aria-label={lang === 'fil' ? 'Salain ayon sa tugma' : 'Filter by fit'}>
         <button
           type="button"
           onclick={() => statusFilter = 'all'}
+          aria-pressed={statusFilter === 'all'}
           class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'all'
               ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
@@ -358,6 +426,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'match'}
+          aria-pressed={statusFilter === 'match'}
           class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'match'
               ? 'border-[#597928] bg-[#597928] text-[#FFFDF8]'
@@ -370,6 +439,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'partial'}
+          aria-pressed={statusFilter === 'partial'}
           class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'partial'
               ? 'border-[#6E3511] bg-[#6E3511] text-[#FFFDF8]'
@@ -382,6 +452,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'confirm'}
+          aria-pressed={statusFilter === 'confirm'}
           class={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'confirm'
               ? 'border-[#4E7380] bg-[#4E7380] text-[#FFFDF8]'
@@ -510,7 +581,7 @@
                   <path d="M12 21s-8-7.5-8-12a8 8 0 1116 0c0 4.5-8 12-8 12z" />
                   <circle cx="12" cy="9" r="2.5" />
                 </svg>
-                <span>{item.distanceKm} km {lang === 'fil' ? 'mula rito' : 'away'}</span>
+                <span>{item.distanceKm} km {lang === 'fil' ? 'tuwirang layo' : 'straight-line'}</span>
               </span>
             </div>
 
@@ -525,7 +596,8 @@
                   type="button"
                   onclick={() => handleToggleSave(item.outlet.id)}
                   aria-label={item.isSaved ? t('removeFromSaved', lang) : t('saveOutlet', lang)}
-                  class={`p-2 rounded-full transition-colors cursor-pointer ${
+                  aria-pressed={item.isSaved}
+                  class={`p-2 rounded-full transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center ${
                     item.isSaved
                       ? 'text-[#597928] bg-[#EAF3DE]'
                       : 'text-[#6B7265] hover:text-[#20251E] hover:bg-[#FCECD8]/50'
@@ -537,7 +609,7 @@
                 </button>
               </div>
               <p class="text-xs text-[#4A5245] font-medium mt-0.5">
-                {item.outlet.municipality}, Laguna &bull; <span class="capitalize">{item.outlet.category}</span>
+                {item.outlet.municipality}, Laguna &bull; <span>{outletCategoryLabel(item.outlet.category, lang)}</span>
               </p>
             </div>
 
@@ -545,10 +617,16 @@
             <p class="text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 border-[#597928] pl-2.5 py-1">
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
+            <p class="text-sm font-semibold text-[#20251E]">
+              {lang === 'fil' ? 'Maaaring tanggapin:' : 'May accept:'} {item.fit.acceptedKg === null ? (lang === 'fil' ? 'kumpirmahin ang dami' : 'confirm quantity') : `${item.fit.acceptedKg} kg`}
+              {#if item.fit.remainingKg !== null && item.fit.remainingKg > 0}
+                · {lang === 'fil' ? 'Matitira:' : 'Remaining:'} {item.fit.remainingKg} kg
+              {/if}
+            </p>
 
             <!-- Evidence / freshness: demo, buyer-posted, reviewed, and public-reference data must stay visibly distinct. -->
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
-              <span class="font-bold text-[#20251E]">{item.fit.sourceLabel || (lang === 'fil' ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
+              <span class="font-bold text-[#20251E]">{evidenceLabel(item.fit, lang)}</span>
               {#if item.fit.dataUpdatedAt}
                 <span>{lang === 'fil' ? 'Na-update' : 'Updated'} {formatEvidenceDate(item.fit.dataUpdatedAt)}</span>
               {/if}
@@ -562,17 +640,21 @@
 
             <!-- Honest Math Transparency Box -->
             {#if item.fit.samplePricePerKg !== null}
-              <div class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
+              <details class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
+                <summary class="cursor-pointer min-h-[44px] text-sm font-semibold text-[#20251E] flex items-center justify-between gap-2">
+                  <span>{priceLabelFor(item.fit)} ₱{item.fit.samplePricePerKg}/kg</span>
+                  <span class="text-[#597928]">{t('afterTransport', lang)}: {formatCurrency(item.fit.afterTransportPay)}</span>
+                </summary>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div>
                     <span class="block text-[11px] text-[#6B7265]">{priceLabelFor(item.fit)}</span>
                     <span class="font-bold text-[#20251E] font-tabular">₱{item.fit.samplePricePerKg} / kg</span>
-                    <span class="block text-[10px] text-[#6B7265]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
+                    <span class="block text-[10px] text-[#6B7265]">{item.fit.acceptedKg === null ? (lang === 'fil' ? 'Hindi pa alam ang dami' : 'Quantity unknown') : `(${item.fit.acceptedKg.toLocaleString()} kg)`}</span>
                   </div>
                   <div>
                     <span class="block text-[11px] text-[#6B7265]">{lang === 'fil' ? 'Kabuuang Halaga' : 'Gross Subtotal'}</span>
                     <span class="font-bold text-[#20251E] font-tabular">{formatCurrency(item.fit.grossPay)}</span>
-                    <span class="block text-[10px] text-[#6B7265]">{item.fit.acceptedKg}kg &times; ₱{item.fit.samplePricePerKg}</span>
+                    {#if item.fit.acceptedKg !== null}<span class="block text-[10px] text-[#6B7265]">{item.fit.acceptedKg} kg &times; ₱{item.fit.samplePricePerKg}</span>{/if}
                   </div>
                   <div>
                     <span class="block text-[11px] text-[#6B7265]">{t('enteredTransport', lang)}</span>
@@ -594,13 +676,13 @@
                 <p class="text-[10px] text-[#6B7265] border-t border-[#20251E]/8 pt-1.5 leading-tight">
                   {t('afterTransportNote', lang)}
                 </p>
-              </div>
+              </details>
             {/if}
 
             <!-- Card Actions Footer -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
               <!-- Add to compare checkbox -->
-              <label class="flex items-center gap-2 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
+              <label class="flex items-center gap-2 text-xs font-semibold text-[#4A5245] cursor-pointer select-none min-h-[44px]">
                 <input
                   type="checkbox"
                   checked={item.isCompared}
@@ -613,8 +695,8 @@
 
               <!-- View Details Link -->
               <a
-                href={`/places/${item.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', item.outlet.id, lang)}`}
-                class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] transition-colors shadow-xs"
+                href={`/places/${item.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', item.outlet.id, lang)}&places=${encodeURIComponent(comparedIds.join(','))}`}
+                class="inline-flex min-h-[44px] items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] transition-colors shadow-xs"
               >
                 <span>{t('viewDetails', lang)}</span>
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -649,8 +731,8 @@
         </h4>
         <p class="leading-relaxed">
           {lang === 'fil'
-            ? 'Pumili ng pin sa mapa upang makita ang ruta mula sa iyong munisipalidad. Palaging tawagan ang mamimili bago umalis upang kumpirmahin ang iskedyul ng pagtanggap.'
-            : 'Select any pin to highlight the destination from your municipality. Always contact the receiving facility to confirm operating hours before loading cargo.'}
+            ? 'Pumili ng pin upang makita ang tuwirang guhit mula sa iyong munisipalidad. Hindi ito ruta sa kalsada. Kumpirmahin ang oras ng pagtanggap bago bumiyahe.'
+            : 'Select a pin to see a straight line from your municipality, not a road route. Confirm receiving hours before travel.'}
         </p>
       </div>
     </div>
@@ -675,15 +757,15 @@
       <div class="flex items-center gap-2">
         <button
           type="button"
-          onclick={() => comparedIds = []}
-          class="text-xs text-[#FFFDF8]/70 hover:text-[#FFFDF8] px-2 py-1 cursor-pointer"
+          onclick={clearComparison}
+          class="text-sm text-[#FFFDF8]/70 hover:text-[#FFFDF8] px-2 py-1 cursor-pointer min-h-[44px]"
         >
           {lang === 'fil' ? 'Alisin' : 'Clear'}
         </button>
 
         <a
           href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-          class="px-4 py-1.5 rounded-xl bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+          class="min-h-[44px] px-4 py-1.5 rounded-xl bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
         >
           <span>{lang === 'fil' ? 'Ihambing' : 'Compare'}</span>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -692,6 +774,7 @@
         </a>
       </div>
     </aside>
+  {/if}
   {/if}
 
 </div>
