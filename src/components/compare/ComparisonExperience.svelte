@@ -99,7 +99,7 @@
   }
 </script>
 
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+<div class="comparison-page mx-auto max-w-7xl min-w-0 px-4 py-8 sm:px-6 md:py-12 lg:px-8">
   <div class="space-y-7">
     <header class="grid gap-5 border-b border-[#20251E]/15 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <div class="max-w-3xl">
@@ -133,7 +133,7 @@
           <div><h2 id="ledger-title" class="font-serif text-2xl font-bold tracking-[-0.02em] text-[#20251E]">{copy('Decision ledger', 'Talaan ng desisyon')}</h2><p class="mt-1 text-sm text-[#4A5245]">{copy('Each row measures the same detail across all selected outlets.', 'Pareho ang sinusukat ng bawat hanay sa lahat ng napiling outlet.')}</p></div>
           <p id="ledger-scroll-note" class="text-xs font-medium text-[#4E7380]">{copy('On a phone, scroll the table sideways to compare.', 'Sa phone, i-scroll nang pakaliwa o pakanan ang talaan upang maghambing.')}</p>
         </div>
-        <div class="matrix-scroll overflow-x-auto rounded-xl border border-[#20251E]/15 bg-white shadow-[0_1px_3px_rgba(32,37,30,0.05)]" tabindex="0" aria-describedby="ledger-scroll-note">
+        <div class="matrix-scroll max-w-full min-w-0 overflow-x-auto rounded-xl border border-[#20251E]/15 bg-white shadow-[0_1px_3px_rgba(32,37,30,0.05)]" tabindex="0" aria-describedby="ledger-scroll-note">
           <table class="w-full min-w-[900px] border-collapse text-left text-sm">
             <caption class="sr-only">{copy('Comparison ledger for selected outlets', 'Talaan ng paghahambing para sa mga napiling outlet')}</caption>
             <thead class="bg-[#FCECD8]/70"><tr class="align-top">
@@ -172,4 +172,10 @@
   .ledger-metric { left: 0; position: sticky; z-index: 1; }
   thead .ledger-metric { z-index: 2; }
   @media print { .matrix-scroll { overflow: visible; } .ledger-metric { position: static; } }
+</style>
+
+
+<style>
+  .comparison-page { width: 100%; overflow-x: clip; }
+  .matrix-scroll { width: 100%; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
 </style>
