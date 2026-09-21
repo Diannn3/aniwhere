@@ -127,13 +127,13 @@
 
         <!-- Prominent Demo Badge Card -->
         <div class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-2xl p-4 sm:p-5 shadow-xs max-w-sm flex items-start gap-3.5">
-          <div class="w-9 h-9 rounded-xl bg-[#597928]/15 flex items-center justify-center text-[#597928] shrink-0 mt-0.5">
+          <div class="w-9 h-9 rounded-xl bg-[#597928]/15 flex items-center justify-center text-[#486320] shrink-0 mt-0.5">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <div class="text-xs font-bold uppercase tracking-wider text-[#597928]">
+            <div class="text-xs font-bold uppercase tracking-wider text-[#486320]">
               {isFil ? 'Demo — Halimbawang Datos' : 'Demo — sample data'}
             </div>
             <p class="text-xs text-[#4A5245] mt-1 leading-normal">
@@ -157,7 +157,7 @@
               activeFilter === 'published' ? 'border-[#597928] bg-[#EBF3DF]/40 ring-2 ring-[#597928]' : 'border-[#20251E]/10 hover:border-[#597928]/40'
             }`}
           >
-            <span class="text-[10px] font-bold text-[#6B7265] uppercase tracking-wider">
+            <span class="text-[10px] font-bold text-[#596052] uppercase tracking-wider">
               {isFil ? 'Nailathala' : 'Published'}
             </span>
             <span class="text-xl font-bold font-serif text-[#20251E] mt-0.5">
@@ -173,7 +173,7 @@
               activeFilter === 'in_review' ? 'border-[#6E3511] bg-[#FCECD8]/40 ring-2 ring-[#6E3511]' : 'border-[#20251E]/10 hover:border-[#6E3511]/40'
             }`}
           >
-            <span class="text-[10px] font-bold text-[#6B7265] uppercase tracking-wider">
+            <span class="text-[10px] font-bold text-[#596052] uppercase tracking-wider">
               {isFil ? 'Pagsusuri' : 'In review'}
             </span>
             <span class="text-xl font-bold font-serif text-[#20251E] mt-0.5">
@@ -189,7 +189,7 @@
               activeFilter === 'draft' ? 'border-[#4B5563] bg-[#F3F4F6]/60 ring-2 ring-[#4B5563]' : 'border-[#20251E]/10 hover:border-[#4B5563]/40'
             }`}
           >
-            <span class="text-[10px] font-bold text-[#6B7265] uppercase tracking-wider">
+            <span class="text-[10px] font-bold text-[#596052] uppercase tracking-wider">
               {isFil ? 'Burador' : 'Draft'}
             </span>
             <span class="text-xl font-bold font-serif text-[#20251E] mt-0.5">
@@ -227,7 +227,7 @@
             </svg>
           </div>
           <div>
-            <div class="text-xs font-semibold text-[#6B7265] uppercase tracking-wider">
+            <div class="text-xs font-semibold text-[#596052] uppercase tracking-wider">
               {isFil ? 'Nailathala' : 'Published offers'}
             </div>
             <div class="text-2xl font-bold font-serif text-[#20251E] mt-0.5">
@@ -250,7 +250,7 @@
             </svg>
           </div>
           <div>
-            <div class="text-xs font-semibold text-[#6B7265] uppercase tracking-wider">
+            <div class="text-xs font-semibold text-[#596052] uppercase tracking-wider">
               {isFil ? 'Nasa pagsusuri' : 'In review'}
             </div>
             <div class="text-2xl font-bold font-serif text-[#20251E] mt-0.5">
@@ -276,7 +276,7 @@
             </svg>
           </div>
           <div>
-            <div class="text-xs font-semibold text-[#6B7265] uppercase tracking-wider">
+            <div class="text-xs font-semibold text-[#596052] uppercase tracking-wider">
               {isFil ? 'Burador' : 'Draft offers'}
             </div>
             <div class="text-2xl font-bold font-serif text-[#20251E] mt-0.5">
@@ -312,7 +312,7 @@
         role="status"
       >
         <div class="flex items-center gap-2.5">
-          <svg class="w-5 h-5 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-[#486320]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           <span class="text-sm font-semibold">{toastMessage}</span>
@@ -336,7 +336,7 @@
       <div class="p-5 sm:p-6 border-b border-[#20251E]/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg bg-[#597928]/10 text-[#597928] flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-[#597928]/10 text-[#486320] flex items-center justify-center">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
               </svg>
@@ -346,7 +346,7 @@
             </h2>
 
           </div>
-          <p class="text-xs text-[#6B7265] mt-1">
+          <p class="text-xs text-[#596052] mt-1">
             {isFil
               ? 'Lumikha at pamahalaan ang mga alok upang kumuha ng sariwang ani mula sa mga lokal na magsasaka.'
               : 'Create and manage your offers to source fresh produce from local farmers.'}
@@ -357,7 +357,7 @@
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <!-- Search Input -->
           <div class="relative min-w-[220px]">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7265]">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#596052]">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -416,7 +416,7 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b border-[#20251E]/10 bg-[#FFFDF8]/80 text-[11px] font-bold text-[#6B7265] uppercase tracking-wider">
+            <tr class="border-b border-[#20251E]/10 bg-[#FFFDF8]/80 text-[11px] font-bold text-[#596052] uppercase tracking-wider">
               <th scope="col" class="py-3.5 px-6">Crop</th>
               <th scope="col" class="py-3.5 px-6">Quantity</th>
               <th scope="col" class="py-3.5 px-6">Target Price (PHP)</th>
@@ -428,9 +428,9 @@
           <tbody class="divide-y divide-[#20251E]/10 text-sm">
             {#if filteredOffers.length === 0}
               <tr>
-                <td colspan="6" class="py-12 px-6 text-center text-[#6B7265]">
+                <td colspan="6" class="py-12 px-6 text-center text-[#596052]">
                   <div class="flex flex-col items-center justify-center gap-2">
-                    <svg class="w-8 h-8 text-[#6B7265]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-8 h-8 text-[#596052]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <p class="text-sm font-medium">
@@ -468,7 +468,7 @@
                           {offer.cropLabel}
                         </div>
                         {#if offer.location}
-                          <div class="text-[11px] text-[#6B7265] flex items-center gap-1 mt-0.5">
+                          <div class="text-[11px] text-[#596052] flex items-center gap-1 mt-0.5">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             </svg>
@@ -487,11 +487,11 @@
                   <!-- Target Price -->
                   <td class="py-4 px-6">
                     {#if offer.pricePerKg !== undefined && offer.pricePerKg > 0}
-                      <span class="font-bold text-[#597928]">
+                      <span class="font-bold text-[#486320]">
                         PHP {offer.pricePerKg} / kg
                       </span>
                     {:else}
-                      <span class="text-[#6B7265] italic text-xs">
+                      <span class="text-[#596052] italic text-xs">
                         {isFil ? 'Walang nakasaad na presyo' : 'Price not posted'}
                       </span>
                     {/if}
@@ -529,7 +529,7 @@
                   </td>
 
                   <!-- Last Updated -->
-                  <td class="py-4 px-6 text-xs text-[#6B7265]">
+                  <td class="py-4 px-6 text-xs text-[#596052]">
                     {#if offer.status === 'published'}
                       <span>Sample offer &middot; 17 Sep 2026</span>
                     {:else if offer.status === 'in_review'}
@@ -556,7 +556,7 @@
                       <button
                         type="button"
                         onclick={() => confirmDelete(offer)}
-                        class="p-1.5 rounded-lg text-[#6B7265] hover:text-[#9B1C1C] hover:bg-[#FDE8E8] transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                        class="p-1.5 rounded-lg text-[#596052] hover:text-[#9B1C1C] hover:bg-[#FDE8E8] transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                         aria-label={`Delete offer for ${offer.cropLabel}`}
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -575,7 +575,7 @@
       <!-- Mobile Stacked Card View (< 768px, matching 03-mobile-buyer.png) -->
       <div class="md:hidden divide-y divide-[#20251E]/10">
         {#if filteredOffers.length === 0}
-          <div class="p-8 text-center text-[#6B7265]">
+          <div class="p-8 text-center text-[#596052]">
             <p class="text-sm font-medium">
               {isFil ? 'Walang alok na tumutugma sa filter na ito.' : 'No offers match this search or filter.'}
             </p>
@@ -615,14 +615,14 @@
                   </div>
                   <div class="text-xs font-semibold text-[#4A5245] mt-0.5">
                     {offer.quantityKg} kg
-                    <span class="text-[#6B7265] font-normal">&middot;</span>
+                    <span class="text-[#596052] font-normal">&middot;</span>
                     {#if offer.pricePerKg !== undefined && offer.pricePerKg > 0}
-                      <span class="text-[#597928] font-bold">PHP {offer.pricePerKg}/kg</span>
+                      <span class="text-[#486320] font-bold">PHP {offer.pricePerKg}/kg</span>
                     {:else}
-                      <span class="text-[#6B7265] italic font-normal">Price not posted</span>
+                      <span class="text-[#596052] italic font-normal">Price not posted</span>
                     {/if}
                   </div>
-                  <div class="text-[11px] text-[#6B7265] mt-0.5 truncate">
+                  <div class="text-[11px] text-[#596052] mt-0.5 truncate">
                     {#if offer.status === 'published'}
                       Sample offer &middot; 17 Sep 2026
                     {:else if offer.status === 'in_review'}
@@ -653,7 +653,7 @@
                 <button
                   type="button"
                   onclick={() => openEditModal(offer)}
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7265] hover:text-[#20251E] transition-colors"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#20251E] transition-colors"
                   aria-label="Edit offer"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -689,7 +689,7 @@
 
       <!-- Card 2: Source and review -->
       <div class="bg-[#EBF3DF]/40 border border-[#597928]/20 rounded-2xl p-5 sm:p-6 shadow-xs flex items-start gap-4">
-        <div class="w-10 h-10 rounded-xl bg-[#597928]/15 text-[#597928] flex items-center justify-center shrink-0 mt-0.5">
+        <div class="w-10 h-10 rounded-xl bg-[#597928]/15 text-[#486320] flex items-center justify-center shrink-0 mt-0.5">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -712,7 +712,7 @@
       <button
         type="button"
         onclick={handleReset}
-        class="text-xs text-[#6B7265] hover:text-[#6E3511] underline transition-colors"
+        class="text-xs text-[#596052] hover:text-[#6E3511] underline transition-colors"
       >
         {isFil ? 'Ibalik sa orihinal na 3 halimbawang alok' : 'Reset to default sample offers (1 published, 1 in review, 1 draft)'}
       </button>
