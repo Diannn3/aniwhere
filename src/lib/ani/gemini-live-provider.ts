@@ -30,6 +30,7 @@ export class GeminiLiveAniProvider implements AniProvider {
   private outputTranscript = '';
   private inputTranscript = '';
   private inputTranscriptEmitted = false;
+  private suppressAudio = false;
 
   async connect(_context: AniSessionContext): Promise<void> {
     const tokenEndpoint = import.meta.env.PUBLIC_ANI_SESSION_ENDPOINT;
@@ -101,6 +102,7 @@ export class GeminiLiveAniProvider implements AniProvider {
     this.outputTranscript = '';
     this.inputTranscript = '';
     this.inputTranscriptEmitted = true;
+    this.suppressAudio = false;
     this.emit({ type: 'status', status: 'working' });
     this.socket!.send(JSON.stringify({
       clientContent: {
@@ -116,6 +118,7 @@ export class GeminiLiveAniProvider implements AniProvider {
     this.inputTranscript = '';
     this.inputTranscriptEmitted = false;
     this.outputTranscript = '';
+    this.suppressAudio = false;
     this.micStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
     this.micContext = new AudioContext({ sampleRate: 16_000 });
     const source = this.micContext.createMediaStreamSource(this.micStream);
@@ -143,6 +146,12 @@ export class GeminiLiveAniProvider implements AniProvider {
       this.socket.send(JSON.stringify({ realtimeInput: { audioStreamEnd: true } }));
     }
     this.emit({ type: 'status', status: 'working' });
+  }
+
+  stopOutput(): void {
+    this.suppressAudio = true;
+    this.stopPlayback();
+    this.emit({ type: 'status', status: this.micStream ? 'listening' : 'ready' });
   }
 
   async submitToolResult(result: AniToolResult): Promise<void> {
@@ -178,7 +187,7 @@ export class GeminiLiveAniProvider implements AniProvider {
     }
 
     for (const part of message.serverContent?.modelTurn?.parts || []) {
-      if (part.inlineData?.data && part.inlineData.mimeType?.startsWith('audio/pcm')) {
+      if (!this.suppressAudio && part.inlineData?.data && part.inlineData.mimeType?.startsWith('audio/pcm')) {
         this.flushVoiceInputTranscript();
         void this.playPcm24k(part.inlineData.data);
         this.emit({ type: 'status', status: 'speaking' });
@@ -210,6 +219,7 @@ export class GeminiLiveAniProvider implements AniProvider {
       const text = this.outputTranscript.trim();
       if (text) this.emit({ type: 'message', message: this.message('ani', text) });
       this.outputTranscript = '';
+      this.suppressAudio = false;
       this.emit({ type: 'status', status: this.micStream ? 'listening' : 'ready' });
     }
   }
