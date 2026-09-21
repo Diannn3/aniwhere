@@ -414,7 +414,7 @@
         <!-- P1.1: 44px Height Standard for Primary CTA Button -->
         <a
           href={`/places/${selectedItem.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', selectedItem.outlet.id, lang)}`}
-          class="min-h-[44px] px-5 py-2.5 rounded-full text-xs font-bold bg-[#597928] hover:bg-[#486320] text-[#FFFDF8] transition-colors shadow-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
+          class="min-h-[44px] px-5 py-2.5 rounded-full text-xs font-bold bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] transition-colors shadow-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
         >
           <span>{t('viewDetails', lang)}</span>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -429,7 +429,7 @@
   <div class="bg-[#FFFDF8]/95 backdrop-blur-sm border-t border-[#20251E]/10 p-2 px-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#4A5245]">
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-1.5">
-        <span class="w-2.5 h-2.5 rounded-full bg-[#597928] inline-block"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#486320] inline-block"></span>
         <span class="font-medium">{lang === 'fil' ? 'Tugma' : 'Match'}</span>
       </div>
       <div class="flex items-center gap-1.5">
