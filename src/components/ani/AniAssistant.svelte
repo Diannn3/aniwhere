@@ -25,7 +25,21 @@
   const isFil = () => initialLang === 'fil';
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
 
-  onMount(() => () => { document.documentElement.style.overflow = ''; unsubscribe?.(); void provider?.close(); });
+  onMount(() => {
+    const handleWindowKeydown = (event: KeyboardEvent) => {
+      if (open && event.key === 'Escape') {
+        event.preventDefault();
+        closeAni();
+      }
+    };
+    window.addEventListener('keydown', handleWindowKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleWindowKeydown);
+      document.documentElement.style.overflow = '';
+      unsubscribe?.();
+      void provider?.close();
+    };
+  });
 
   function currentHarvest() {
     return parseDiscoverQuery(window.location.search).harvest;
@@ -134,9 +148,9 @@
 </script>
 
 <div class="ani-assistant" data-open={open}>
-  <button bind:this={trigger} type="button" class="ani-trigger" aria-haspopup="dialog" aria-expanded={open} aria-controls="ani-panel" onclick={openAni}>
+  <button bind:this={trigger} type="button" class="ani-trigger" aria-label={isFil() ? 'Tanungin si Ani' : 'Ask Ani'} aria-haspopup="dialog" aria-expanded={open} aria-controls="ani-panel" onclick={openAni}>
     <span aria-hidden="true"><AniAvatar state={open ? 'attentive' : 'idle'} size="sm" /></span>
-    <span>{isFil() ? 'Tanungin si Ani' : 'Ask Ani'}</span>
+    <span class="ani-trigger__label">{isFil() ? 'Tanungin si Ani' : 'Ask Ani'}</span>
   </button>
 
   {#if open}
@@ -207,6 +221,8 @@
   @media(min-width:768px){ .ani-assistant{bottom:1.25rem;right:1.25rem}.ani-panel{right:1.25rem;bottom:1.25rem}.ani-scrim{background:rgba(32,37,30,.06)} }
   @media(max-width:767px){
     :global(body:has([aria-label="Comparison dock"])) .ani-assistant { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
+    .ani-trigger { width:3.25rem; height:3.25rem; min-height:3.25rem; padding:.35rem; justify-content:center; }
+    .ani-trigger__label { display:none; }
     .ani-panel{inset:auto 0 0 0;width:100%;max-height:min(44rem,calc(100dvh - 2rem));border-radius:1.5rem 1.5rem 0 0;padding-bottom:env(safe-area-inset-bottom)} .ani-trigger span{font-size:.82rem}.ani-assistant[data-open="true"] .ani-trigger{visibility:hidden} }
   @media(prefers-reduced-motion:reduce){.ani-panel,.ani-scrim,.ani-trigger{animation:none!important;transition:none!important}}
   @media(forced-colors:active){.ani-trigger,.ani-panel,.icon-button,.mic-button,.send-button,input{border:1px solid CanvasText}.ani-scrim{background:transparent}.send-button{background:ButtonFace;color:ButtonText}}
