@@ -1,5 +1,6 @@
 ﻿<script lang="ts">
   import { onMount } from 'svelte';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { getSavedOutletIds, toggleSavedOutlet } from '../../lib/state/saved-outlets';
@@ -32,6 +33,10 @@
       lang = parsed.lang;
     }
   });
+
+  onMount(() => subscribeHarvestContext((next) => {
+    harvest = next;
+  }));
 
   const isFil = $derived(lang === 'fil');
 
