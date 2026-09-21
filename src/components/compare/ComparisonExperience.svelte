@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
@@ -36,6 +37,10 @@
     const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
     selectedIds = stored.length ? stored.slice(0, 3) : DEFAULT_COMPARE_IDS;
   });
+
+  onMount(() => subscribeHarvestContext((next) => {
+    harvest = next;
+  }));
 
   const isFil = $derived(lang === 'fil');
   const originMun = $derived(LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]);
