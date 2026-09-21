@@ -3,7 +3,10 @@
   import AniAvatar from './AniAvatar.svelte';
   import { MockAniProvider } from '../../lib/ani/mock-provider';
   import { GeminiLiveAniProvider } from '../../lib/ani/gemini-live-provider';
-  import type { AniAvatarState, AniMessage, AniProvider, AniProviderStatus } from '../../lib/ani/types';
+  import type { AniAvatarState, AniMessage, AniProvider, AniProviderStatus, AniToolRequest } from '../../lib/ani/types';
+  import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
+  import { AniActionExecutor } from '../../lib/ani/action-executor';
+  import { parseDiscoverQuery } from '../../lib/state/url-state';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
   let open = $state(false);
@@ -16,6 +19,8 @@
   let inputEl: HTMLInputElement | null = $state(null);
   let unsubscribe: (() => void) | undefined;
   let provider: AniProvider | undefined;
+  const dispatcher = new AniToolDispatcher();
+  const actionExecutor = new AniActionExecutor();
 
   const isFil = () => initialLang === 'fil';
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
@@ -23,13 +28,24 @@
   onMount(() => () => { unsubscribe?.(); void provider?.close(); });
 
   function currentHarvest() {
-    const p = new URLSearchParams(window.location.search);
-    return {
-      crop: p.get('crop') || 'tomato',
-      quantityKg: Math.max(1, Number(p.get('kg')) || 300),
-      originMunicipality: p.get('origin') || 'los-banos',
-      ...(p.get('ready') ? { readyDate: p.get('ready')! } : {}),
-    };
+    return parseDiscoverQuery(window.location.search).harvest;
+  }
+
+  async function handleToolRequest(request: AniToolRequest) {
+    if (!provider) return;
+    status = 'working';
+    notice = isFil() ? 'Sinusuri ng AniWhere ang datos…' : 'AniWhere is checking the data…';
+    const harvest = currentHarvest();
+    const result = await dispatcher.dispatch(request, harvest);
+    actionExecutor.apply(request, result, harvest, initialLang);
+    await provider.submitToolResult?.(result);
+    if (!result.ok) {
+      status = 'error';
+      notice = result.error?.message || (isFil() ? 'Hindi natapos ang aksyon.' : 'The action could not be completed.');
+      return;
+    }
+    status = 'ready';
+    notice = isFil() ? 'Tapos na ang pagsusuri ng AniWhere.' : 'AniWhere finished checking.';
   }
 
   async function openAni() {
@@ -42,6 +58,7 @@
     unsubscribe = provider.subscribe((event) => {
       if (event.status) status = event.status;
       if (event.message) messages = [...messages, event.message];
+      if (event.toolRequest) void handleToolRequest(event.toolRequest);
       if (event.error) { status = 'error'; notice = event.error; }
     });
     try {
