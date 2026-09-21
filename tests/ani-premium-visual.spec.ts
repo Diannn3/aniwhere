@@ -91,3 +91,23 @@ test('surface audit matrix at mobile width', async ({ page }) => {
     expect(overflow, name).toBeLessThanOrEqual(1);
   }
 });
+
+
+test('Ani trigger stays clear of mobile comparison dock', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(discovery);
+  await page.getByRole('checkbox').first().check();
+  const dock = page.getByLabel('Comparison dock');
+  const ani = page.getByRole('button', { name: 'Ask Ani' });
+  await expect(dock).toBeVisible();
+  const [dockBox, aniBox] = await Promise.all([dock.boundingBox(), ani.boundingBox()]);
+  expect(dockBox).not.toBeNull();
+  expect(aniBox).not.toBeNull();
+  const overlap = !(
+    aniBox!.x + aniBox!.width <= dockBox!.x ||
+    dockBox!.x + dockBox!.width <= aniBox!.x ||
+    aniBox!.y + aniBox!.height <= dockBox!.y ||
+    dockBox!.y + dockBox!.height <= aniBox!.y
+  );
+  expect(overlap).toBe(false);
+});
