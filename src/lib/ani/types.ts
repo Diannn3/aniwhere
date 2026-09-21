@@ -28,6 +28,7 @@ export interface AniProvider {
   sendText(text: string): Promise<void>;
   startListening?(): Promise<void>;
   stopListening?(): Promise<void>;
+  stopOutput?(): void;
   submitToolResult?(result: AniToolResult): Promise<void>;
   subscribe(listener: (event: AniProviderEvent) => void): () => void;
   close(): Promise<void>;
