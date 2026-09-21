@@ -140,3 +140,22 @@ test('Ani trigger stays clear of mobile comparison dock', async ({ page }) => {
   );
   expect(overlap).toBe(false);
 });
+
+
+test('Ani shared harvest state updates the real comparison surface', async ({ page }) => {
+  await page.goto(compare);
+  await expect(page.getByText('300 kg', { exact: true }).first()).toBeVisible();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent('aniwhere:harvest-context', {
+      detail: {
+        crop: 'tomato',
+        quantityKg: 450,
+        originMunicipality: 'los-banos',
+        readyDate: '2026-09-22',
+      },
+    }));
+  });
+
+  await expect(page.getByText('450 kg', { exact: true }).first()).toBeVisible();
+});
