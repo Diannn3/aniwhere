@@ -252,7 +252,7 @@
         aria-label={isEditingHarvest ? (lang === 'fil' ? 'Isara ang pag-edit ng ani' : 'Close harvest editor') : t('editHarvest', lang)}
         class="premium-control inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
       >
-        <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
@@ -300,15 +300,15 @@
 
         <div class="sm:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
           <div>
-            <label for="edit-variety-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('varietyLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <label for="edit-variety-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('varietyLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
             <input id="edit-variety-input" type="text" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
           <div>
-            <label for="edit-grade-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('gradeLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <label for="edit-grade-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('gradeLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
             <input id="edit-grade-input" type="text" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
           <div>
-            <label for="edit-packaging-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('packagingLabel', lang)} <span class="font-normal text-[#6B7265]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
+            <label for="edit-packaging-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('packagingLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
             <input id="edit-packaging-input" type="text" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
         </div>
@@ -491,7 +491,7 @@
               <!-- Fit Status Badge -->
               {#if item.fit.status === 'match'}
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#EAF3DE] text-[#3B5B16] border border-[#91AC67]/40">
-                  <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 20 20" fill="currentColor">
+                  <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                   </svg>
                   <span>{lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}</span>
@@ -512,7 +512,7 @@
                 </div>
               {:else}
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#F0F2EE] text-[#555D50] border border-[#D4D8D0]">
-                  <svg class="w-3.5 h-3.5 text-[#6B7265]" viewBox="0 0 20 20" fill="currentColor">
+                  <svg class="w-3.5 h-3.5 text-[#596052]" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                   </svg>
                   <span>{lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}</span>
@@ -521,7 +521,7 @@
 
               <!-- Distance Pill -->
               <span class="text-xs font-medium text-[#4A5245] flex items-center gap-1">
-                <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 21s-8-7.5-8-12a8 8 0 1116 0c0 4.5-8 12-8 12z" />
                   <circle cx="12" cy="9" r="2.5" />
                 </svg>
@@ -542,8 +542,8 @@
                   aria-label={item.isSaved ? t('removeFromSaved', lang) : t('saveOutlet', lang)}
                   class={`premium-control grid min-h-11 min-w-11 place-items-center rounded-full transition-colors cursor-pointer ${
                     item.isSaved
-                      ? 'text-[#597928] bg-[#EAF3DE]'
-                      : 'text-[#6B7265] hover:text-[#20251E] hover:bg-[#FCECD8]/50'
+                      ? 'text-[#486320] bg-[#EAF3DE]'
+                      : 'text-[#596052] hover:text-[#20251E] hover:bg-[#FCECD8]/50'
                   }`}
                 >
                   <svg class="w-4 h-4" fill={item.isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
@@ -565,7 +565,7 @@
                 </div>
                 <div class="border-l border-[#20251E]/10 p-3 sm:p-3.5">
                   <dt class="text-[11px] font-semibold text-[#687064]">{lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}</dt>
-                  <dd class={`mt-0.5 font-tabular text-xl font-bold tracking-tight ${item.fit.remainingKg && item.fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#597928]'}`}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
+                  <dd class={`mt-0.5 font-tabular text-xl font-bold tracking-tight ${item.fit.remainingKg && item.fit.remainingKg > 0 ? 'text-[#6E3511]' : 'text-[#486320]'}`}>{item.fit.remainingKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#687064]">kg</span></dd>
                 </div>
               </dl>
             {:else if item.fit.status === 'confirm'}
@@ -599,33 +599,33 @@
               <div class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div>
-                    <span class="block text-[11px] text-[#6B7265]">{priceLabelFor(item.fit)}</span>
+                    <span class="block text-[11px] text-[#596052]">{priceLabelFor(item.fit)}</span>
                     <span class="font-bold text-[#20251E] font-tabular">₱{item.fit.samplePricePerKg} / kg</span>
-                    <span class="block text-[10px] text-[#6B7265]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
+                    <span class="block text-[10px] text-[#596052]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
                   </div>
                   <div>
-                    <span class="block text-[11px] text-[#6B7265]">{lang === 'fil' ? 'Kabuuang Halaga' : 'Gross Subtotal'}</span>
+                    <span class="block text-[11px] text-[#596052]">{lang === 'fil' ? 'Kabuuang Halaga' : 'Gross Subtotal'}</span>
                     <span class="font-bold text-[#20251E] font-tabular">{formatCurrency(item.fit.grossPay)}</span>
-                    <span class="block text-[10px] text-[#6B7265]">{item.fit.acceptedKg}kg &times; ₱{item.fit.samplePricePerKg}</span>
+                    <span class="block text-[10px] text-[#596052]">{item.fit.acceptedKg}kg &times; ₱{item.fit.samplePricePerKg}</span>
                   </div>
                   <div>
-                    <span class="block text-[11px] text-[#6B7265]">{t('enteredTransport', lang)}</span>
+                    <span class="block text-[11px] text-[#596052]">{t('enteredTransport', lang)}</span>
                     <span class="font-bold text-[#6E3511] font-tabular">
                       {item.fit.enteredTransport !== null ? `-${formatCurrency(item.fit.enteredTransport)}` : '—'}
                     </span>
                     <span class="block text-[10px] text-[#6E3511]">{lang === 'fil' ? 'bawas sa biyahe' : 'hauling cost'}</span>
                   </div>
                   <div>
-                    <span class="block text-[11px] text-[#597928] font-bold">{t('afterTransport', lang)}</span>
-                    <span class="font-bold text-base text-[#597928] font-tabular">
+                    <span class="block text-[11px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
+                    <span class="font-bold text-base text-[#486320] font-tabular">
                       {formatCurrency(item.fit.afterTransportPay)}
                     </span>
-                    <span class="block text-[10px] text-[#597928] font-medium">{lang === 'fil' ? 'bago gastos sa bukid' : 'before farm costs'}</span>
+                    <span class="block text-[10px] text-[#486320] font-medium">{lang === 'fil' ? 'bago gastos sa bukid' : 'before farm costs'}</span>
                   </div>
                 </div>
 
                 <!-- Anti-Profit Claim Strict Disclaimer -->
-                <p class="text-[10px] text-[#6B7265] border-t border-[#20251E]/8 pt-1.5 leading-tight">
+                <p class="text-[10px] text-[#596052] border-t border-[#20251E]/8 pt-1.5 leading-tight">
                   {t('afterTransportNote', lang)}
                 </p>
               </div>
@@ -640,7 +640,7 @@
                   checked={item.isCompared}
                   disabled={!item.isCompared && comparedIds.length >= 3}
                   onchange={() => handleToggleCompare(item.outlet.id)}
-                  class="rounded text-[#597928] focus:ring-[#597928] w-4 h-4 cursor-pointer"
+                  class="rounded text-[#486320] focus:ring-[#597928] w-4 h-4 cursor-pointer"
                 />
                 <span>{item.isCompared ? (lang === 'fil' ? 'Nasa paghahambing' : 'In comparison') : t('addToCompare', lang)}</span>
               </label>
@@ -676,7 +676,7 @@
       <!-- Map Guidance Card -->
       <div class="bg-[#FFFDF8] border border-[#20251E]/10 rounded-2xl p-4 text-xs text-[#4A5245] space-y-1.5 shadow-xs">
         <h4 class="font-bold text-[#20251E] flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5 text-[#597928]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
           </svg>
           <span>{lang === 'fil' ? 'Paalala sa Paglalakbay' : 'Travel & Verification Note'}</span>
