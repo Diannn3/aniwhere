@@ -62,7 +62,7 @@ test('Ani text mode uses deterministic tools through the explicit mock provider'
 
   await expect(page.getByText('What outlets fit this harvest?')).toBeVisible();
   await expect(page.getByText(/Preview only — this is demo data\./i)).toBeVisible();
-  await expect(page.getByText(/full match/i)).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Ani' }).getByText(/full match/i)).toBeVisible();
 });
 
 test('Ani follows Filipino URL language in the static build', async ({ page }) => {
