@@ -6,7 +6,7 @@ All tools are narrow, typed application operations. There is no generic SQL, URL
 Validates/proposes crop, quantityKg, originMunicipality, readyDate and optional variety/grade/packaging. Ambiguous extraction requires confirmation before committing shared state.
 
 ## find_outlets
-Input: authoritative HarvestQuery. Calls the existing market repository and `evaluateFit`. Output includes outlet identity plus the complete factual fit projection: status, acceptedKg, remainingKg, price if present, gross/after-transport only when calculable, evidence kind/source/freshness, unknowns and confirmation questions.
+Input: authoritative HarvestQuery. Calls the existing market repository and `evaluateFit`. Output includes outlet identity plus the complete factual fit projection: status, acceptedKg, remainingKg, buyer-posted, reference, and demo price fields kept separate, gross/after-transport only when calculable, evidence kind/source/freshness, unknowns and confirmation questions.
 
 ## get_outlet_details
 Returns only repository-backed outlet facts and deterministic fit for the current harvest.
@@ -30,4 +30,4 @@ Allowlist only: `/`, `/discover`, `/saved`, `/compare`, `/places/:known-slug`. P
 Validates a known outlet ID and delegates to the existing save mechanism. No external contact or transaction occurs.
 
 ## Response invariants
-Every market-bearing result carries `dataMode` and preserves null. Demo facts are labelled demo. Reference prices remain separate from buyer-posted prices. Unknown quantity never becomes zero. PARTIAL preserves accepted and remaining quantity. No tool reserves capacity or confirms a sale.
+Every market-bearing result carries `dataMode` and preserves null. Demo facts are labelled demo. Buyer-posted, public-reference, and demo price fields are structurally separate; reference/demo values can never occupy the buyer-posted field. Unknown quantity never becomes zero. PARTIAL preserves accepted and remaining quantity. No tool reserves capacity or confirms a sale.
