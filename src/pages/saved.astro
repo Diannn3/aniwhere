@@ -2,14 +2,18 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SavedOutletsExperience from '../components/saved/SavedOutletsExperience.svelte';
 
-const title = 'AniWhere — Saved Outlets';
-const description = 'Review outlets you have saved locally on this device. Compare terms or prepare for your harvest haul.';
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
+const title = lang === 'fil' ? 'AniWhere — Mga Nai-save na Lugar' : 'AniWhere — Saved Outlets';
+const description = lang === 'fil'
+  ? 'Balikan ang mga lugar na nai-save sa device na ito at suriin muli ayon sa kasalukuyang ani.'
+  : 'Revisit outlets saved on this device and check them again against your current harvest.';
 ---
 
 <BaseLayout
   title={title}
   description={description}
   currentPath="/saved"
+  lang={lang}
 >
-  <SavedOutletsExperience client:load />
+  <SavedOutletsExperience client:load initialLang={lang} />
 </BaseLayout>
