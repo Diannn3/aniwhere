@@ -14,7 +14,9 @@ function fitFacts(outlet: Outlet, harvest: HarvestQuery): AniFitFacts {
     statusLabel: fit.statusLabel,
     acceptedKg: fit.acceptedKg,
     remainingKg: fit.remainingKg,
-    pricePerKg: fit.samplePricePerKg,
+    buyerPostedPricePerKg: fit.evidenceKind === 'buyer_offer' ? fit.samplePricePerKg : null,
+    referencePricePerKg: fit.evidenceKind === 'public_reference' ? fit.samplePricePerKg : null,
+    demoPricePerKg: fit.evidenceKind === 'demo' ? fit.samplePricePerKg : null,
     grossAmount: fit.grossPay,
     enteredTransport: fit.enteredTransport,
     afterTransportAmount: fit.afterTransportPay,
@@ -127,7 +129,10 @@ export class AniToolDispatcher {
 function fitFactsFromResult(fit: ReturnType<typeof evaluateFit>): AniFitFacts {
   return {
     status: fit.status, statusLabel: fit.statusLabel, acceptedKg: fit.acceptedKg, remainingKg: fit.remainingKg,
-    pricePerKg: fit.samplePricePerKg, grossAmount: fit.grossPay, enteredTransport: fit.enteredTransport,
+    buyerPostedPricePerKg: fit.evidenceKind === 'buyer_offer' ? fit.samplePricePerKg : null,
+    referencePricePerKg: fit.evidenceKind === 'public_reference' ? fit.samplePricePerKg : null,
+    demoPricePerKg: fit.evidenceKind === 'demo' ? fit.samplePricePerKg : null,
+    grossAmount: fit.grossPay, enteredTransport: fit.enteredTransport,
     afterTransportAmount: fit.afterTransportPay, evidenceKind: fit.evidenceKind, sourceLabel: fit.sourceLabel,
     updatedAt: fit.dataUpdatedAt, validUntil: fit.dataValidUntil, unknowns: [...fit.unknowns],
     confirmationQuestions: [...fit.conditionsToConfirm],
