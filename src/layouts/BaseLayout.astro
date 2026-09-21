@@ -166,6 +166,14 @@ const languageHref = (targetLang: 'en' | 'fil') => {
           const url = new URL(window.location.href);
           url.searchParams.set('lang', target);
           element.setAttribute('href', url.pathname + url.search + url.hash);
+
+          const selected = target === activeLang;
+          if (selected) element.setAttribute('aria-current', 'true');
+          else element.removeAttribute('aria-current');
+          element.classList.toggle('bg-[#20251E]', selected);
+          element.classList.toggle('text-[#FFFDF8]', selected);
+          element.classList.toggle('text-[#4A5245]', !selected);
+          element.classList.toggle('hover:bg-[#FCECD8]', !selected);
         });
 
         document.querySelectorAll('a[data-route-href]').forEach((element) => {
