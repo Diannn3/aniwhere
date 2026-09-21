@@ -38,6 +38,7 @@
     return () => {
       window.removeEventListener('keydown', handleWindowKeydown);
       document.documentElement.style.overflow = '';
+      setBackgroundInert(false);
       unsubscribe?.();
       void provider?.close();
     };
@@ -45,6 +46,14 @@
 
   function currentHarvest() {
     return parseDiscoverQuery(window.location.search).harvest;
+  }
+
+  function setBackgroundInert(value: boolean) {
+    document.querySelectorAll<HTMLElement>('[data-ani-background]').forEach((element) => {
+      element.inert = value;
+      if (value) element.setAttribute('aria-hidden', 'true');
+      else element.removeAttribute('aria-hidden');
+    });
   }
 
   async function handleToolRequest(request: AniToolRequest) {
@@ -67,6 +76,7 @@
   async function openAni() {
     open = true;
     document.documentElement.style.overflow = 'hidden';
+    setBackgroundInert(true);
     status = 'connecting';
     notice = isFil() ? 'Binubuksan si Ani.' : 'Opening Ani.';
     await tick();
@@ -95,6 +105,7 @@
   function closeAni() {
     open = false;
     document.documentElement.style.overflow = '';
+    setBackgroundInert(false);
     notice = '';
     void provider?.close();
     unsubscribe?.();
