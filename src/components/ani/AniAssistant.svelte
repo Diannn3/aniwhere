@@ -9,6 +9,7 @@
   import { parseDiscoverQuery } from '../../lib/state/url-state';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
+  let lang = $state<'en' | 'fil'>(initialLang);
   let open = $state(false);
   let status = $state<AniProviderStatus>('idle');
   let messages = $state<AniMessage[]>([]);
@@ -22,10 +23,11 @@
   const dispatcher = new AniToolDispatcher();
   const actionExecutor = new AniActionExecutor();
 
-  const isFil = () => initialLang === 'fil';
+  const isFil = () => lang === 'fil';
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
 
   onMount(() => {
+    lang = parseDiscoverQuery(window.location.search).lang;
     const handleWindowKeydown = (event: KeyboardEvent) => {
       if (open && event.key === 'Escape') {
         event.preventDefault();
@@ -51,7 +53,7 @@
     notice = isFil() ? 'Sinusuri ng AniWhere ang datos…' : 'AniWhere is checking the data…';
     const harvest = currentHarvest();
     const result = await dispatcher.dispatch(request, harvest);
-    actionExecutor.apply(request, result, harvest, initialLang);
+    actionExecutor.apply(request, result, harvest, lang);
     await provider.submitToolResult?.(result);
     if (!result.ok) {
       status = 'error';
@@ -69,7 +71,8 @@
     notice = isFil() ? 'Binubuksan si Ani.' : 'Opening Ani.';
     await tick();
     inputEl?.focus();
-    provider = import.meta.env.DEV ? new MockAniProvider() : new GeminiLiveAniProvider();
+    const useMock = import.meta.env.DEV || import.meta.env.PUBLIC_ANI_PROVIDER === 'mock';
+    provider = useMock ? new MockAniProvider() : new GeminiLiveAniProvider();
     unsubscribe = provider.subscribe((event) => {
       if (event.status) status = event.status;
       if (event.message) messages = [...messages, event.message];
@@ -77,8 +80,8 @@
       if (event.error) { status = 'error'; notice = event.error; }
     });
     try {
-      await provider.connect({ language: initialLang, dataMode: 'demo', harvest: currentHarvest() });
-      notice = import.meta.env.DEV
+      await provider.connect({ language: lang, dataMode: 'demo', harvest: currentHarvest() });
+      notice = provider.kind === 'mock'
         ? (isFil() ? 'Preview mode. Hindi ito live market AI.' : 'Preview mode. This is not live market AI.')
         : (isFil() ? 'Handa si Ani.' : 'Ani is ready.');
     } catch {
