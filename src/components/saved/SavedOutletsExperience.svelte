@@ -95,7 +95,7 @@
 
   <!-- Notice: Device-Only Storage -->
   <div class="rounded-xl p-4 bg-[#FAF7EE] border border-[#20251E]/10 flex items-start gap-3 text-xs text-[#4A5245]">
-    <svg class="w-5 h-5 text-[#597928] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-5 h-5 text-[#486320] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
     <div>
@@ -110,7 +110,7 @@
   {#if savedOutlets.length === 0}
     <!-- Empty State -->
     <div class="bg-white rounded-2xl border border-[#20251E]/12 p-8 sm:p-12 text-center space-y-5 shadow-sm">
-      <div class="w-16 h-16 rounded-full bg-[#597928]/10 text-[#597928] mx-auto flex items-center justify-center">
+      <div class="w-16 h-16 rounded-full bg-[#597928]/10 text-[#486320] mx-auto flex items-center justify-center">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
@@ -153,7 +153,7 @@
               <span
                 class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                   fit.status === 'match'
-                    ? 'bg-[#597928]/10 text-[#597928]'
+                    ? 'bg-[#597928]/10 text-[#486320]'
                     : fit.status === 'partial'
                     ? 'bg-[#FCECD8] text-[#6E3511]'
                     : fit.status === 'confirm'
@@ -167,7 +167,7 @@
               <button
                 type="button"
                 onclick={() => handleRemove(outlet.id)}
-                class="w-10 h-10 rounded-full flex items-center justify-center text-[#6B7265] hover:text-red-700 hover:bg-red-50 transition-colors min-h-[44px]"
+                class="w-10 h-10 rounded-full flex items-center justify-center text-[#596052] hover:text-red-700 hover:bg-red-50 transition-colors min-h-[44px]"
                 aria-label={isFil ? 'Alisin sa nai-save' : 'Remove from saved'}
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,7 +179,7 @@
             <!-- Title & Municipality -->
             <div>
               <h2 class="text-xl font-serif font-bold text-[#20251E]">
-                <a href={detailHref} class="hover:text-[#597928] transition-colors">
+                <a href={detailHref} class="hover:text-[#486320] transition-colors">
                   {outlet.name}
                 </a>
               </h2>
@@ -195,20 +195,20 @@
             <!-- Transparent Math Ledger -->
             <div class="rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 p-3.5 grid grid-cols-3 gap-2 text-center">
               <div>
-                <div class="text-[10px] uppercase font-semibold text-[#6B7265]">Sample Price</div>
+                <div class="text-[10px] uppercase font-semibold text-[#596052]">Sample Price</div>
                 <div class="text-sm font-bold text-[#20251E]">
                   {fit.samplePricePerKg ? `₱${fit.samplePricePerKg}/kg` : '---'}
                 </div>
               </div>
               <div>
-                <div class="text-[10px] uppercase font-semibold text-[#6B7265]">Accepted</div>
-                <div class="text-sm font-bold text-[#597928]">
+                <div class="text-[10px] uppercase font-semibold text-[#596052]">Accepted</div>
+                <div class="text-sm font-bold text-[#486320]">
                   {fit.acceptedKg !== null ? `${fit.acceptedKg} kg` : 'Confirm'}
                 </div>
               </div>
               <div>
-                <div class="text-[10px] uppercase font-semibold text-[#597928]">After Transport</div>
-                <div class="text-sm font-bold text-[#597928]">
+                <div class="text-[10px] uppercase font-semibold text-[#486320]">After Transport</div>
+                <div class="text-sm font-bold text-[#486320]">
                   {fit.afterTransportPay ? `₱${fit.afterTransportPay.toLocaleString()}` : '---'}
                 </div>
               </div>
@@ -229,7 +229,7 @@
 
             <a
               href={compareHref}
-              class="min-h-[44px] px-4 py-2 rounded-full border border-[#20251E]/20 text-[#20251E] font-semibold text-xs hover:border-[#597928] hover:text-[#597928] transition-all flex items-center gap-1.5"
+              class="min-h-[44px] px-4 py-2 rounded-full border border-[#20251E]/20 text-[#20251E] font-semibold text-xs hover:border-[#597928] hover:text-[#486320] transition-all flex items-center gap-1.5"
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
