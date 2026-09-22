@@ -45,7 +45,8 @@
   const cropLabel = () => (cropChoice === 'other' ? otherCrop.trim() : cropChoice);
 
   function restoreDraft(draft: HarvestDraft) {
-    const knownCropChoice = SUPPORTED_CROPS.some((item) => item.key === draft.cropChoice);
+    const knownCropChoice =
+      draft.cropChoice === 'other' || SUPPORTED_CROPS.some((item) => item.key === draft.cropChoice);
     const parsedQuantity = Number(draft.quantityKg);
     const knownOrigin = LAGUNA_MUNICIPALITIES.some((item) => item.id === draft.originMunicipality);
 
