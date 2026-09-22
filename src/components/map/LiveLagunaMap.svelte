@@ -96,7 +96,10 @@
     const originElement = document.createElement('div');
     originElement.className = 'aniwhere-origin-marker';
     originElement.textContent = 'A';
-    originElement.setAttribute('aria-label', `${lang === 'fil' ? 'Pinagmulan' : 'Origin'}: ${origin.name}`);
+    originElement.setAttribute(
+      'aria-label',
+      `${lang === 'fil' ? 'Reference point' : 'Reference point'}: ${origin.name} municipality center`
+    );
     originMarker = new maplibre.Marker({ element: originElement, anchor: 'center' })
       .setLngLat([origin.lng, origin.lat])
       .addTo(map);
@@ -256,7 +259,7 @@
 
     <div class="map-status-bar">
       <div>
-        <strong>{lang === 'fil' ? 'Live na mapa' : 'Live map'}</strong>
+        <strong>{lang === 'fil' ? 'Interaktibong mapa' : 'Interactive map'}</strong>
         <span>{liveReady ? (lang === 'fil' ? 'Pumili ng lugar upang makita ang ruta.' : 'Select an outlet to inspect the route.') : (lang === 'fil' ? 'Naglo-load…' : 'Loading…')}</span>
       </div>
       <span class="map-source">{MAP_ATTRIBUTION}</span>
@@ -267,6 +270,11 @@
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
+          <span class="route-origin">
+            {lang === 'fil'
+              ? `Reference point: sentro ng ${origin.name}`
+              : `Reference point: ${origin.name} municipality center`}
+          </span>
         </div>
         {#if selectedRoute.source === 'road'}
           <dl>
@@ -279,7 +287,7 @@
               <dd>~{selectedRoute.roadDurationMinutes} min</dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService lamang. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate only. Confirm the receiving schedule before travel.'}</p>
+          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate from the municipality reference point, not the exact farm. Confirm the receiving schedule before travel.'}</p>
         {:else}
           <dl>
             <div>
@@ -291,7 +299,7 @@
               <dd>{lang === 'fil' ? 'Hindi available' : 'Unavailable'}</dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'The dashed line is geographic context only, not road directions.'}</p>
+          <p>{lang === 'fil' ? 'Mula ito sa reference point ng munisipyo. Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'This starts from the municipality reference point. The dashed line is geographic context only, not road directions.'}</p>
         {/if}
       </aside>
     {/if}
@@ -392,6 +400,13 @@
   .route-card__title strong {
     color: #20251e;
     font-size: 0.92rem;
+  }
+
+  .route-card__title .route-origin {
+    margin-top: 0.18rem;
+    color: #596052;
+    font-size: 0.62rem;
+    font-weight: 600;
   }
 
   .route-card dl {
