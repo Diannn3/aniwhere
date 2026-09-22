@@ -95,3 +95,28 @@ test('outlet dialogs focus safely and return the farmer to the triggering action
   await expect(dialog).toBeHidden();
   await expect(prepare).toBeFocused();
 });
+
+
+test('prepared inquiry reports clipboard failure instead of claiming a copy succeeded', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new DOMException('Clipboard blocked', 'NotAllowedError');
+        },
+      },
+    });
+  });
+
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await page.getByRole('button', { name: 'Prepare message' }).click();
+  await page.getByRole('button', { name: 'Copy message' }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Prepare Inquiry Message' });
+  await expect(dialog.getByRole('status')).toContainText(/could not be copied/i);
+  await expect(dialog.getByText('Copied to clipboard!')).toHaveCount(0);
+});
