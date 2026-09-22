@@ -263,7 +263,9 @@
           <span class="capitalize font-medium text-[#20251E]">{outlet.category}</span>
           <span class="text-[#20251E]/20">&bull;</span>
           <span class="text-xs bg-[#486320]/10 text-[#486320] px-2.5 py-0.5 rounded-full font-medium">
-            {distanceKm} km from {originMun.name}
+            {routeEstimate.source === 'road'
+              ? `${routeEstimate.roadDistanceKm?.toFixed(1)} km ${isFil ? 'sa kalsada' : 'by road'} · ${originMun.name} ${isFil ? 'sentro ng munisipyo' : 'municipality center'}`
+              : `${distanceKm.toFixed(1)} km ${isFil ? 'tuwid na layo' : 'straight-line'} · ${originMun.name} ${isFil ? 'sentro ng munisipyo' : 'municipality center'}`}
           </span>
         </div>
 
@@ -352,7 +354,7 @@
       </div>
 
       <span class="text-xs text-[#596052] bg-[#FCECD8]/60 text-[#6E3511] font-semibold px-2.5 py-1 rounded-full">
-        {harvest.quantityKg} kg {harvest.crop}
+        {harvest.quantityKg.toLocaleString('en-PH')} kg {cropName}
       </span>
     </div>
 
@@ -363,8 +365,8 @@
         <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {isFil ? 'Ani Mo' : 'Your Produce'}
         </div>
-        <div class="text-base sm:text-lg font-bold text-[#20251E] capitalize">{harvest.crop}</div>
-        <div class="text-[11px] text-[#596052]">Ready {harvest.readyDate}</div>
+        <div class="text-base sm:text-lg font-bold text-[#20251E]">{cropName}</div>
+        <div class="text-[11px] text-[#596052]">{isFil ? 'Handa' : 'Ready'} {harvest.readyDate}</div>
       </div>
 
       <!-- 2. Accepted Quantity -->
@@ -373,12 +375,16 @@
           {isFil ? 'Kayang Tanggapin' : 'Accepted'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#486320]">
-          {fitResult.acceptedKg !== null ? `${fitResult.acceptedKg} kg` : 'Confirm'}
+          {fitResult.acceptedKg !== null
+            ? `${fitResult.acceptedKg.toLocaleString('en-PH')} kg`
+            : (isFil ? 'Kumpirmahin muna' : 'Confirm first')}
         </div>
         <div class="text-[11px] text-[#596052]">
-          {fitResult.remainingKg && fitResult.remainingKg > 0
-            ? `${fitResult.remainingKg} kg unallocated`
-            : 'Full harvest match'}
+          {fitResult.remainingKg === null
+            ? (isFil ? 'Hindi pa alam ang matitirang ani' : 'Remaining harvest is not known yet')
+            : fitResult.remainingKg > 0
+              ? `${fitResult.remainingKg.toLocaleString('en-PH')} kg ${isFil ? 'ang matitira' : 'remaining'}`
+              : (isFil ? 'Walang matitirang ani' : 'No harvest remaining')}
         </div>
       </div>
 
@@ -388,7 +394,9 @@
           {priceLabel}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
-          {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
+          {fitResult.samplePricePerKg !== null
+            ? `₱${fitResult.samplePricePerKg}/kg`
+            : (isFil ? 'Walang nakatalang presyo' : 'No price recorded')}
         </div>
         <div class="text-[11px] text-[#596052]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
       </div>
@@ -399,35 +407,43 @@
           {isFil ? 'Kabuuang Halaga' : 'Gross Subtotal'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
-          {fitResult.grossPay !== null ? `₱${fitResult.grossPay.toLocaleString()}` : '---'}
+          {fitResult.grossPay !== null
+            ? `₱${fitResult.grossPay.toLocaleString('en-PH')}`
+            : (isFil ? 'Hindi makalkula' : 'Not calculated')}
         </div>
         <div class="text-[11px] text-[#596052]">
-          {fitResult.acceptedKg && fitResult.samplePricePerKg
-            ? `${fitResult.acceptedKg}kg × ₱${fitResult.samplePricePerKg}`
-            : 'Pending intake'}
+          {fitResult.acceptedKg !== null && fitResult.samplePricePerKg !== null
+            ? `${fitResult.acceptedKg.toLocaleString('en-PH')} kg × ₱${fitResult.samplePricePerKg}`
+            : (isFil ? 'Kailangan muna ang dami at presyo' : 'Needs accepted quantity and price')}
         </div>
       </div>
 
       <!-- 5. Entered Transport -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
         <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
-          {isFil ? 'Gastos sa Biyahe' : 'Hauling Expense'}
+          {isFil ? 'Nakatalaang Tantiya sa Biyahe' : 'Recorded Transport Estimate'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#6E3511]">
-          {fitResult.enteredTransport !== null ? `-₱${fitResult.enteredTransport.toLocaleString()}` : '---'}
+          {fitResult.enteredTransport !== null
+            ? `-₱${fitResult.enteredTransport.toLocaleString('en-PH')}`
+            : (isFil ? 'Walang nakatala' : 'Not recorded')}
         </div>
-        <div class="text-[11px] text-[#596052]">Entered default</div>
+        <div class="text-[11px] text-[#596052]">
+          {isFil ? 'Tantiya sa demo record, hindi aktuwal na quote sa biyahe' : 'Demo-record estimate, not an actual hauling quote'}
+        </div>
       </div>
 
       <!-- 6. After Entered Transport -->
       <div class="p-3.5 rounded-xl bg-[#486320]/8 border border-[#597928]/30 space-y-1">
         <div class="text-[11px] font-semibold text-[#486320] uppercase tracking-wider">
-          {isFil ? 'Matapos ang Biyahe' : 'After Transport'}
+          {isFil ? 'Matapos ang Nakatalaang Biyahe' : 'After Recorded Transport'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#486320]">
-          {fitResult.afterTransportPay !== null ? `₱${fitResult.afterTransportPay.toLocaleString()}` : '---'}
+          {fitResult.afterTransportPay !== null
+            ? `₱${fitResult.afterTransportPay.toLocaleString('en-PH')}`
+            : (isFil ? 'Hindi makalkula' : 'Not calculated')}
         </div>
-        <div class="text-[11px] text-[#4A5245]">Before farm costs</div>
+        <div class="text-[11px] text-[#4A5245]">{isFil ? 'Bago ang gastos sa bukid' : 'Before farm costs'}</div>
       </div>
     </div>
 
@@ -437,7 +453,10 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <div>
-        <span class="font-bold text-[#20251E]">Notice:</span> {t('afterTransportNote', lang)}
+        <span class="font-bold text-[#20251E]">{isFil ? 'Paalala:' : 'Notice:'}</span>
+        {isFil
+          ? ' Ang kalkulasyon ay gumagamit lamang ng nakatalang tantiya sa biyahe sa itaas. Hindi ito kita o garantisadong tubo.'
+          : ' This arithmetic uses only the recorded transport estimate shown above. It is not profit or guaranteed income.'}
       </div>
     </div>
   </section>
