@@ -237,7 +237,10 @@
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
           {harvest.quantityKg.toLocaleString()} kg {getCropLabel(harvest.crop, lang)}
           <span class="text-[#4A5245] font-normal text-xs sm:text-sm block sm:inline sm:ml-2">
-            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull; {filteredOutlets.length} {lang === 'fil' ? 'lugar na natagpuan' : 'places found'}
+            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull;
+            {statusFilter === 'all'
+              ? `${processedOutlets.length} ${lang === 'fil' ? 'lugar na natagpuan' : 'places found'}`
+              : `${lang === 'fil' ? 'ipinapakita' : 'showing'} ${filteredOutlets.length} ${lang === 'fil' ? 'sa' : 'of'} ${processedOutlets.length}`}
           </span>
         </h1>
       </div>
