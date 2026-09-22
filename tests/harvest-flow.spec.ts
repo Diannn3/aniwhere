@@ -150,6 +150,22 @@ test('makes all four fit filters understandable and exposes selected state', asy
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/showing .* of/i);
 });
 
+test('explains the three-place comparison limit instead of silently blocking the farmer', async ({ page }) => {
+  await page.goto(discoverPath);
+
+  const cards = page.locator('article[id^="outlet-card-"]');
+  await cards.nth(0).getByRole('checkbox').check();
+  await cards.nth(1).getByRole('checkbox').check();
+  await cards.nth(2).getByRole('checkbox').check();
+
+  const fourth = cards.nth(3).getByRole('checkbox');
+  await fourth.check();
+
+  await expect(page.getByText(/compare up to three places. remove one first/i)).toBeAttached();
+  await expect(fourth).not.toBeChecked();
+  await expect(page.getByLabel('Comparison dock').getByText(/3 of 3 places selected/i)).toBeVisible();
+});
+
 test('keeps price arithmetic available without overwhelming the primary result card', async ({ page }) => {
   await page.goto(discoverPath);
   const processor = outletCard(page, 'Demo Processor');
