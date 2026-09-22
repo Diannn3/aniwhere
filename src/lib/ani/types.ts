@@ -43,7 +43,7 @@ export interface AniSessionContext {
 export type AniToolName =
   | 'set_harvest_context' | 'find_outlets' | 'get_outlet_details'
   | 'compare_outlets' | 'explain_current_fit_facts' | 'get_confirmation_questions'
-  | 'set_or_update_transport_amount' | 'navigate_to' | 'save_outlet';
+  | 'set_or_update_transport_amount' | 'get_route_estimate' | 'navigate_to' | 'save_outlet';
 
 export interface AniToolRequest {
   id: string;
@@ -76,6 +76,22 @@ export interface AniOutletFacts {
   name: string;
   municipality: string;
   fit: AniFitFacts;
+}
+
+export interface AniRouteFacts {
+  outletId: string;
+  outletName: string;
+  originMunicipality: string;
+  originName: string;
+  originBasis: 'municipality_centroid';
+  source: 'road' | 'straight_line';
+  straightLineDistanceKm: number;
+  roadDistanceKm: number | null;
+  roadDurationMinutes: number | null;
+  provider: 'openrouteservice' | null;
+  profile: 'driving-car' | null;
+  generatedAt: string | null;
+  geometryAvailable: boolean;
 }
 
 export interface AniToolResult {
