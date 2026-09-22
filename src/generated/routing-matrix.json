@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": null,
+  "provider": "openrouteservice",
+  "providerBase": "https://api.heigit.org/openrouteservice/v2",
+  "profile": "driving-car",
+  "status": "not_generated",
+  "note": "No road-routing claims are bundled until this artifact is generated with a valid ORS API key.",
+  "origins": {},
+  "outlets": {},
+  "cells": {}
+}
