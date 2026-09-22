@@ -219,3 +219,21 @@ test('saved outlets require confirmation before clearing the shortlist', async (
   await page.getByRole('button', { name: 'Yes, clear all' }).click();
   await expect(page.getByRole('heading', { name: /no saved/i })).toBeVisible();
 });
+
+
+test('empty saved state preserves the farmer harvest and language', async ({ page }) => {
+  await page.goto('/saved?crop=tomato&kg=450&origin=calamba&ready=2026-09-25&view=list&lang=fil');
+
+  const explore = page.getByRole('link', { name: 'Maghanap ng mapagbebentahan' });
+  await expect(explore).toHaveAttribute('href', /kg=450/);
+  await expect(explore).toHaveAttribute('href', /origin=calamba/);
+  await expect(explore).toHaveAttribute('href', /lang=fil/);
+
+  await explore.click();
+  await expectHarvestQuery(page, {
+    kg: '450',
+    origin: 'calamba',
+    ready: '2026-09-25',
+    lang: 'fil',
+  });
+});
