@@ -438,12 +438,12 @@
             </svg>
           </div>
           <h2 class="text-xl font-serif font-bold text-[#20251E]">
-            {isFil ? 'Guhit ng Ruta' : 'Your Route'}
+            {isFil ? 'Mapa at konteksto ng biyahe' : 'Map & travel context'}
           </h2>
         </div>
 
         <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
-          {routeEstimate.source === 'road' ? (isFil ? 'Ruta sa kalsada' : 'Road route') : t('illustrativeMap', lang)}
+          {isFil ? 'Konteksto ng mapa' : 'Map context'}
         </span>
       </div>
 
@@ -461,10 +461,21 @@
         />
       </div>
 
-      <div class="flex items-center justify-between text-xs text-[#596052] pt-1">
-        <span>Origin: <strong>{originMun.name}</strong></span>
-        <span>{routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid' : 'Straight-line')}: <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong></span>
-        <span>Destination: <strong>{outlet.municipality}</strong></span>
+      <div class="grid gap-2 text-xs text-[#596052] pt-1 sm:grid-cols-3 sm:items-start">
+        <span>
+          {isFil ? 'Batayang lokasyon' : 'Reference point'}:
+          <strong>{originMun.name}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
+        </span>
+        <span>
+          {routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid na layo' : 'Straight-line')}:
+          <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong>
+          {#if routeEstimate.source === 'road'}
+            <span class="block">{isFil ? '~' + routeEstimate.roadDurationMinutes + ' min biyahe' : '~' + routeEstimate.roadDurationMinutes + ' min drive'}</span>
+          {:else}
+            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
+          {/if}
+        </span>
+        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
       </div>
     </section>
   </div>
