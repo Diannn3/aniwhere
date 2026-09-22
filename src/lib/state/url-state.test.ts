@@ -61,6 +61,12 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.lang).toBe('fil');
   });
 
+  it('does not invent comparison selections when places are absent', () => {
+    const parsed = parseCompareQuery('crop=tomato&kg=300&origin=los-banos');
+
+    expect(parsed.placeIds).toEqual([]);
+  });
+
   it('clamps compare query to max 3 outlets', () => {
     const query = 'places=place1,place2,place3,place4,place5&crop=tomato&kg=300';
     const parsed = parseCompareQuery(query);
