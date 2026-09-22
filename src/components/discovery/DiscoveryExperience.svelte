@@ -38,6 +38,7 @@
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
+  let compareNotice = $state('');
 
   // Editable harvest draft
   let editCrop = $state(initialQuery.harvest.crop);
@@ -162,12 +163,21 @@
   }
 
   function handleToggleCompare(id: string) {
+    compareNotice = '';
+
     if (comparedIds.includes(id)) {
       comparedIds = comparedIds.filter((item) => item !== id);
-    } else {
-      if (comparedIds.length >= 3) return; // Cap at 3 per contract
-      comparedIds = [...comparedIds, id];
+      return;
     }
+
+    if (comparedIds.length >= 3) {
+      compareNotice = lang === 'fil'
+        ? 'Hanggang tatlong lugar lang ang maaaring paghambingin. Alisin muna ang isa.'
+        : 'You can compare up to three places. Remove one first.';
+      return;
+    }
+
+    comparedIds = [...comparedIds, id];
   }
 
   function resetHarvestEditDraft() {
@@ -742,7 +752,7 @@
                 <input
                   type="checkbox"
                   checked={item.isCompared}
-                  disabled={!item.isCompared && comparedIds.length >= 3}
+                  aria-disabled={!item.isCompared && comparedIds.length >= 3}
                   onchange={() => handleToggleCompare(item.outlet.id)}
                   class="rounded text-[#486320] focus:ring-[#597928] w-4 h-4 cursor-pointer"
                 />
@@ -805,6 +815,8 @@
   </div>
 
   <!-- 4. Floating Bottom Compare Bar (Appears when >= 1 outlet is selected) -->
+  <p class="sr-only" aria-live="polite">{compareNotice}</p>
+
   {#if comparedIds.length > 0}
     <aside
       class="fixed bottom-14 md:bottom-6 left-4 right-4 max-w-lg mx-auto z-40 bg-[#20251E] text-[#FFFDF8] rounded-2xl p-3.5 px-4 shadow-xl border border-[#FFFDF8]/20 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
@@ -823,14 +835,14 @@
         <button
           type="button"
           onclick={() => comparedIds = []}
-          class="text-xs text-[#FFFDF8]/70 hover:text-[#FFFDF8] px-2 py-1 cursor-pointer"
+          class="min-h-11 px-3 py-2 rounded-lg text-xs font-semibold text-[#FFFDF8]/80 hover:text-[#FFFDF8] hover:bg-white/8 cursor-pointer"
         >
           {lang === 'fil' ? 'Alisin' : 'Clear'}
         </button>
 
         <a
           href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-          class="px-4 py-1.5 rounded-xl bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+          class="min-h-11 px-4 py-2 rounded-xl bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
         >
           <span>{lang === 'fil' ? 'Ihambing' : 'Compare'}</span>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
