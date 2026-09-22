@@ -192,9 +192,10 @@ A production pilot still needs:
 - source/verification workflow;
 - current buyer offer collection;
 - separation of demo and production repositories/adapters;
-- optional MapLibre integration;
-- server-side road-routing proxy;
-- field/usability validation with farmers and market actors.
+- production review of the MapLibre/OpenFreeMap dependency, CSP, caching, attribution, and no-WebGL fallback;
+- a legitimately generated ORS road-routing artifact or a secure cached routing service, with private credentials kept out of the browser;
+- field/usability validation with farmers and market actors;
+- representative Filipino/Taglish voice testing before claiming production-quality Ani voice navigation.
 
 ---
 
