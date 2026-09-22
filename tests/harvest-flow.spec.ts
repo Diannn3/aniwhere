@@ -128,6 +128,16 @@ test('edits the discovery harvest and updates the address without discarding lan
 });
 
 
+test('distance sorting explains the shared comparison basis to farmers', async ({ page }) => {
+  await page.goto(discoverPath);
+
+  await page.getByLabel(/sort/i).selectOption('distance');
+
+  await expect(page.getByText(/straight-line distance is used for every place/i)).toBeVisible();
+  const cards = page.locator('article[id^="outlet-card-"]');
+  await expect(cards.first().getByText(/km straight-line/i)).toBeVisible();
+});
+
 test('makes all four fit filters understandable and exposes selected state', async ({ page }) => {
   await page.goto(discoverPath);
 
