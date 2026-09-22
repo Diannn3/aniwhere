@@ -43,6 +43,8 @@
     const params = new URLSearchParams(window.location.search);
     if (params.has('places')) {
       selectedIds = normalizeSelectedIds(parsed.placeIds);
+      safeStorage.setItem('aniwhere_compare_ids', selectedIds);
+      syncComparisonUrl(selectedIds);
       return;
     }
 
@@ -110,6 +112,12 @@
     if (!transportValue(outlet, recorded).trim()) return copy('Transport has not been entered.', 'Wala pang inilalagay na gastos sa biyahe.');
     return hasTransportDraft(outlet.id) ? copy('Your edited transport amount.', 'Inedit mong halaga ng biyahe.') : copy('Recorded transport estimate.', 'Nakatalaang tantiya sa biyahe.');
   }
+  function syncComparisonUrl(ids: string[]) {
+    const params = new URLSearchParams(serializeDiscoverQuery(harvest, 'list', undefined, lang));
+    if (ids.length > 0) params.set('places', ids.join(','));
+    window.history.replaceState({}, '', `/compare?${params.toString()}`);
+  }
+
   function handleTransportChange(outlet: Outlet, recorded: number | null, value: string) {
     transportDrafts = { ...transportDrafts, [outlet.id]: value };
     const transport = parsedTransport(outlet, recorded);
@@ -125,6 +133,7 @@
   function handleRemove(id: string) {
     selectedIds = selectedIds.filter((selectedId) => selectedId !== id);
     safeStorage.setItem('aniwhere_compare_ids', selectedIds);
+    syncComparisonUrl(selectedIds);
   }
 </script>
 
