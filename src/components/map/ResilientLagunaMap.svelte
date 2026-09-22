@@ -361,6 +361,8 @@
     <!-- Mobile Non-Modal Pin Inspection Bottom Sheet (P1.1 44px touch targets & zero pin occlusion) -->
     {#if selectedItem && !isDetailView}
       <div
+        role="region"
+        aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}
         class="lg:hidden absolute bottom-3 left-3 right-3 z-20 bg-[#FFFDF8]/98 backdrop-blur-md border border-[#597928]/30 rounded-2xl p-4 shadow-xl space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-150"
       >
         <div class="flex items-start justify-between gap-2">
