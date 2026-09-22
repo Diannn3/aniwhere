@@ -5,8 +5,9 @@
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
+  import { validateHarvestInput } from '../../lib/domain/validation';
   import { SUPPORTED_CROPS, getCropLabel } from '../../lib/domain/crops';
-  import { serializeDiscoverQuery, parseDiscoverQuery, type ParsedDiscoverQuery } from '../../lib/state/url-state';
+  import { serializeDiscoverQuery, parseDiscoverQuery, todayInManila, type ParsedDiscoverQuery } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
@@ -46,6 +47,7 @@
   let editVariety = $state(initialQuery.harvest.details?.variety || '');
   let editGrade = $state(initialQuery.harvest.details?.grade || '');
   let editPackaging = $state(initialQuery.harvest.details?.packaging || '');
+  let editErrors = $state<Record<string, string>>({});
 
   onMount(() => {
     savedIds = getSavedOutletIds();
@@ -170,6 +172,20 @@
 
   function handleApplyHarvestEdit(e: SubmitEvent) {
     e.preventDefault();
+
+    const validation = validateHarvestInput({
+      crop: editCrop,
+      quantityKg: Number(editKg),
+      originMunicipality: editOrigin,
+      readyDate: editReadyDate || undefined,
+    });
+
+    if (!validation.isValid) {
+      editErrors = lang === 'fil' ? validation.errorsFil : validation.errors;
+      return;
+    }
+
+    editErrors = {};
     harvest = {
       ...harvest,
       crop: editCrop,
@@ -187,8 +203,11 @@
     };
     isEditingHarvest = false;
 
-    // Sync URL without reload
-    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
+    // Changing the harvest invalidates a selected result until the farmer chooses again.
+    selectedOutletId = undefined;
+    statusFilter = 'all';
+
+    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, undefined, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
@@ -285,7 +304,17 @@
 
     <!-- Collapsible Quick Harvest Editor -->
     {#if isEditingHarvest}
-      <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+      <form onsubmit={handleApplyHarvestEdit} novalidate class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+        {#if Object.keys(editErrors).length > 0}
+          <div role="alert" class="sm:col-span-5 rounded-xl border border-[#6E3511]/30 bg-[#FCECD8]/60 px-3 py-2 text-xs text-[#6E3511]">
+            <strong>{lang === 'fil' ? 'Suriin muna ang ani.' : 'Check the harvest details first.'}</strong>
+            <ul class="mt-1 list-inside list-disc">
+              {#each Object.values(editErrors) as message}
+                <li>{message}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
         <div>
           <label for="edit-crop-select" class="block text-xs font-bold text-[#20251E] mb-1">{t('cropLabel', lang)}</label>
           <select id="edit-crop-select" bind:value={editCrop} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold">
@@ -297,7 +326,8 @@
 
         <div>
           <label for="edit-kg-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('quantityLabel', lang)} (kg)</label>
-          <input id="edit-kg-input" type="number" bind:value={editKg} min="1" max="100000" class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          <input id="edit-kg-input" type="number" bind:value={editKg} min="1" max="100000" inputmode="numeric" aria-invalid={Boolean(editErrors.quantityKg)} aria-describedby={editErrors.quantityKg ? 'edit-kg-error' : undefined} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          {#if editErrors.quantityKg}<p id="edit-kg-error" class="mt-1 text-xs font-semibold text-[#6E3511]">{editErrors.quantityKg}</p>{/if}
         </div>
 
         <div>
@@ -311,7 +341,8 @@
 
         <div>
           <label for="edit-ready-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('readyDateLabel', lang)}</label>
-          <input id="edit-ready-input" type="date" bind:value={editReadyDate} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          <input id="edit-ready-input" type="date" bind:value={editReadyDate} min={todayInManila()} aria-invalid={Boolean(editErrors.readyDate)} aria-describedby={editErrors.readyDate ? 'edit-ready-error' : undefined} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          {#if editErrors.readyDate}<p id="edit-ready-error" class="mt-1 text-xs font-semibold text-[#6E3511]">{editErrors.readyDate}</p>{/if}
         </div>
 
         <button
@@ -324,15 +355,15 @@
         <div class="sm:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
           <div>
             <label for="edit-variety-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('varietyLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
-            <input id="edit-variety-input" type="text" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+            <input id="edit-variety-input" type="text" maxlength="80" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
           <div>
             <label for="edit-grade-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('gradeLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
-            <input id="edit-grade-input" type="text" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+            <input id="edit-grade-input" type="text" maxlength="80" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
           <div>
             <label for="edit-packaging-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('packagingLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
-            <input id="edit-packaging-input" type="text" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+            <input id="edit-packaging-input" type="text" maxlength="80" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
         </div>
       </form>
