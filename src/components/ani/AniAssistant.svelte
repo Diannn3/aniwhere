@@ -178,7 +178,7 @@
       if (places) target.searchParams.set('places', places);
     }
 
-    return ${target.pathname}${target.search};
+    return `${target.pathname}${target.search}`;
   }
 
   async function disposeProvider() {
