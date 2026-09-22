@@ -289,6 +289,18 @@
               : `Reference point: ${origin.name} municipality center`}
           </span>
         </div>
+        <div class={`route-card__fit fit-${selectedItem.fit.status}`}>
+          <strong>{lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}</strong>
+          {#if selectedItem.fit.acceptedKg !== null && selectedItem.fit.remainingKg !== null}
+            <span>
+              {lang === 'fil'
+                ? `Kayang tanggapin ${selectedItem.fit.acceptedKg.toLocaleString('en-PH')} kg · Matitira ${selectedItem.fit.remainingKg.toLocaleString('en-PH')} kg`
+                : `Can accept ${selectedItem.fit.acceptedKg.toLocaleString('en-PH')} kg · ${selectedItem.fit.remainingKg.toLocaleString('en-PH')} kg remaining`}
+            </span>
+          {:else}
+            <span>{lang === 'fil' ? 'Hindi pa alam ang kapasidad — kumpirmahin muna.' : 'Capacity is still unknown — confirm first.'}</span>
+          {/if}
+        </div>
         {#if selectedRoute.source === 'road'}
           <dl>
             <div>
@@ -421,6 +433,23 @@
     font-size: 0.62rem;
     font-weight: 600;
   }
+
+  .route-card__fit {
+    display: grid;
+    gap: 0.08rem;
+    margin: 0 0 0.55rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid rgb(32 37 30 / 0.12);
+    border-radius: 0.75rem;
+    background: #fffdf8;
+  }
+
+  .route-card__fit strong { font-size: 0.72rem; }
+  .route-card__fit span { color: #596052; font-size: 0.64rem; line-height: 1.35; }
+  .route-card__fit.fit-match { border-color: rgb(89 121 40 / 0.3); background: rgb(234 243 222 / 0.8); }
+  .route-card__fit.fit-partial { border-color: rgb(184 106 43 / 0.28); background: rgb(252 236 216 / 0.8); }
+  .route-card__fit.fit-confirm { border-color: rgb(78 115 128 / 0.28); background: rgb(235 242 245 / 0.86); }
+  .route-card__fit.fit-no_match { border-color: rgb(107 113 103 / 0.25); background: rgb(240 242 238 / 0.9); }
 
   .route-card dl {
     display: grid;
