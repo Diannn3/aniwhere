@@ -53,3 +53,20 @@ test('mobile map selection stays on the map until the farmer asks for the list',
   await expect(page).toHaveURL(/view=list/);
   await expect(page.locator('#outlet-card-demo-processor')).toBeVisible();
 });
+
+
+test('fallback map preview dismissal clears selected place state', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('https://unpkg.com/**', (route) => route.abort());
+  await page.goto(
+    '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=map&lang=en'
+  );
+
+  await expect(page.getByText('Offline map')).toBeVisible();
+  await page.getByRole('button', { name: /Demo Processor:.*straight-line/i }).click();
+  await expect(page).toHaveURL(/place=demo-processor/);
+
+  await page.getByRole('button', { name: 'Close preview' }).click();
+  await expect(page).not.toHaveURL(/place=/);
+  await expect(page.getByRole('button', { name: /View selected place in the list/i })).toHaveCount(0);
+});
