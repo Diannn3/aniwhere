@@ -178,3 +178,21 @@ test('comparison distinguishes recorded transport estimates from farmer-edited a
   await processorTransport.fill('750');
   await expect(transport).toContainText(/Your edited transport amount/i);
 });
+
+
+test('mobile comparison cards keep transport editing and decision facts usable', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(comparisonPath(['demo-processor', 'demo-market']));
+
+  await expect(page.getByRole('heading', { name: 'Compare at a glance' })).toBeVisible();
+  const processorTransport = page.getByLabel(/Transport amount used for Demo Processor/i);
+  await expect(processorTransport).toBeVisible();
+
+  await processorTransport.fill('750');
+  const processorCard = page.getByRole('article').filter({
+    has: page.getByRole('heading', { name: 'Demo Processor' }),
+  });
+  await expect(processorCard).toContainText(/Your edited transport amount/i);
+  await expect(processorCard).toContainText(/After transport/i);
+  await expect(processorCard.getByRole('link', { name: 'Review this place' })).toBeVisible();
+});
