@@ -51,6 +51,17 @@ test('Ani shell is keyboard closable and restores focus', async ({ page }) => {
 
 
 
+test('Ani shows the live home harvest draft before the farmer submits discovery', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#harvest-quantity').fill('450');
+  await page.locator('#harvest-origin').selectOption('santa-cruz');
+
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Ani' });
+  await expect(dialog.getByText('Current harvest')).toBeVisible();
+  await expect(dialog.getByText(/450 kg .*Santa Cruz/i)).toBeVisible();
+});
+
 test('Ani text mode uses deterministic tools through the explicit mock provider', async ({ page }) => {
   await page.goto(discovery);
   await page.getByRole('button', { name: 'Ask Ani' }).click();
