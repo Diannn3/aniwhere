@@ -33,12 +33,12 @@ for (const viewport of viewports) {
     }
 
     if (viewport.width <= 390) {
-      const matrixScroller = page.getByRole('table', { name: /comparison ledger/i }).locator('..');
-      const dimensions = await matrixScroller.evaluate((element) => ({
-        clientWidth: element.clientWidth,
-        scrollWidth: element.scrollWidth,
-      }));
-      expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+      await expect(page.getByRole('heading', { name: /compare at a glance/i })).toBeVisible();
+      await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeHidden();
+      await expect(page.getByLabel(/Transport for Demo Processor/i)).toHaveCount(0);
+      await expect(page.getByLabel(/Transport amount used/i).first()).toBeVisible();
+    } else {
+      await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeVisible();
     }
   });
 }
