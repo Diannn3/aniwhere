@@ -17,7 +17,7 @@
     sharedDistanceBasis,
     type OutletRouteEstimate,
   } from '../../lib/routing/routing-matrix';
-  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
     initialQuery,
@@ -228,6 +228,7 @@
     // Changing the harvest invalidates a selected result until the farmer chooses again.
     selectedOutletId = undefined;
     statusFilter = 'all';
+    publishHarvestContext(harvest);
 
     const newQuery = serializeDiscoverQuery(harvest, activeMobileView, undefined, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
