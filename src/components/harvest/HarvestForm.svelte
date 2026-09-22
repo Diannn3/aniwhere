@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { validateHarvestInput } from '../../lib/domain/validation';
+  import { isValidIsoDate, validateHarvestInput } from '../../lib/domain/validation';
   import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
@@ -44,14 +44,21 @@
   const cropLabel = () => (cropChoice === 'other' ? otherCrop.trim() : cropChoice);
 
   function restoreDraft(draft: HarvestDraft) {
-    cropChoice = draft.cropChoice || 'tomato';
-    otherCrop = draft.otherCrop || '';
-    quantityKg = Number(draft.quantityKg) || 300;
-    originMunicipality = draft.originMunicipality || 'los-banos';
-    readyDate = draft.readyDate || todayInManila();
-    variety = draft.variety || '';
-    grade = draft.grade || '';
-    packaging = draft.packaging || '';
+    const knownCropChoice = SUPPORTED_CROPS.some((item) => item.key === draft.cropChoice);
+    const parsedQuantity = Number(draft.quantityKg);
+    const knownOrigin = LAGUNA_MUNICIPALITIES.some((item) => item.id === draft.originMunicipality);
+
+    cropChoice = knownCropChoice ? draft.cropChoice : 'tomato';
+    otherCrop = typeof draft.otherCrop === 'string' ? draft.otherCrop.trim().slice(0, 80) : '';
+    quantityKg =
+      Number.isFinite(parsedQuantity) && parsedQuantity > 0 && parsedQuantity <= 100000
+        ? parsedQuantity
+        : 300;
+    originMunicipality = knownOrigin ? draft.originMunicipality : 'los-banos';
+    readyDate = isValidIsoDate(draft.readyDate) ? draft.readyDate : todayInManila();
+    variety = typeof draft.variety === 'string' ? draft.variety.trim().slice(0, 80) : '';
+    grade = typeof draft.grade === 'string' ? draft.grade.trim().slice(0, 80) : '';
+    packaging = typeof draft.packaging === 'string' ? draft.packaging.trim().slice(0, 80) : '';
     showDetails = Boolean(variety || grade || packaging);
   }
 
