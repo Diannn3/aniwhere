@@ -249,6 +249,18 @@
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
+  function setStatusFilter(next: 'all' | 'match' | 'partial' | 'confirm' | 'no_match') {
+    statusFilter = next;
+
+    if (selectedOutletId && next !== 'all') {
+      const selected = processedOutlets.find((item) => item.outlet.id === selectedOutletId);
+      if (!selected || selected.fit.status !== next) {
+        selectedOutletId = undefined;
+        syncDiscoveryUrl();
+      }
+    }
+  }
+
   function scrollSelectedIntoView(id: string) {
     requestAnimationFrame(() => {
       const el = document.getElementById(`outlet-card-${id}`);
@@ -457,7 +469,7 @@
       >
         <button
           type="button"
-          onclick={() => statusFilter = 'all'}
+          onclick={() => setStatusFilter('all')}
           aria-pressed={statusFilter === 'all'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'all'
@@ -470,7 +482,7 @@
 
         <button
           type="button"
-          onclick={() => statusFilter = 'match'}
+          onclick={() => setStatusFilter('match')}
           aria-pressed={statusFilter === 'match'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'match'
@@ -483,7 +495,7 @@
 
         <button
           type="button"
-          onclick={() => statusFilter = 'partial'}
+          onclick={() => setStatusFilter('partial')}
           aria-pressed={statusFilter === 'partial'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'partial'
@@ -496,7 +508,7 @@
 
         <button
           type="button"
-          onclick={() => statusFilter = 'confirm'}
+          onclick={() => setStatusFilter('confirm')}
           aria-pressed={statusFilter === 'confirm'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'confirm'
@@ -509,7 +521,7 @@
 
         <button
           type="button"
-          onclick={() => statusFilter = 'no_match'}
+          onclick={() => setStatusFilter('no_match')}
           aria-pressed={statusFilter === 'no_match'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${statusFilter === 'no_match'
             ? 'border-[#20251E] bg-[#20251E] text-[#FFFDF8]'
@@ -541,7 +553,7 @@
       {#if statusFilter !== 'all'}
         <button
           type="button"
-          onclick={() => statusFilter = 'all'}
+          onclick={() => setStatusFilter('all')}
           class="min-h-11 px-2 text-xs text-[#6E3511] font-bold hover:underline cursor-pointer"
         >
           {t('clearFilters', lang)}
@@ -574,7 +586,7 @@
           </p>
           <button
             type="button"
-            onclick={() => statusFilter = 'all'}
+            onclick={() => setStatusFilter('all')}
             class="min-h-11 px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
           >
             {t('clearFilters', lang)}
