@@ -35,8 +35,8 @@ for (const viewport of viewports) {
     if (viewport.width <= 390) {
       await expect(page.getByRole('heading', { name: /compare at a glance/i })).toBeVisible();
       await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeHidden();
-      await expect(page.getByLabel(/Transport for Demo Processor/i)).toHaveCount(0);
-      await expect(page.getByLabel(/Transport amount used/i).first()).toBeVisible();
+      await expect(page.locator('#transport-demo-processor')).toBeHidden();
+      await expect(page.locator('#mobile-transport-demo-processor')).toBeVisible();
     } else {
       await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeVisible();
     }
