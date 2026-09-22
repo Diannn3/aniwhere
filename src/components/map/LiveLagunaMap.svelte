@@ -124,8 +124,14 @@
   function syncRoute() {
     if (!map || !liveReady || !map.isStyleLoaded?.()) return;
 
+    const existingSource = map.getSource('aniwhere-selected-route');
+    if (!selectedItem) {
+      existingSource?.setData?.({ type: 'FeatureCollection', features: [] });
+      return;
+    }
+
     const data = routeGeoJson();
-    const source = map.getSource('aniwhere-selected-route');
+    const source = existingSource;
     if (source?.setData) {
       source.setData(data);
     } else {
