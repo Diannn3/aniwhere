@@ -63,3 +63,16 @@ test('Filipino outlet guidance localizes crop and confirmation questions', async
   await expect(dialog).toContainText(/300 kg na kamatis/i);
   await expect(dialog).toContainText(/kasalukuyang presyo, kapasidad/i);
 });
+
+
+test('demo contact fields are never presented as verified real-world contacts', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await page.getByRole('button', { name: 'Contact details' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Recorded contact field');
+  await expect(dialog).toContainText(/demo field, not a verified real-world contact/i);
+  await expect(dialog).not.toContainText('Verified public contact');
+});
