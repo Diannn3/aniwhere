@@ -630,7 +630,7 @@
   .ani-transcript { flex:1; min-height:12rem; overflow:auto; padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
   .ani-welcome { margin:auto 0; padding:1rem; border-left:2px solid #91AC67; color:#343b31; line-height:1.55; } .ani-welcome p{margin:0}.ani-welcome .trust-note{margin-top:.7rem;font-size:.78rem;color:#687064}
   .harvest-context { display:grid; gap:.12rem; margin:0 0 .85rem; padding:.65rem .72rem; border:1px solid rgba(89,121,40,.18); border-radius:.8rem; background:#F9FBF7; }
-  .harvest-context span { color:#687064; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .harvest-context span { color:#596052; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
   .harvest-context strong { color:#20251E; font-size:.82rem; font-weight:750; }
   .harvest-context.is-invalid { border-color:rgba(110,53,17,.28); background:#FCECD8; }
   .harvest-context.is-invalid span,.harvest-context.is-invalid strong { color:#6E3511; }
@@ -657,9 +657,9 @@
   .online-mode > div { min-width:0; }
   .online-mode strong { display:block; color:#20251E; }
   .ani-composer { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:.45rem; padding:.8rem; border-top:1px solid rgba(32,37,30,.1); background:#fff; } input { min-width:0; min-height:2.75rem; border:1px solid rgba(32,37,30,.14); border-radius:.85rem; background:#FFFDF8; padding:0 .8rem; color:#20251E; font-size:1rem; } input::placeholder{color:#72796e}.mic-button svg,.send-button svg{width:1.15rem;height:1.15rem}.mic-button.listening{background:#FCECD8;border-color:#6E3511;color:#6E3511}.send-button{background:#597928;color:#FFFDF8;border-color:#597928}.mic-button:disabled,.send-button:disabled{opacity:.42;cursor:not-allowed}
-  .ani-footnote { margin:0; padding:0 .9rem .85rem; font-size:.68rem; line-height:1.4; color:#6a7165; background:#fff; }
+  .ani-footnote { margin:0; padding:0 .9rem .85rem; font-size:.68rem; line-height:1.4; color:#596052; background:#fff; }
   .ani-scrim { position:fixed; z-index:1; inset:0; border:0; background:rgba(32,37,30,.12); backdrop-filter:blur(2px); animation:fade-in 220ms ease both; }
-  @keyframes panel-in { from{opacity:0;transform:translateY(16px) scale(.985)} to{opacity:1;transform:none} } @keyframes fade-in{from{opacity:0}to{opacity:1}}
+  @keyframes panel-in { from{transform:translateY(16px) scale(.985)} to{transform:none} } @keyframes fade-in{from{opacity:0}to{opacity:1}}
   @media(min-width:768px){ .ani-assistant{bottom:1.25rem;right:1.25rem}.ani-panel{right:1.25rem;bottom:1.25rem}.ani-scrim{background:rgba(32,37,30,.06)} }
   @media(max-width:767px){
     :global(body:has([aria-label="Comparison dock"])) .ani-assistant { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
