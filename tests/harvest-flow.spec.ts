@@ -11,6 +11,19 @@ test.beforeEach(async ({ page }) => {
   await clearClientState(page);
 });
 
+test('home rejects malformed harvest URL state before showing it to the farmer', async ({ page }) => {
+  const oversized = 'x'.repeat(120);
+  await page.goto(
+    `/?crop=${oversized}&kg=999999&origin=not-real&ready=not-a-date&variety=${oversized}&lang=en`
+  );
+
+  await expect(page.locator('#harvest-quantity')).toHaveValue('300');
+  await expect(page.locator('#harvest-origin')).toHaveValue('los-banos');
+  await expect(page.locator('#harvest-ready-date')).not.toHaveValue('not-a-date');
+  await expect(page.getByRole('radio', { name: /other crop/i })).toBeChecked();
+  await expect(page.getByPlaceholder(/enter crop name/i)).toHaveValue('');
+});
+
 test('home exposes the four harvest integration controls', async ({ page }) => {
   await page.goto('/');
 
