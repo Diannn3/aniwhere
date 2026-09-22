@@ -52,15 +52,17 @@ The trust-model v2 domain now carries:
 
 Production work should introduce repository/data adapters rather than replacing fixture values with scraped or unverified values in the same file.
 
-### C. Offline/keyless map remains the fallback
+### C. Live map is progressive; offline/keyless map remains the fallback
 
-The current app still uses `ResilientLagunaMap.svelte`, an in-repo illustrative SVG map.
+The discovery and outlet-detail flows now use `LiveLagunaMap.svelte`, which lazy-loads MapLibre GL JS and the keyless OpenFreeMap Liberty style when network/WebGL are available.
 
-Straight-line distance is computed with deterministic Haversine calculations.
+`ResilientLagunaMap.svelte` remains the explicit fallback. Live-map failure must not make discovery unusable.
 
-There is no claim that this is road distance, travel time, or freight cost.
+Straight-line distance is still computed deterministically with Haversine. The checked-in routing artifact is fail-closed (`status: not_generated`) until an operator runs the OpenRouteService generator with a private `ORS_API_KEY`.
 
-A future MapLibre/road-routing layer must remain progressive: failure of live mapping/routing must not make the list/discovery workflow unusable.
+When a generated matrix cell exists, the UI may label its values **Road distance** and **Estimated drive**. Otherwise it continues to label Haversine as **Straight-line distance** and shows no invented driving time.
+
+Route distance/time remains separate from market evidence, buyer acceptance, fit state, and hauling expense.
 
 ---
 
@@ -161,18 +163,19 @@ These policies still require behavioral testing in a running Supabase local envi
 
 ---
 
-## 7. Routing/Mapping Roadmap
+## 7. Routing/Mapping State
 
-Future live mapping should use a layered approach:
+The layered architecture is now implemented:
 
-1. Haversine distance for inexpensive candidate discovery;
-2. MapLibre as a live interactive map when available;
-3. road routing only for selected/detail/compare destinations;
-4. external routing key held server-side;
-5. cache route results;
-6. explicit fallback to straight-line distance when routing fails.
+1. Haversine remains the inexpensive deterministic fallback.
+2. MapLibre + OpenFreeMap is the progressive live map.
+3. `src/generated/routing-matrix.json` is the browser-safe road-routing artifact.
+4. `scripts/generate-routing-matrix.mjs` uses a private ORS key outside the browser to precompute the 10 municipality-origin × 5 demo-outlet driving matrix.
+5. Optional geometry generation can precompute selected-route lines.
+6. Discovery/detail/compare read the same artifact and fall back explicitly when no routed cell exists.
+7. The resilient SVG map remains available when the live map cannot load.
 
-Do not send every discovery candidate through a routing API.
+The browser does not send every candidate through a routing API and does not receive an ORS secret.
 
 ---
 

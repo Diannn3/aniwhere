@@ -8,7 +8,8 @@
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
-  import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
+  import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
+  import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
 
   interface Props {
     outlet: Outlet;
@@ -52,6 +53,7 @@
   );
 
   const fitResult = $derived(evaluateFit(outlet, harvest));
+  const routeEstimate = $derived(getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distanceKm));
 
   const isFil = $derived(lang === 'fil');
   const hasVerifiedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
@@ -441,12 +443,12 @@
         </div>
 
         <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
-          {t('illustrativeMap', lang)}
+          {routeEstimate.source === 'road' ? (isFil ? 'Ruta sa kalsada' : 'Road route') : t('illustrativeMap', lang)}
         </span>
       </div>
 
       <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">
-        <ResilientLagunaMap
+        <LiveLagunaMap
           items={[{
             outlet,
             fit: fitResult,
@@ -454,7 +456,6 @@
           }]}
           harvest={harvest}
           selectedId={outlet.id}
-          isDetailView={true}
           lang={lang}
           onSelect={() => {}}
         />
@@ -462,7 +463,7 @@
 
       <div class="flex items-center justify-between text-xs text-[#596052] pt-1">
         <span>Origin: <strong>{originMun.name}</strong></span>
-        <span>Distance: <strong>{distanceKm} km</strong></span>
+        <span>{routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid' : 'Straight-line')}: <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong></span>
         <span>Destination: <strong>{outlet.municipality}</strong></span>
       </div>
     </section>

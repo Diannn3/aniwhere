@@ -77,8 +77,9 @@ At runtime it currently uses:
 - explicit fictional demo data separated into stable places, crop capabilities, time-sensitive offers, provenance, and hauling assumptions;
 - a presentation adapter that composes those records for the current UI;
 - browser `localStorage`;
-- an in-repo illustrative Laguna SVG map;
-- deterministic Haversine straight-line distance.
+- a progressive Laguna map: MapLibre + OpenFreeMap when network/WebGL are available, with the in-repo SVG map as the resilient fallback;
+- deterministic Haversine straight-line distance;
+- a fail-closed road-routing matrix contract with an OpenRouteService artifact generator.
 
 It does **not** currently use:
 
@@ -86,8 +87,7 @@ It does **not** currently use:
 - real-time buyer demand;
 - live authentication;
 - real buyer prices;
-- MapLibre production tiles;
-- OpenRouteService road routing;
+- a generated OpenRouteService road matrix in the checked-in default artifact (the default remains intentionally `not_generated` until run with a valid private key);
 - payments, reservations, or checkout.
 
 The app labels demo evidence as demo data. Generated or fixture business names, capacities, prices, contacts, and transport costs must not be represented as real market facts.
@@ -138,6 +138,16 @@ pnpm test
 pnpm check
 pnpm build
 ```
+
+Optional road-routing artifact generation (ops/CI only):
+
+```bash
+ORS_API_KEY=... pnpm routing:generate
+# Add precomputed road geometry for all demo origin/outlet pairs:
+ORS_API_KEY=... pnpm routing:generate:geometry
+```
+
+The ORS key is never sent to the browser. Without a generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
 
 The same frontend checks run in GitHub Actions through `.github/workflows/ci.yml`.
 
