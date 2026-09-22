@@ -182,3 +182,21 @@ test('saves an outlet locally and makes it available on the saved route', async 
   await expect(page.getByText('Harvest remaining').first()).toBeVisible();
   await expect(page.getByText(/straight-line from Los Baños municipality center/i).first()).toBeVisible();
 });
+
+
+test('saved outlets require confirmation before clearing the shortlist', async ({ page }) => {
+  await page.goto(discoverPath);
+  await outletCard(page, 'Demo Cooperative').getByRole('button', { name: 'Save outlet' }).click();
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Saved' }).click();
+
+  await page.getByRole('button', { name: 'Clear all' }).click();
+  await expect(page.getByText('Clear every saved place?')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Demo Cooperative' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('heading', { name: 'Demo Cooperative' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Clear all' }).click();
+  await page.getByRole('button', { name: 'Yes, clear all' }).click();
+  await expect(page.getByRole('heading', { name: /no saved/i })).toBeVisible();
+});
