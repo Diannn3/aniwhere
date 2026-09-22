@@ -207,7 +207,7 @@ test('comparison ignores malformed, duplicate, and unknown outlet selections', a
 
   const ledger = page.getByRole('table', { name: /comparison ledger/i });
   await expect(ledger).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: /Demo Public Market/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Demo Market/i })).toBeVisible();
   await expect(ledger.getByRole('columnheader', { name: /Demo Processor/i })).toBeVisible();
   await expect(ledger.getByRole('columnheader')).toHaveCount(3);
   await expect(page.getByText('<script>')).toHaveCount(0);
