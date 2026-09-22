@@ -49,6 +49,7 @@ test('uses the invalid-submission summary to return focus to quantity', async ({
 
 test('keeps Filipino selected while navigating home, discovery, and saved outlets', async ({ page }) => {
   await page.goto('/?lang=fil');
+  await expect(page.getByRole('group', { name: /piliin ang wika/i }).getByRole('link', { name: 'FIL' })).toHaveAttribute('aria-current', 'true');
   await fillHomeHarvest(page);
 
   await page.getByRole('button', { name: /hanapin/i }).click();

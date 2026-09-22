@@ -96,15 +96,11 @@ export function serializeDiscoverQuery(
   if (harvest.details?.packaging?.trim()) {
     params.set('packaging', harvest.details.packaging.trim());
   }
-  if (view === 'map') {
-    params.set('view', 'map');
-  }
+  params.set('view', view);
   if (placeId) {
     params.set('place', placeId);
   }
-  if (lang === 'fil') {
-    params.set('lang', 'fil');
-  }
+  params.set('lang', lang);
   return params.toString();
 }
 

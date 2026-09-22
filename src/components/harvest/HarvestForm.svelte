@@ -6,6 +6,7 @@
   import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   type HarvestDraft = {
     cropChoice: string;
@@ -125,6 +126,20 @@
     });
   });
 
+  onMount(() => subscribeHarvestContext((next) => {
+    const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === next.crop);
+    cropChoice = supportedCrop ? next.crop : 'other';
+    otherCrop = supportedCrop ? '' : next.crop;
+    quantityKg = next.quantityKg;
+    originMunicipality = next.originMunicipality;
+    readyDate = next.readyDate || todayInManila();
+    variety = next.details?.variety || '';
+    grade = next.details?.grade || '';
+    packaging = next.details?.packaging || '';
+    showDetails = Boolean(variety || grade || packaging);
+    saveDraft();
+  }));
+
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     const validation = validateHarvestInput({
@@ -185,19 +200,19 @@
     </div>
   {/if}
 
-  <fieldset bind:this={cropGroupEl} tabindex="-1" class="min-w-0" aria-describedby={errors.crop ? 'crop-error' : undefined}>
+  <fieldset id="harvest-crop" bind:this={cropGroupEl} tabindex="-1" class="min-w-0" aria-describedby={errors.crop ? 'crop-error' : undefined}>
     <legend class="text-sm font-bold text-[#20251E]">{t('cropLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></legend>
     <p class="mt-1 text-xs text-[#4A5245]">{lang === 'fil' ? 'Pumili ng pananim na aalamin para sa market fit.' : 'Choose the crop you want to check for market fit.'}</p>
     <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
       {#each SUPPORTED_CROPS as item}
         <label class="group relative cursor-pointer">
           <input class="peer sr-only" type="radio" name="crop" value={item.key} bind:group={cropChoice} />
-          <span class="flex min-h-14 items-center justify-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-center text-sm font-semibold text-[#20251E] transition-all group-hover:border-[#597928] peer-checked:border-[#597928] peer-checked:bg-[#597928] peer-checked:text-[#FFFDF8] peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#597928]">{lang === 'fil' ? item.labelFil : item.labelEn}</span>
+          <span class="flex min-h-14 items-center justify-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-center text-sm font-semibold text-[#20251E] transition-all group-hover:border-[#597928] peer-checked:border-[#597928] peer-checked:bg-[#486320] peer-checked:text-[#FFFDF8] peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#597928]">{lang === 'fil' ? item.labelFil : item.labelEn}</span>
         </label>
       {/each}
       <label class="group relative cursor-pointer">
         <input class="peer sr-only" type="radio" name="crop" value="other" bind:group={cropChoice} />
-        <span class="flex min-h-14 items-center justify-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-center text-sm font-semibold text-[#20251E] transition-all group-hover:border-[#597928] peer-checked:border-[#597928] peer-checked:bg-[#597928] peer-checked:text-[#FFFDF8] peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#597928]">{lang === 'fil' ? 'Ibang ani' : 'Other crop'}</span>
+        <span class="flex min-h-14 items-center justify-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-center text-sm font-semibold text-[#20251E] transition-all group-hover:border-[#597928] peer-checked:border-[#597928] peer-checked:bg-[#486320] peer-checked:text-[#FFFDF8] peer-focus-visible:outline peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#597928]">{lang === 'fil' ? 'Ibang ani' : 'Other crop'}</span>
       </label>
     </div>
     {#if cropChoice === 'other'}
@@ -256,7 +271,7 @@
     {/if}
   </div>
 
-  <button type="submit" class="flex min-h-14 w-full items-center justify-center gap-3 rounded-lg bg-[#597928] px-6 py-3 text-base font-bold text-[#FFFDF8] shadow-[0_14px_28px_-18px_rgba(32,37,30,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[#486320] focus-visible:ring-4 focus-visible:ring-[#597928]/30 active:translate-y-0">
+  <button type="submit" class="flex min-h-14 w-full items-center justify-center gap-3 rounded-lg bg-[#486320] px-6 py-3 text-base font-bold text-[#FFFDF8] shadow-[0_14px_28px_-18px_rgba(32,37,30,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[#3A5219] focus-visible:ring-4 focus-visible:ring-[#597928]/30 active:translate-y-0">
     <span>{t('findPlacesAction', lang)}</span>
     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
   </button>

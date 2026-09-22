@@ -133,7 +133,7 @@
               ? (isFil ? 'Baguhin ang Alok' : 'Edit Buying Offer')
               : (isFil ? 'Gumawa ng Bagong Alok' : 'Create Buying Offer')}
           </h2>
-          <p class="text-xs text-[#6B7265] mt-0.5">
+          <p class="text-xs text-[#596052] mt-0.5">
             {isFil
               ? 'Naka-save sa device na ito lamang para sa demonstrasyon.'
               : 'Saved on this device only for hackathon demonstration.'}
@@ -142,7 +142,7 @@
         <button
           type="button"
           onclick={onClose}
-          class="w-9 h-9 flex items-center justify-center rounded-lg text-[#6B7265] hover:text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors"
+          class="w-9 h-9 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors"
           aria-label={isFil ? 'Isara' : 'Close dialog'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@
                 onclick={() => { cropKey = crop.key; }}
                 class={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center flex flex-col items-center gap-1 min-h-[44px] justify-center ${
                   cropKey === crop.key
-                    ? 'border-[#597928] bg-[#597928]/10 text-[#597928] ring-2 ring-[#597928]'
+                    ? 'border-[#597928] bg-[#597928]/10 text-[#486320] ring-2 ring-[#597928]'
                     : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/50'
                 }`}
               >
@@ -177,7 +177,7 @@
               onclick={() => { cropKey = 'other'; }}
               class={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center flex flex-col items-center gap-1 min-h-[44px] justify-center ${
                 cropKey === 'other'
-                  ? 'border-[#597928] bg-[#597928]/10 text-[#597928] ring-2 ring-[#597928]'
+                  ? 'border-[#597928] bg-[#597928]/10 text-[#486320] ring-2 ring-[#597928]'
                   : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/50'
               }`}
             >
@@ -216,7 +216,7 @@
                 class="w-full px-3.5 py-2.5 pr-10 text-sm font-semibold bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
                 required
               />
-              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6B7265]">
+              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#596052]">
                 kg
               </span>
             </div>
@@ -229,12 +229,12 @@
           <div>
             <label for="offer-price" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
               {isFil ? 'Alok na Presyo (PHP/kg)' : 'Buying Price (PHP/kg)'}
-              <span class="text-[10px] font-normal text-[#6B7265] lowercase">
+              <span class="text-[10px] font-normal text-[#596052] lowercase">
                 ({isFil ? 'opsyonal' : 'optional'})
               </span>
             </label>
             <div class="relative">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6B7265]">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#596052]">
                 ₱
               </span>
               <input
@@ -275,7 +275,7 @@
                 class="sr-only"
               />
               <span class="text-xs font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
-              <span class="text-[10px] opacity-75">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
+              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
             </label>
 
             <!-- In Review -->
@@ -294,7 +294,7 @@
                 class="sr-only"
               />
               <span class="text-xs font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
-              <span class="text-[10px] opacity-75">{isFil ? 'Sample workflow' : 'Sample workflow'}</span>
+              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Sample workflow' : 'Sample workflow'}</span>
             </label>
 
             <!-- Draft -->
@@ -313,7 +313,7 @@
                 class="sr-only"
               />
               <span class="text-xs font-bold">{isFil ? 'Burador' : 'Draft'}</span>
-              <span class="text-[10px] opacity-75">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
+              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
             </label>
           </div>
         </div>

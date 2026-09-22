@@ -27,7 +27,10 @@ export function comparisonPath(places: string[]): string {
 }
 
 export async function clearClientState(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+  // Clear once for test isolation. An init script would clear local state again
+  // on every in-test navigation and invalidate save/compare persistence tests.
+  await page.goto('/');
+  await page.evaluate(() => {
     window.localStorage.clear();
     window.sessionStorage.clear();
   });
@@ -62,9 +65,7 @@ export function outletCard(page: Page, outletName: string): Locator {
 }
 
 export function metricRow(table: Locator, metric: string): Locator {
-  return table.getByRole('row').filter({
-    has: table.getByRole('rowheader', { name: metric, exact: true }),
-  });
+  return table.getByRole('rowheader', { name: metric, exact: true }).locator('..');
 }
 
 export async function expectNoPageOverflow(page: Page): Promise<void> {

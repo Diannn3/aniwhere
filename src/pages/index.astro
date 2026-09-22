@@ -16,10 +16,10 @@ const isFil = lang === 'fil';
     <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] lg:gap-12">
       <section class="min-w-0">
         <div class="max-w-2xl">
-          <h1 class="max-w-[12ch] text-5xl font-bold leading-[0.98] tracking-[-0.035em] text-[#20251E] sm:text-6xl lg:text-7xl">
+          <h1 class="max-w-[12ch] text-5xl font-bold leading-[0.98] tracking-[-0.035em] text-[#20251E] sm:text-6xl lg:text-7xl" data-i18n-en="Where can your harvest go?" data-i18n-fil="Saan maaaring pumunta ang ani mo?">
             {isFil ? 'Saan maaaring pumunta ang ani mo?' : 'Where can your harvest go?'}
           </h1>
-          <p class="mt-5 max-w-xl text-lg leading-relaxed text-[#4A5245] sm:text-xl">
+          <p class="mt-5 max-w-xl text-lg leading-relaxed text-[#4A5245] sm:text-xl" data-i18n-en="Describe your harvest to see possible selling outlets, what each can accept, and what to confirm before you travel." data-i18n-fil="Ilagay ang ani mo para makita ang mga posibleng mapagbebentahan, ang kayang tanggapin ng bawat isa, at ang dapat kumpirmahin bago bumiyahe.">
             {isFil ? 'Ilagay ang ani mo para makita ang mga posibleng mapagbebentahan, ang kayang tanggapin ng bawat isa, at ang dapat kumpirmahin bago bumiyahe.' : 'Describe your harvest to see possible selling outlets, what each can accept, and what to confirm before you travel.'}
           </p>
         </div>
@@ -32,10 +32,10 @@ const isFil = lang === 'fil';
       <aside class="route-surface min-h-[30rem] rounded-2xl border border-[#20251E]/12 p-5 sm:p-7 lg:sticky lg:top-24 lg:min-h-[38rem]" aria-label={isFil ? 'Guhit ng ruta ng ani sa Laguna' : 'Illustrative harvest route in Laguna'}>
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{isFil ? 'Mula ani hanggang outlet' : 'From harvest to outlet'}</h2>
-            <p class="mt-2 max-w-sm text-sm leading-relaxed text-[#4A5245]">{isFil ? 'Ang mga ruta at lokasyon ay guhit lamang. Makikita ang aktuwal na fit at impormasyon sa susunod na screen.' : 'Routes and locations are illustrative. The next screen shows the actual fit and evidence for each outlet.'}</p>
+            <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl" data-i18n-en="From harvest to outlet" data-i18n-fil="Mula ani hanggang outlet">{isFil ? 'Mula ani hanggang outlet' : 'From harvest to outlet'}</h2>
+            <p class="mt-2 max-w-sm text-sm leading-relaxed text-[#4A5245]" data-i18n-en="Routes and locations are illustrative. The next screen shows the actual fit and evidence for each outlet." data-i18n-fil="Ang mga ruta at lokasyon ay guhit lamang. Makikita ang aktuwal na fit at impormasyon sa susunod na screen.">{isFil ? 'Ang mga ruta at lokasyon ay guhit lamang. Makikita ang aktuwal na fit at impormasyon sa susunod na screen.' : 'Routes and locations are illustrative. The next screen shows the actual fit and evidence for each outlet.'}</p>
           </div>
-          <span class="documentary-label shrink-0">{isFil ? 'Guhit-mapa' : 'Illustrative map'}</span>
+          <span class="documentary-label shrink-0" data-i18n-en="Illustrative map" data-i18n-fil="Guhit-mapa">{isFil ? 'Guhit-mapa' : 'Illustrative map'}</span>
         </div>
 
         <div class="mt-8 border-y border-[#20251E]/12 py-6 sm:mt-10 sm:py-8">
@@ -76,7 +76,7 @@ const isFil = lang === 'fil';
           <div><dt class="documentary-label">{isFil ? 'Bago umalis' : 'Before travel'}</dt><dd class="mt-1 font-semibold text-[#20251E]">{isFil ? 'Kumpirmahin' : 'Confirm'}</dd></div>
         </dl>
 
-        <p class="mt-8 border-t border-[#20251E]/12 pt-5 text-xs leading-relaxed text-[#4A5245]">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon. Hindi nito ginagarantiyahan ang pagbili o pagreserba ng kapasidad.' : 'AniWhere helps prepare a decision. It does not guarantee a purchase or reserve capacity.'}</p>
+        <p class="mt-8 border-t border-[#20251E]/12 pt-5 text-xs leading-relaxed text-[#4A5245]" data-i18n-en="AniWhere helps prepare a decision. It does not guarantee a purchase or reserve capacity." data-i18n-fil="Ang AniWhere ay tumutulong maghanda ng desisyon. Hindi nito ginagarantiyahan ang pagbili o pagreserba ng kapasidad.">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon. Hindi nito ginagarantiyahan ang pagbili o pagreserba ng kapasidad.' : 'AniWhere helps prepare a decision. It does not guarantee a purchase or reserve capacity.'}</p>
       </aside>
     </div>
   </div>

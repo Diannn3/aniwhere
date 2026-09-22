@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -37,6 +38,10 @@
       lang = parsed.lang;
     }
   });
+
+  onMount(() => subscribeHarvestContext((next) => {
+    harvest = next;
+  }));
 
   const originMun = $derived(
     LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]
@@ -126,7 +131,7 @@
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
       <a
         href={backUrl}
-        class="inline-flex items-center gap-1.5 font-semibold text-[#597928] hover:text-[#435c1d] transition-colors py-1 px-2 rounded-lg hover:bg-[#597928]/10"
+        class="inline-flex items-center gap-1.5 font-semibold text-[#486320] hover:text-[#435c1d] transition-colors py-1 px-2 rounded-lg hover:bg-[#486320]/10"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -134,7 +139,7 @@
         <span>{isFil ? 'Bumalik sa resulta' : 'Back to discovery results'}</span>
       </a>
       <span class="text-[#20251E]/20">/</span>
-      <span class="hidden sm:inline text-xs text-[#6B7265]">{originMun.name}</span>
+      <span class="hidden sm:inline text-xs text-[#596052]">{originMun.name}</span>
       <span class="hidden sm:inline text-[#20251E]/20">/</span>
       <span class="text-xs font-medium text-[#20251E] truncate max-w-[200px]">{outlet.name}</span>
     </div>
@@ -146,7 +151,7 @@
         onclick={handleToggleSave}
         class={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all min-h-[44px] ${
           saved
-            ? 'bg-[#597928] text-white border-[#597928] shadow-sm'
+            ? 'bg-[#486320] text-white border-[#597928] shadow-sm'
             : 'bg-white text-[#20251E] border-[#20251E]/20 hover:border-[#597928]'
         }`}
         aria-label={saved ? 'Saved on this device' : 'Save outlet'}
@@ -161,7 +166,7 @@
         href={compareUrl}
         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-[#20251E] border border-[#20251E]/20 hover:border-[#597928] transition-all min-h-[44px]"
       >
-        <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-[#486320]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
         <span>{isFil ? 'Ihambing' : 'Compare'}</span>
@@ -189,7 +194,7 @@
           <span class="text-[#20251E]/20">&bull;</span>
           <span class="capitalize font-medium text-[#20251E]">{outlet.category}</span>
           <span class="text-[#20251E]/20">&bull;</span>
-          <span class="text-xs bg-[#597928]/10 text-[#597928] px-2.5 py-0.5 rounded-full font-medium">
+          <span class="text-xs bg-[#486320]/10 text-[#486320] px-2.5 py-0.5 rounded-full font-medium">
             {distanceKm} km from {originMun.name}
           </span>
         </div>
@@ -204,7 +209,7 @@
         <div
           class={`rounded-xl p-4 border flex flex-col gap-1.5 sm:min-w-[260px] ${
             fitResult.status === 'match'
-              ? 'bg-[#597928]/8 border-[#597928]/25 text-[#20251E]'
+              ? 'bg-[#486320]/8 border-[#597928]/25 text-[#20251E]'
               : fitResult.status === 'partial'
               ? 'bg-[#FCECD8]/50 border-[#6E3511]/25 text-[#20251E]'
               : fitResult.status === 'confirm'
@@ -227,14 +232,14 @@
     <!-- Facility Attributes Tray -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
       <div class="flex items-center gap-2.5 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/6">
-        <div class="w-8 h-8 rounded-lg bg-[#597928]/10 text-[#597928] flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-[#486320]/10 text-[#486320] flex items-center justify-center flex-shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         </div>
         <div>
           <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Uri ng Ebidensya' : 'Evidence Type'}</div>
-          <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
+          <div class="text-[11px] text-[#596052]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
         </div>
       </div>
 
@@ -246,7 +251,7 @@
         </div>
         <div>
           <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'Huling Update' : 'Last Updated'}</div>
-          <div class="text-[11px] text-[#6B7265]">{fitResult.dataUpdatedAt ? formatEvidenceDate(fitResult.dataUpdatedAt) : outlet.sampleOfferDate}</div>
+          <div class="text-[11px] text-[#596052]">{fitResult.dataUpdatedAt ? formatEvidenceDate(fitResult.dataUpdatedAt) : outlet.sampleOfferDate}</div>
         </div>
       </div>
 
@@ -258,7 +263,7 @@
         </div>
         <div>
           <div class="text-xs font-semibold text-[#20251E]">{isFil ? 'May Bisa Hanggang' : 'Valid Until'}</div>
-          <div class="text-[11px] text-[#6B7265]">{fitResult.dataValidUntil ? formatEvidenceDate(fitResult.dataValidUntil) : (isFil ? 'Walang expiry na nakatala' : 'No expiry recorded')}</div>
+          <div class="text-[11px] text-[#596052]">{fitResult.dataValidUntil ? formatEvidenceDate(fitResult.dataValidUntil) : (isFil ? 'Walang expiry na nakatala' : 'No expiry recorded')}</div>
         </div>
       </div>
     </div>
@@ -268,7 +273,7 @@
   <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
     <div class="flex items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-[#597928]/12 text-[#597928] flex items-center justify-center">
+        <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
@@ -278,7 +283,7 @@
         </h2>
       </div>
 
-      <span class="text-xs text-[#6B7265] bg-[#FCECD8]/60 text-[#6E3511] font-semibold px-2.5 py-1 rounded-full">
+      <span class="text-xs text-[#596052] bg-[#FCECD8]/60 text-[#6E3511] font-semibold px-2.5 py-1 rounded-full">
         {harvest.quantityKg} kg {harvest.crop}
       </span>
     </div>
@@ -287,22 +292,22 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       <!-- 1. Your Produce -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+        <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {isFil ? 'Ani Mo' : 'Your Produce'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E] capitalize">{harvest.crop}</div>
-        <div class="text-[11px] text-[#6B7265]">Ready {harvest.readyDate}</div>
+        <div class="text-[11px] text-[#596052]">Ready {harvest.readyDate}</div>
       </div>
 
       <!-- 2. Accepted Quantity -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+        <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {isFil ? 'Kayang Tanggapin' : 'Accepted'}
         </div>
-        <div class="text-base sm:text-lg font-bold text-[#597928]">
+        <div class="text-base sm:text-lg font-bold text-[#486320]">
           {fitResult.acceptedKg !== null ? `${fitResult.acceptedKg} kg` : 'Confirm'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">
+        <div class="text-[11px] text-[#596052]">
           {fitResult.remainingKg && fitResult.remainingKg > 0
             ? `${fitResult.remainingKg} kg unallocated`
             : 'Full harvest match'}
@@ -311,24 +316,24 @@
 
       <!-- 3. Sample Price -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+        <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {priceLabel}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
           {fitResult.samplePricePerKg !== null ? `₱${fitResult.samplePricePerKg}/kg` : 'Not posted'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
+        <div class="text-[11px] text-[#596052]">{fitResult.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</div>
       </div>
 
       <!-- 4. Gross Subtotal -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+        <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {isFil ? 'Kabuuang Halaga' : 'Gross Subtotal'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#20251E]">
           {fitResult.grossPay !== null ? `₱${fitResult.grossPay.toLocaleString()}` : '---'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">
+        <div class="text-[11px] text-[#596052]">
           {fitResult.acceptedKg && fitResult.samplePricePerKg
             ? `${fitResult.acceptedKg}kg × ₱${fitResult.samplePricePerKg}`
             : 'Pending intake'}
@@ -337,21 +342,21 @@
 
       <!-- 5. Entered Transport -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-        <div class="text-[11px] font-medium text-[#6B7265] uppercase tracking-wider">
+        <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {isFil ? 'Gastos sa Biyahe' : 'Hauling Expense'}
         </div>
         <div class="text-base sm:text-lg font-bold text-[#6E3511]">
           {fitResult.enteredTransport !== null ? `-₱${fitResult.enteredTransport.toLocaleString()}` : '---'}
         </div>
-        <div class="text-[11px] text-[#6B7265]">Entered default</div>
+        <div class="text-[11px] text-[#596052]">Entered default</div>
       </div>
 
       <!-- 6. After Entered Transport -->
-      <div class="p-3.5 rounded-xl bg-[#597928]/8 border border-[#597928]/30 space-y-1">
-        <div class="text-[11px] font-semibold text-[#597928] uppercase tracking-wider">
+      <div class="p-3.5 rounded-xl bg-[#486320]/8 border border-[#597928]/30 space-y-1">
+        <div class="text-[11px] font-semibold text-[#486320] uppercase tracking-wider">
           {isFil ? 'Matapos ang Biyahe' : 'After Transport'}
         </div>
-        <div class="text-base sm:text-lg font-bold text-[#597928]">
+        <div class="text-base sm:text-lg font-bold text-[#486320]">
           {fitResult.afterTransportPay !== null ? `₱${fitResult.afterTransportPay.toLocaleString()}` : '---'}
         </div>
         <div class="text-[11px] text-[#4A5245]">Before farm costs</div>
@@ -390,7 +395,7 @@
         </div>
       {/if}
 
-      <p class="text-xs text-[#6B7265]">
+      <p class="text-xs text-[#596052]">
         {isFil
           ? 'Huwag bumiyahe nang hindi pa nakukumpirma ang mga sumusunod na tanong sa mamimili:'
           : 'Do not travel without confirming these key operational questions with the intake manager:'}
@@ -398,15 +403,15 @@
 
       <ul class="space-y-3">
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
-          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
           <span>What grade and ripeness standard do you require for {harvest.crop}?</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
-          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
           <span>What packaging or crate specification is required at delivery?</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
-          <span class="w-5 h-5 rounded-full bg-[#597928]/15 text-[#597928] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
+          <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
           <span>What are the exact receiving hours and gate cutoffs on {harvest.readyDate}?</span>
         </li>
 
@@ -455,7 +460,7 @@
         />
       </div>
 
-      <div class="flex items-center justify-between text-xs text-[#6B7265] pt-1">
+      <div class="flex items-center justify-between text-xs text-[#596052] pt-1">
         <span>Origin: <strong>{originMun.name}</strong></span>
         <span>Distance: <strong>{distanceKm} km</strong></span>
         <span>Destination: <strong>{outlet.municipality}</strong></span>
@@ -466,7 +471,7 @@
   <!-- Contact & Next Steps Action Dock -->
   <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
     <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
-      <div class="w-8 h-8 rounded-lg bg-[#597928]/12 text-[#597928] flex items-center justify-center">
+      <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
@@ -475,7 +480,7 @@
         <h2 class="text-xl font-serif font-bold text-[#20251E]">
           {isFil ? 'Pakikipag-ugnayan at Susunod na Hakbang' : 'Contact & Next Steps'}
         </h2>
-        <p class="text-xs text-[#6B7265]">
+        <p class="text-xs text-[#596052]">
           {isFil
             ? 'Kumpirmahin ang mga detalye bago bumiyahe. Maaaring magbago ang presyo at kapasidad.'
             : 'Confirm terms before travel. Availability, price, and requirements may change.'}
@@ -489,7 +494,7 @@
       <button
         type="button"
         onclick={() => (showMessageModal = true)}
-        class="w-full min-h-[48px] px-5 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#47621f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+        class="w-full min-h-[48px] px-5 py-3 rounded-full bg-[#486320] text-white font-semibold text-sm hover:bg-[#47621f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -503,7 +508,7 @@
         onclick={() => (showContactModal = true)}
         class="w-full min-h-[48px] px-5 py-3 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] font-semibold text-sm hover:bg-[#FFFDF8] hover:border-[#597928] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
       >
-        <svg class="w-4 h-4 text-[#597928]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-[#486320]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
         </svg>
         <span>
@@ -526,7 +531,7 @@
     </div>
 
     <!-- Provenance / Timestamp Attribution Footer -->
-    <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#6B7265]">
+    <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#596052]">
       <div>
         Source: <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || 'Source unknown'} &bull; {outlet.sampleOfferDate}</span>
       </div>
@@ -583,7 +588,7 @@
         <button
           type="button"
           onclick={handleCopyMessage}
-          class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#597928] text-white hover:bg-[#435c1d] transition-all flex items-center gap-1.5 min-h-[44px]"
+          class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#486320] text-white hover:bg-[#435c1d] transition-all flex items-center gap-1.5 min-h-[44px]"
         >
           {#if copiedMessage}
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -624,11 +629,11 @@
 
       <div class="space-y-3 text-xs sm:text-sm text-[#20251E]">
         <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
-          <div class="text-[11px] font-semibold text-[#6B7265] uppercase">
+          <div class="text-[11px] font-semibold text-[#596052] uppercase">
             {isFil ? 'Lokasyon ng tala' : 'Recorded location'}
           </div>
           <div class="font-bold">{outlet.municipality}, Laguna</div>
-          <div class="text-[11px] text-[#6B7265]">
+          <div class="text-[11px] text-[#596052]">
             {isFil
               ? 'Walang operating hours na ipinapalagay kung hindi ito beripikado.'
               : 'No operating hours are inferred unless they are verified.'}
@@ -637,7 +642,7 @@
 
         {#if hasVerifiedContact}
           <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-2">
-            <div class="text-[11px] font-semibold text-[#6B7265] uppercase">
+            <div class="text-[11px] font-semibold text-[#596052] uppercase">
               {isFil ? 'Beripikadong pampublikong kontak' : 'Verified public contact'}
             </div>
             {#if outlet.contactPhone}
@@ -664,7 +669,7 @@
         <button
           type="button"
           onclick={() => (showContactModal = false)}
-          class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#597928] text-white hover:bg-[#435c1d] transition-all min-h-[44px]"
+          class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#486320] text-white hover:bg-[#435c1d] transition-all min-h-[44px]"
         >
           Done
         </button>

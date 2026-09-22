@@ -28,7 +28,7 @@ tokens:
 :root {
   --color-text-primary: var(--field-ink);
   --color-text-secondary: #4A5245;
-  --color-text-muted: #6B7265;
+  --color-text-muted: #596052;
   --color-text-inverse: var(--warm-surface);
 
   --color-surface-base: var(--warm-surface);
@@ -123,3 +123,40 @@ The central visual anchor is the **Harvest Route**: transforming entered harvest
 6. **Illustrative Map**: Label all map views as `Illustrative map`. Never claim live GPS navigation or real-time traffic accuracy.
 7. **Zero Prompt Leakage**: Zero mention of `agent`, `prompt`, `seed`, `mock`, `anti-hallucination`, or internal architecture names in user-facing UI.
 8. **Accessible Touch Targets**: Minimum 44x44px clickable bounds on mobile. Real `<button>` and `<a>` elements only; zero `<div onClick>`.
+
+
+---
+
+## 7. Premium Interaction Layer (September 22)
+
+### Surface hierarchy
+Use three intentional levels rather than nested-card stacking:
+1. **Page plane** — Warm Surface.
+2. **Decision surface** — raised white/warm surface for Harvest Ticket, selected result, comparison.
+3. **Evidence inset** — Rice Cream/soft neutral for source, freshness, unknowns and confirmation.
+
+A container earns a border only when it groups a distinct decision or interaction.
+
+### Motion tokens
+```css
+--motion-instant: 80ms;
+--motion-micro: 140ms;
+--motion-ui: 220ms;
+--motion-gentle: 360ms;
+--ease-out: cubic-bezier(.2,.8,.2,1);
+--ease-settle: cubic-bezier(.16,1,.3,1);
+--travel-micro: 8px;
+--travel-sheet: 16px;
+```
+Motion explains continuity; it never gates input. Prefer opacity/transform. Reduced motion uses immediate/static state changes.
+
+### Ani character
+Canonical Ani is a cream/ivory rounded seed-like character with asymmetric dark-olive and young-green leaf canopy, warm brown eyes, white highlights, tiny warm cheek dots and small rounded hands. Ani is quiet, friendly and agricultural—not a robot, orb, sparkle, farmer caricature or purple AI brand.
+
+Semantic avatar states:
+`idle | attentive | listening | thinking | working | speaking | success | uncertain | error | offline`.
+
+Animation is derived from semantic state, not arbitrary props. Idle movement is rare and near-imperceptible. Listening must be visually explicit. Uncertain remains calm. Error never flashes. Reduced-motion uses static state changes.
+
+### Assistant placement
+Ani is contextual, not a permanent navigation destination. Desktop uses a compact trigger expanding into an integrated side/popover surface. Mobile uses an accessible floating trigger above the bottom navigation and safe area, opening a bottom sheet/near-full-height surface. Closed Ani is quiet and never covers primary actions.
