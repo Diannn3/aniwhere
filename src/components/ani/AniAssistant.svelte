@@ -8,6 +8,8 @@
   import { parseDiscoverQuery } from '../../lib/state/url-state';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import type { HarvestQuery } from '../../lib/domain/types';
+  import { getCropLabel } from '../../lib/domain/crops';
+  import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { CURRENT_DATA_MODE } from '../../lib/data/current-market';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
@@ -29,6 +31,12 @@
 
   const isFil = () => lang === 'fil';
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
+  const harvestSummary = () => {
+    if (!sharedHarvest) return '';
+    const origin = LAGUNA_MUNICIPALITIES.find((item) => item.id === sharedHarvest?.originMunicipality);
+    const crop = getCropLabel(sharedHarvest.crop, lang);
+    return `${sharedHarvest.quantityKg.toLocaleString('en-PH')} kg ${crop} · ${origin?.name ?? sharedHarvest.originMunicipality}`;
+  };
 
   onMount(() => {
     const parsed = parseDiscoverQuery(window.location.search);
@@ -222,6 +230,12 @@
       <div class="ani-transcript" aria-label={isFil() ? 'Usapan kay Ani' : 'Conversation with Ani'}>
         {#if messages.length === 0}
           <div class="ani-welcome">
+            {#if sharedHarvest}
+              <div class="harvest-context" aria-label={isFil() ? 'Kasalukuyang ani na ginagamit ni Ani' : 'Current harvest Ani is using'}>
+                <span>{isFil() ? 'Kasalukuyang ani' : 'Current harvest'}</span>
+                <strong>{harvestSummary()}</strong>
+              </div>
+            {/if}
             <p>{isFil() ? 'Matutulungan kitang ilagay ang ani, intindihin ang fit, at pumunta sa tamang bahagi ng AniWhere.' : 'I can help you enter a harvest, understand fit, and move through AniWhere.'}</p>
             <p class="trust-note">{isFil() ? 'Mag-type para tahimik na text reply. Gamitin ang mikropono kung gusto mong magsalita kay Ani.' : 'Type for a quiet text reply. Use the microphone when you want to speak with Ani.'}</p>
             <p class="trust-note">{isFil() ? 'Ang market fit ay kinukuwenta ng AniWhere, hindi ni Ani.' : 'Market fit is calculated by AniWhere, not by Ani.'}</p>
@@ -266,6 +280,9 @@
   .stop-audio { min-height:2.75rem; padding:0 .35rem; flex:0 0 auto; border:0; border-radius:.6rem; background:transparent; color:#5f3215; font-size:.72rem; font-weight:800; text-decoration:underline; text-underline-offset:3px; }
   .ani-transcript { flex:1; min-height:12rem; overflow:auto; padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
   .ani-welcome { margin:auto 0; padding:1rem; border-left:2px solid #91AC67; color:#343b31; line-height:1.55; } .ani-welcome p{margin:0}.ani-welcome .trust-note{margin-top:.7rem;font-size:.78rem;color:#687064}
+  .harvest-context { display:grid; gap:.12rem; margin:0 0 .85rem; padding:.65rem .72rem; border:1px solid rgba(89,121,40,.18); border-radius:.8rem; background:#F9FBF7; }
+  .harvest-context span { color:#687064; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .harvest-context strong { color:#20251E; font-size:.82rem; font-weight:750; }
   .message { max-width:88%; align-self:flex-start; padding:.72rem .82rem; border:1px solid rgba(32,37,30,.1); border-radius:1rem 1rem 1rem .3rem; background:#fff; } .message.farmer { align-self:flex-end; border-radius:1rem 1rem .3rem 1rem; background:#eef3e7; border-color:rgba(89,121,40,.16); } .message-role{display:block;margin-bottom:.2rem;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#687064}.message p{margin:0;font-size:.9rem;line-height:1.45}
   .ani-composer { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:.45rem; padding:.8rem; border-top:1px solid rgba(32,37,30,.1); background:#fff; } input { min-width:0; min-height:2.75rem; border:1px solid rgba(32,37,30,.14); border-radius:.85rem; background:#FFFDF8; padding:0 .8rem; color:#20251E; font-size:.9rem; } input::placeholder{color:#72796e}.mic-button svg,.send-button svg{width:1.15rem;height:1.15rem}.mic-button.listening{background:#FCECD8;border-color:#6E3511;color:#6E3511}.send-button{background:#597928;color:#FFFDF8;border-color:#597928}.send-button:disabled{opacity:.42}
   .ani-footnote { margin:0; padding:0 .9rem .85rem; font-size:.68rem; line-height:1.4; color:#6a7165; background:#fff; }
