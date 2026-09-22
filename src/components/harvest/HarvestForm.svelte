@@ -212,7 +212,7 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} oninput={saveAndShareDraft} onchange={saveAndShareDraft} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
+<form onsubmit={handleSubmit} oninput={() => queueMicrotask(saveAndShareDraft)} onchange={() => queueMicrotask(saveAndShareDraft)} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
   <div class="flex items-start justify-between gap-4 border-b quiet-rule pb-5">
     <div class="max-w-xl">
       <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
