@@ -7,7 +7,7 @@
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
-  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { parseCompareQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { t } from '../../content/translations';
@@ -20,22 +20,34 @@
   const { initialLang = 'en', initialPlaceIds = [] } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
-  let selectedIds = $state<string[]>(initialPlaceIds.slice(0, 3));
+  function normalizeSelectedIds(ids: string[]): string[] {
+    const knownIds = new Set(CURRENT_OUTLETS.map((outlet) => outlet.id));
+    const knownSlugs = new Map(CURRENT_OUTLETS.map((outlet) => [outlet.slug, outlet.id]));
+    return ids
+      .map((id) => knownIds.has(id) ? id : knownSlugs.get(id))
+      .filter((id): id is string => Boolean(id))
+      .filter((id, index, values) => values.indexOf(id) === index)
+      .slice(0, 3);
+  }
+
+  let selectedIds = $state<string[]>(normalizeSelectedIds(initialPlaceIds));
   let harvest = $state<HarvestQuery>({ crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: todayInManila() });
   let transportDrafts = $state<Record<string, string>>({});
   let transportAnnouncement = $state('');
 
   onMount(() => {
-    const parsed = parseDiscoverQuery(window.location.search);
+    const parsed = parseCompareQuery(window.location.search);
     harvest = parsed.harvest;
     lang = parsed.lang || lang;
-    const places = new URLSearchParams(window.location.search).get('places');
-    if (places !== null) {
-      selectedIds = places.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 3);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('places')) {
+      selectedIds = normalizeSelectedIds(parsed.placeIds);
       return;
     }
+
     const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
-    selectedIds = stored.slice(0, 3);
+    selectedIds = normalizeSelectedIds(stored);
   });
 
   onMount(() => subscribeHarvestContext((next) => {
