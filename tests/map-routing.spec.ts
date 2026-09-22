@@ -21,3 +21,14 @@ test('default build never invents road distance or drive time', async ({ page })
   await expect(page.getByText(/Road estimate/)).toHaveCount(0);
   await expect(page.getByText(/min drive/)).toHaveCount(0);
 });
+
+
+test('outlet detail labels municipality reference distance without implying exact farm routing', async ({ page }) => {
+  await page.goto(
+    '/places/demo-market?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en'
+  );
+
+  await expect(page.getByText(/Reference point:/).first()).toBeVisible();
+  await expect(page.getByText(/Los Baños municipality center/).first()).toBeVisible();
+  await expect(page.getByText('Road route unavailable.').first()).toBeVisible();
+});
