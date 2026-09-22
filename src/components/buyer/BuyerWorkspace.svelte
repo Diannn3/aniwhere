@@ -304,7 +304,7 @@
   </section>
 
   <!-- Main Offers Workspace Content -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     <!-- Toast Notification Banner -->
     {#if toastMessage}
       <div
@@ -717,7 +717,7 @@
         {isFil ? 'Ibalik sa orihinal na 3 halimbawang alok' : 'Reset to default sample offers (1 published, 1 in review, 1 draft)'}
       </button>
     </div>
-  </main>
+  </div>
 </div>
 
 <!-- Accessible Modal Dialog for Create/Edit -->
