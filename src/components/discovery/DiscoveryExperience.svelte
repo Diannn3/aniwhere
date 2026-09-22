@@ -118,6 +118,14 @@
     })
   );
 
+  const statusCounts = $derived({
+    all: processedOutlets.length,
+    match: processedOutlets.filter((item) => item.fit.status === 'match').length,
+    partial: processedOutlets.filter((item) => item.fit.status === 'partial').length,
+    confirm: processedOutlets.filter((item) => item.fit.status === 'confirm').length,
+    no_match: processedOutlets.filter((item) => item.fit.status === 'no_match').length,
+  });
+
   const distanceBasis = $derived(sharedDistanceBasis(processedOutlets.map((item) => item.route)));
 
   // Filter & Sort
@@ -356,7 +364,7 @@
               : 'border-[#20251E]/15 bg-[#FFFDF8] text-[#4A5245] hover:border-[#597928]/40'
           }`}
         >
-          {lang === 'fil' ? 'Lahat' : 'All'} ({processedOutlets.length})
+          {lang === 'fil' ? 'Lahat' : 'All'} ({statusCounts.all})
         </button>
 
         <button
@@ -368,7 +376,7 @@
               : 'border-[#91AC67]/40 bg-[#EAF3DE]/60 text-[#3B5B16] hover:border-[#597928]'
           }`}
         >
-          {lang === 'fil' ? 'Tugma' : 'Full match'}
+          {lang === 'fil' ? 'Tugma' : 'Full match'} ({statusCounts.match})
         </button>
 
         <button
@@ -380,7 +388,7 @@
               : 'border-[#E0A96D]/40 bg-[#FCECD8]/60 text-[#6E3511] hover:border-[#6E3511]'
           }`}
         >
-          {lang === 'fil' ? 'Bahagya' : 'Partial'}
+          {lang === 'fil' ? 'Bahagya' : 'Partial'} ({statusCounts.partial})
         </button>
 
         <button
@@ -392,7 +400,17 @@
               : 'border-[#4E7380]/40 bg-[#EBF2F5]/60 text-[#2A4B56] hover:border-[#4E7380]'
           }`}
         >
-          {lang === 'fil' ? 'Kumpirmahin' : 'Confirm'}
+          {lang === 'fil' ? 'Kumpirmahin' : 'Confirm'} ({statusCounts.confirm})
+        </button>
+
+        <button
+          type="button"
+          onclick={() => statusFilter = 'no_match'}
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${statusFilter === 'no_match'
+            ? 'border-[#20251E] bg-[#20251E] text-[#FFFDF8]'
+            : 'border-[#20251E]/20 bg-[#FFFDF8] text-[#4A5245] hover:border-[#20251E]/45'}`}
+        >
+          {lang === 'fil' ? 'Hindi tugma' : "Doesn't match"} ({statusCounts.no_match})
         </button>
       </div>
     </div>
