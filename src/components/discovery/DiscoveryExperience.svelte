@@ -562,6 +562,18 @@
     </div>
   </div>
 
+  {#if sortBy === 'distance'}
+    <p class="text-[11px] leading-relaxed text-[#596052]">
+      {distanceBasis === 'road'
+        ? (lang === 'fil'
+            ? 'Pare-parehong distansya sa kalsada ang gamit sa pag-aayos ng lahat ng lugar.'
+            : 'Every place is ranked using road distance on the same basis.')
+        : (lang === 'fil'
+            ? 'Tuwid na layo ang ginagamit para sa lahat ng lugar upang patas ang paghahambing. Hindi ito eksaktong haba ng biyahe.'
+            : 'Straight-line distance is used for every place so the comparison stays consistent. It is not the exact travel distance.')}
+    </p>
+  {/if}
+
   <!-- 3. Main Responsive 2-Column Split -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
     
@@ -643,9 +655,9 @@
                   <circle cx="12" cy="9" r="2.5" />
                 </svg>
                 <span>
-                  {item.route.source === 'road'
-                    ? `${item.route.roadDistanceKm?.toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
-                    : `${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na distansya' : 'straight-line'}`}
+                  {distanceBasis === 'road'
+                    ? `${distanceForBasis(item.route, distanceBasis).toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
+                    : `${distanceForBasis(item.route, distanceBasis).toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line'}`}
                 </span>
               </span>
             </div>
