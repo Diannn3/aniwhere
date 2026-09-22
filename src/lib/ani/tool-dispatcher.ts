@@ -45,21 +45,50 @@ function error(request: AniToolRequest, code: NonNullable<AniToolResult['error']
   return { requestId: request.id, tool: request.name, ok: false, dataMode: CURRENT_DATA_MODE, error: { code, message } };
 }
 
+const HARVEST_DETAIL_FIELDS = new Set(['variety', 'grade', 'packaging']);
+
+function parseHarvestDetails(value: unknown): HarvestQuery['details'] | null | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+
+  const raw = value as Record<string, unknown>;
+  if (Object.keys(raw).some((key) => !HARVEST_DETAIL_FIELDS.has(key))) return null;
+
+  const details: NonNullable<HarvestQuery['details']> = {};
+  for (const key of HARVEST_DETAIL_FIELDS) {
+    const field = raw[key];
+    if (field === undefined || field === '') continue;
+    if (typeof field !== 'string') return null;
+
+    const normalized = field.trim();
+    if (!normalized) continue;
+    if (normalized.length > 80) return null;
+    details[key as 'variety' | 'grade' | 'packaging'] = normalized;
+  }
+
+  return Object.keys(details).length ? details : undefined;
+}
+
 function parseHarvest(value: unknown): HarvestQuery | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const v = value as Record<string, unknown>;
+  const details = parseHarvestDetails(v.details);
+  if (details === null) return null;
+
   if (
     typeof v.crop !== 'string' || !v.crop.trim() ||
+    v.crop.trim().length > 80 ||
     typeof v.quantityKg !== 'number' || !Number.isFinite(v.quantityKg) || v.quantityKg <= 0 || v.quantityKg > 100000 ||
     typeof v.originMunicipality !== 'string' || !LAGUNA_MUNICIPALITIES.some((item) => item.id === v.originMunicipality) ||
     typeof v.readyDate !== 'string' || !isValidIsoDate(v.readyDate)
   ) return null;
+
   return {
     crop: v.crop.trim(),
     quantityKg: v.quantityKg,
     originMunicipality: v.originMunicipality,
     readyDate: v.readyDate,
-    ...(v.details && typeof v.details === 'object' ? { details: v.details as HarvestQuery['details'] } : {}),
+    ...(details ? { details } : {}),
   };
 }
 
