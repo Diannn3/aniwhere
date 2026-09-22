@@ -67,6 +67,19 @@ test('keeps Filipino selected while navigating home, discovery, and saved outlet
   await expect(page.locator('html')).toHaveAttribute('lang', 'fil');
 });
 
+test('cancels discovery harvest edits without leaving stale draft values', async ({ page }) => {
+  await page.goto(discoverPath);
+  const originalUrl = page.url();
+
+  await page.getByRole('button', { name: /edit harvest/i }).click();
+  await page.getByLabel(/quantity.*kg/i).fill('999');
+  await page.getByRole('button', { name: /cancel harvest edit/i }).click();
+
+  expect(page.url()).toBe(originalUrl);
+  await page.getByRole('button', { name: /edit harvest/i }).click();
+  await expect(page.getByLabel(/quantity.*kg/i)).toHaveValue('300');
+});
+
 test('keeps invalid discovery harvest edits from changing farmer results', async ({ page }) => {
   await page.goto(discoverPath);
   const originalUrl = page.url();
