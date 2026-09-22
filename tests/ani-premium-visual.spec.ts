@@ -161,3 +161,19 @@ test('Ani shared harvest state updates the real comparison surface', async ({ pa
 
   await expect(page.getByText('450 kg', { exact: true }).first()).toBeVisible();
 });
+
+
+test('Ani transport state updates the real comparison ledger', async ({ page }) => {
+  await page.goto(compare);
+  const transport = page.getByLabel(/Transport for Demo Processing Plant/i);
+  await expect(transport).toBeVisible();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent('aniwhere:transport-update', {
+      detail: { outletId: 'demo-processor', amount: 750 },
+    }));
+  });
+
+  await expect(transport).toHaveValue('750');
+  await expect(page.getByText(/Your edited transport amount/i).first()).toBeVisible();
+});
