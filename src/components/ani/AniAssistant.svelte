@@ -6,7 +6,10 @@
   import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
   import { AniActionExecutor } from '../../lib/ani/action-executor';
   import { parseDiscoverQuery } from '../../lib/state/url-state';
-  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import {
+    subscribeHarvestContext,
+    subscribeHarvestDraftValidity,
+  } from '../../lib/ani/harvest-sync';
   import type { HarvestQuery } from '../../lib/domain/types';
   import { getCropLabel } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
@@ -24,12 +27,16 @@
   let inputEl: HTMLInputElement | null = $state(null);
   let unsubscribe: (() => void) | undefined;
   let unsubscribeHarvest: (() => void) | undefined;
+  let unsubscribeHarvestValidity: (() => void) | undefined;
   let sharedHarvest = $state<HarvestQuery | null>(null);
+  let harvestDraftValid = $state(true);
+  let onHome = $state(false);
   let provider: AniProvider | undefined;
   const dispatcher = new AniToolDispatcher();
   const actionExecutor = new AniActionExecutor();
 
   const isFil = () => lang === 'fil';
+  const homeNeedsValidDraft = () => onHome && !harvestDraftValid;
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
   const harvestSummary = () => {
     if (!sharedHarvest) return '';
@@ -41,9 +48,18 @@
   onMount(() => {
     const parsed = parseDiscoverQuery(window.location.search);
     lang = parsed.lang;
+    onHome = window.location.pathname === '/';
     sharedHarvest = parsed.harvest;
     unsubscribeHarvest = subscribeHarvestContext((next) => {
       sharedHarvest = next;
+    });
+    unsubscribeHarvestValidity = subscribeHarvestDraftValidity((isValid) => {
+      harvestDraftValid = isValid;
+      if (!isValid && onHome && open) {
+        notice = isFil()
+          ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
+          : 'Complete the required harvest fields before Ani checks market fit.';
+      }
     });
 
     const handleWindowKeydown = (event: KeyboardEvent) => {
@@ -62,6 +78,7 @@
       setBackgroundInert(false);
       unsubscribe?.();
       unsubscribeHarvest?.();
+      unsubscribeHarvestValidity?.();
       void provider?.close();
     };
   });
@@ -87,6 +104,25 @@
 
   async function handleToolRequest(request: AniToolRequest) {
     if (!provider) return;
+    if (homeNeedsValidDraft()) {
+      status = 'ready';
+      notice = isFil()
+        ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
+        : 'Complete the required harvest fields before Ani checks market fit.';
+      await provider.submitToolResult?.({
+        requestId: request.id,
+        tool: request.name,
+        ok: false,
+        dataMode: CURRENT_DATA_MODE,
+        error: {
+          code: 'invalid_arguments',
+          message: isFil()
+            ? 'Hindi pa valid ang kasalukuyang harvest form.'
+            : 'The current harvest form is not valid yet.',
+        },
+      });
+      return;
+    }
     status = 'working';
     notice = isFil() ? 'Sinusuri ng AniWhere ang datos…' : 'AniWhere is checking the data…';
     const harvest = currentHarvest();
@@ -158,6 +194,13 @@
   async function submit() {
     const text = input.trim();
     if (!text || !provider || status === 'offline' || status === 'error') return;
+    if (homeNeedsValidDraft()) {
+      notice = isFil()
+        ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
+        : 'Complete the required harvest fields before Ani checks market fit.';
+      inputEl?.focus();
+      return;
+    }
     messages = [...messages, { id: `farmer-${Date.now()}`, role: 'farmer', text, createdAt: Date.now() }];
     input = '';
     try { await provider.sendText(text); }
@@ -168,6 +211,13 @@
   }
 
   async function requestMic() {
+    if (homeNeedsValidDraft()) {
+      notice = isFil()
+        ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago gamitin si Ani.'
+        : 'Complete the required harvest fields before using Ani.';
+      inputEl?.focus();
+      return;
+    }
     notice = isFil() ? 'Humihingi ng pahintulot sa mikropono.' : 'Requesting microphone permission.';
     if (!provider?.startListening) {
       notice = isFil()
@@ -230,7 +280,16 @@
       <div class="ani-transcript" aria-label={isFil() ? 'Usapan kay Ani' : 'Conversation with Ani'}>
         {#if messages.length === 0}
           <div class="ani-welcome">
-            {#if sharedHarvest}
+            {#if homeNeedsValidDraft()}
+              <div class="harvest-context is-invalid" role="status">
+                <span>{isFil() ? 'Kailangan munang ayusin' : 'Harvest details needed'}</span>
+                <strong>
+                  {isFil()
+                    ? 'Kumpletuhin ang crop, dami, munisipalidad, at petsa bago mag-check ng market fit.'
+                    : 'Complete crop, quantity, municipality, and ready date before checking market fit.'}
+                </strong>
+              </div>
+            {:else if sharedHarvest}
               <div class="harvest-context" aria-label={isFil() ? 'Kasalukuyang ani na ginagamit ni Ani' : 'Current harvest Ani is using'}>
                 <span>{isFil() ? 'Kasalukuyang ani' : 'Current harvest'}</span>
                 <strong>{harvestSummary()}</strong>
@@ -252,14 +311,21 @@
 
       <form class="ani-composer" onsubmit={(e) => { e.preventDefault(); void submit(); }}>
         <label class="sr-only" for="ani-input">{isFil() ? 'Mensahe kay Ani' : 'Message Ani'}</label>
-        <input bind:this={inputEl} id="ani-input" bind:value={input} type="text" autocomplete="off" placeholder={isFil() ? 'hal. May 300 kg akong kamatis…' : 'e.g. I have 300 kg of tomatoes…'} disabled={status === 'offline'} />
-        <button type="button" class:listening={status === 'listening'} class="mic-button" aria-pressed={status === 'listening'} aria-label={status === 'listening' ? (isFil() ? 'Huminto sa pakikinig' : 'Stop listening') : (isFil() ? 'Gamitin ang mikropono' : 'Use microphone')} onclick={() => status === 'listening' ? void stopListening() : void requestMic()}>
+        <input bind:this={inputEl} id="ani-input" bind:value={input} type="text" autocomplete="off" placeholder={isFil() ? 'hal. May 300 kg akong kamatis…' : 'e.g. I have 300 kg of tomatoes…'} disabled={status === 'offline'} aria-describedby={homeNeedsValidDraft() ? 'ani-draft-warning' : undefined} />
+        <button type="button" class:listening={status === 'listening'} class="mic-button" disabled={status === 'offline' || homeNeedsValidDraft()} aria-pressed={status === 'listening'} aria-label={status === 'listening' ? (isFil() ? 'Huminto sa pakikinig' : 'Stop listening') : (isFil() ? 'Gamitin ang mikropono' : 'Use microphone')} onclick={() => status === 'listening' ? void stopListening() : void requestMic()}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
-        <button type="submit" class="send-button" disabled={!input.trim() || status === 'offline'} aria-label={isFil() ? 'Ipadala' : 'Send'}>
+        <button type="submit" class="send-button" disabled={!input.trim() || status === 'offline' || homeNeedsValidDraft()} aria-label={isFil() ? 'Ipadala' : 'Send'}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4 12 15-7-4 14-3-6-8-1Z"/><path d="m12 13 7-8"/></svg>
         </button>
       </form>
+      {#if homeNeedsValidDraft()}
+        <p id="ani-draft-warning" class="ani-draft-warning" role="status">
+          {isFil()
+            ? 'Ayusin muna ang harvest form sa likod bago magtanong kay Ani tungkol sa market fit.'
+            : 'Fix the harvest form first before asking Ani to check market fit.'}
+        </p>
+      {/if}
       <p class="ani-footnote">{CURRENT_DATA_MODE === 'demo' ? (isFil() ? 'Demo data ngayon. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Demo data for now. Confirm price, capacity, and receiving terms before travelling.') : (isFil() ? 'Kumpirmahin pa rin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.')}</p>
     </section>
     <button type="button" class="ani-scrim" aria-label={isFil() ? 'Isara si Ani' : 'Close Ani'} onclick={closeAni}></button>
@@ -283,8 +349,11 @@
   .harvest-context { display:grid; gap:.12rem; margin:0 0 .85rem; padding:.65rem .72rem; border:1px solid rgba(89,121,40,.18); border-radius:.8rem; background:#F9FBF7; }
   .harvest-context span { color:#687064; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
   .harvest-context strong { color:#20251E; font-size:.82rem; font-weight:750; }
+  .harvest-context.is-invalid { border-color:rgba(110,53,17,.28); background:#FCECD8; }
+  .harvest-context.is-invalid span,.harvest-context.is-invalid strong { color:#6E3511; }
+  .ani-draft-warning { margin:0; padding:.55rem .9rem 0; color:#6E3511; background:#fff; font-size:.72rem; line-height:1.4; font-weight:650; }
   .message { max-width:88%; align-self:flex-start; padding:.72rem .82rem; border:1px solid rgba(32,37,30,.1); border-radius:1rem 1rem 1rem .3rem; background:#fff; } .message.farmer { align-self:flex-end; border-radius:1rem 1rem .3rem 1rem; background:#eef3e7; border-color:rgba(89,121,40,.16); } .message-role{display:block;margin-bottom:.2rem;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#687064}.message p{margin:0;font-size:.9rem;line-height:1.45}
-  .ani-composer { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:.45rem; padding:.8rem; border-top:1px solid rgba(32,37,30,.1); background:#fff; } input { min-width:0; min-height:2.75rem; border:1px solid rgba(32,37,30,.14); border-radius:.85rem; background:#FFFDF8; padding:0 .8rem; color:#20251E; font-size:.9rem; } input::placeholder{color:#72796e}.mic-button svg,.send-button svg{width:1.15rem;height:1.15rem}.mic-button.listening{background:#FCECD8;border-color:#6E3511;color:#6E3511}.send-button{background:#597928;color:#FFFDF8;border-color:#597928}.send-button:disabled{opacity:.42}
+  .ani-composer { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:.45rem; padding:.8rem; border-top:1px solid rgba(32,37,30,.1); background:#fff; } input { min-width:0; min-height:2.75rem; border:1px solid rgba(32,37,30,.14); border-radius:.85rem; background:#FFFDF8; padding:0 .8rem; color:#20251E; font-size:.9rem; } input::placeholder{color:#72796e}.mic-button svg,.send-button svg{width:1.15rem;height:1.15rem}.mic-button.listening{background:#FCECD8;border-color:#6E3511;color:#6E3511}.send-button{background:#597928;color:#FFFDF8;border-color:#597928}.mic-button:disabled,.send-button:disabled{opacity:.42;cursor:not-allowed}
   .ani-footnote { margin:0; padding:0 .9rem .85rem; font-size:.68rem; line-height:1.4; color:#6a7165; background:#fff; }
   .ani-scrim { position:fixed; z-index:1; inset:0; border:0; background:rgba(32,37,30,.12); backdrop-filter:blur(2px); animation:fade-in 220ms ease both; }
   @keyframes panel-in { from{opacity:0;transform:translateY(16px) scale(.985)} to{opacity:1;transform:none} } @keyframes fade-in{from{opacity:0}to{opacity:1}}
