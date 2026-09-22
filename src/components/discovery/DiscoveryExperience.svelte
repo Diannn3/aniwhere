@@ -170,6 +170,28 @@
     }
   }
 
+  function resetHarvestEditDraft() {
+    editCrop = harvest.crop;
+    editKg = harvest.quantityKg;
+    editOrigin = harvest.originMunicipality;
+    editReadyDate = harvest.readyDate || '';
+    editVariety = harvest.details?.variety || '';
+    editGrade = harvest.details?.grade || '';
+    editPackaging = harvest.details?.packaging || '';
+    editErrors = {};
+  }
+
+  function toggleHarvestEditor() {
+    if (!isEditingHarvest) {
+      resetHarvestEditDraft();
+      isEditingHarvest = true;
+      return;
+    }
+
+    resetHarvestEditDraft();
+    isEditingHarvest = false;
+  }
+
   function handleApplyHarvestEdit(e: SubmitEvent) {
     e.preventDefault();
 
@@ -290,15 +312,15 @@
       <!-- Edit harvest toggle button -->
       <button
         type="button"
-        onclick={() => isEditingHarvest = !isEditingHarvest}
-        aria-label={isEditingHarvest ? (lang === 'fil' ? 'Isara ang pag-edit ng ani' : 'Close harvest editor') : t('editHarvest', lang)}
+        onclick={toggleHarvestEditor}
+        aria-label={isEditingHarvest ? (lang === 'fil' ? 'Kanselahin ang pag-edit ng ani' : 'Cancel harvest edit') : t('editHarvest', lang)}
         class="premium-control inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        <span>{isEditingHarvest ? (lang === 'fil' ? 'Isara' : 'Close') : t('editHarvest', lang)}</span>
+        <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
     </div>
 
