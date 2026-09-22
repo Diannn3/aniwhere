@@ -18,6 +18,7 @@
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let savedIds = $state<string[]>([]);
+  let confirmClearAll = $state(false);
   let harvest = $state<HarvestQuery>({
     crop: 'tomato',
     quantityKg: 300,
@@ -54,8 +55,14 @@
   }
 
   function handleClearAll() {
+    if (!confirmClearAll) {
+      confirmClearAll = true;
+      return;
+    }
+
     savedIds.forEach((id) => toggleSavedOutlet(id));
     savedIds = [];
+    confirmClearAll = false;
   }
 
   const compareAllUrl = $derived(
@@ -76,14 +83,34 @@
     </div>
 
     {#if savedOutlets.length > 0}
-      <div class="flex items-center gap-3">
-        <button
-          type="button"
-          onclick={handleClearAll}
-          class="px-4 py-2 rounded-full text-xs font-semibold text-[#6E3511] hover:bg-[#6E3511]/10 transition-colors min-h-[44px]"
-        >
-          {isFil ? 'Alisin Lahat' : 'Clear all'}
-        </button>
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        {#if confirmClearAll}
+          <span class="text-xs font-semibold text-[#6E3511]">
+            {isFil ? 'Alisin lahat ng naka-save?' : 'Clear every saved place?'}
+          </span>
+          <button
+            type="button"
+            onclick={() => (confirmClearAll = false)}
+            class="min-h-11 rounded-full border border-[#20251E]/15 px-4 py-2 text-xs font-semibold text-[#4A5245] hover:bg-[#FCECD8]/40"
+          >
+            {isFil ? 'Kanselahin' : 'Cancel'}
+          </button>
+          <button
+            type="button"
+            onclick={handleClearAll}
+            class="min-h-11 rounded-full bg-[#6E3511] px-4 py-2 text-xs font-bold text-[#FFFDF8] hover:bg-[#5A2B0E]"
+          >
+            {isFil ? 'Oo, alisin lahat' : 'Yes, clear all'}
+          </button>
+        {:else}
+          <button
+            type="button"
+            onclick={handleClearAll}
+            class="min-h-11 rounded-full px-4 py-2 text-xs font-semibold text-[#6E3511] hover:bg-[#6E3511]/10 transition-colors"
+          >
+            {isFil ? 'Alisin lahat' : 'Clear all'}
+          </button>
+        {/if}
 
         <a
           href={compareAllUrl}
