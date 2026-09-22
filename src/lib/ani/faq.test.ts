@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ANI_FAQ_VERSION, ANI_FAQS, matchAniFaq, normalizeFaqQuery } from './faq';
+import { ANI_FAQ_VERSION, ANI_FAQS, faqsForRoute, matchAniFaq, normalizeFaqQuery } from './faq';
 
 describe('Ani local FAQ', () => {
   it('contains all 32 approved starter questions', () => {
@@ -47,6 +47,19 @@ describe('Ani local FAQ', () => {
     expect(price?.answer.en).toMatch(/expired offers are not active demand/i);
     expect(distance?.answer.en).toMatch(/municipality center.*not your exact farm/i);
     expect(offline?.answer.en).toMatch(/does not create fresh buyer demand/i);
+  });
+
+  it('keeps route-specific suggestions relevant while retaining global help', () => {
+    const saved = faqsForRoute('/saved').map((faq) => faq.id);
+    const place = faqsForRoute('/places/demo-market').map((faq) => faq.id);
+
+    expect(saved).toContain('saved-local');
+    expect(saved).toContain('what-is-aniwhere');
+    expect(saved).not.toContain('what-to-confirm');
+
+    expect(place).toContain('what-to-confirm');
+    expect(place).toContain('partial-match');
+    expect(place).not.toContain('saved-local');
   });
 
   it('normalizes accents and punctuation', () => {
