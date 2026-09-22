@@ -10,7 +10,12 @@
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
-  import { distanceForSorting, getOutletRouteEstimate, type OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import {
+    distanceForBasis,
+    getOutletRouteEstimate,
+    sharedDistanceBasis,
+    type OutletRouteEstimate,
+  } from '../../lib/routing/routing-matrix';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
@@ -115,6 +120,8 @@
     })
   );
 
+  const distanceBasis = $derived(sharedDistanceBasis(processedOutlets.map((item) => item.route)));
+
   // Filter & Sort
   const filteredOutlets = $derived<ProcessedOutlet[]>(
     processedOutlets
@@ -138,7 +145,7 @@
       })
       .sort((a, b) => {
         if (sortBy === 'distance') {
-          return distanceForSorting(a.route) - distanceForSorting(b.route);
+          return distanceForBasis(a.route, distanceBasis) - distanceForBasis(b.route, distanceBasis);
         }
         if (sortBy === 'price') {
           return (b.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY) - (a.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY);
@@ -153,7 +160,7 @@
         const rank = { match: 1, partial: 2, confirm: 3, no_match: 4 };
         const diff = rank[a.fit.status] - rank[b.fit.status];
         if (diff !== 0) return diff;
-        return distanceForSorting(a.route) - distanceForSorting(b.route);
+        return distanceForBasis(a.route, distanceBasis) - distanceForBasis(b.route, distanceBasis);
       })
   );
 
