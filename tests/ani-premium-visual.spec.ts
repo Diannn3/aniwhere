@@ -89,7 +89,7 @@ test('Ani follows Filipino URL language in the static build', async ({ page }) =
   await expect(page.getByText(/Preview lang — demo data ito\./i)).toBeVisible();
 });
 
-test('Ani microphone denial keeps text fallback visible', async ({ page }) => {
+test('Ani mock mode keeps text fallback visible when voice is unavailable', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,
@@ -99,7 +99,7 @@ test('Ani microphone denial keeps text fallback visible', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Ask Ani' }).click();
   await page.getByRole('button', { name: 'Use microphone' }).click();
-  await expect(page.getByText(/microphone could not be opened/i)).toBeVisible();
+  await expect(page.getByText(/Voice is unavailable here/i)).toBeVisible();
   await expect(page.getByLabel('Message Ani')).toBeVisible();
 });
 
@@ -186,5 +186,5 @@ test('Ani transport state updates the real comparison ledger', async ({ page }) 
   });
 
   await expect(transport).toHaveValue('750');
-  await expect(page.getByText(/Your edited transport amount/i).first()).toBeVisible();
+  await expect(page.getByRole('table', { name: /comparison ledger/i }).getByText(/Your edited transport amount/i)).toBeVisible();
 });
