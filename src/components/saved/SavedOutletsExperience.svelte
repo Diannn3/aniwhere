@@ -106,8 +106,8 @@
     <div>
       <span class="font-bold text-[#20251E]">{isFil ? 'Naka-save sa device na ito:' : 'Saved locally on this device:'}</span>
       {isFil
-        ? 'Ang mga lugar na ito ay naka-save sa iyong browser cache. Hindi ito nangangailangan ng account o internet login.'
-        : 'Outlets are saved in your local browser memory. No login or cloud sync is required.'}
+        ? 'Ang mga lugar na ito ay naka-save lang sa browser ng device na ito. Hindi ito reserbasyon at hindi nito kinokontak ang buyer.'
+        : 'Outlets are saved only in this device browser. Saving does not reserve capacity or contact the buyer.'}
     </div>
   </div>
 
@@ -172,7 +172,7 @@
               <button
                 type="button"
                 onclick={() => handleRemove(outlet.id)}
-                class="w-10 h-10 rounded-full flex items-center justify-center text-[#596052] hover:text-red-700 hover:bg-red-50 transition-colors min-h-[44px]"
+                class="h-11 min-h-11 min-w-11 rounded-full flex items-center justify-center text-[#596052] hover:text-red-700 hover:bg-red-50 transition-colors"
                 aria-label={isFil ? 'Alisin sa nai-save' : 'Remove from saved'}
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,35 +188,46 @@
                   {outlet.name}
                 </a>
               </h2>
-              <div class="flex items-center gap-2 text-xs text-[#4A5245] mt-1">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#4A5245] mt-1">
                 <span class="font-medium text-[#6E3511]">{outlet.municipality}, Laguna</span>
-                <span>&bull;</span>
+                <span aria-hidden="true">&bull;</span>
                 <span class="capitalize">{outlet.category}</span>
-                <span>&bull;</span>
-                <span>{dist} km away</span>
+              </div>
+              <p class="mt-1 text-[11px] text-[#596052]">
+                {isFil
+                  ? `${dist.toFixed(1)} km tuwid mula sa sentro ng ${originMun.name}`
+                  : `${dist.toFixed(1)} km straight-line from ${originMun.name} municipality center`}
+              </p>
+            </div>
+
+            <!-- Decision-first shortlist facts -->
+            <div class="rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 p-3.5 grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-[10px] font-semibold text-[#596052]">{isFil ? 'Kayang tanggapin' : 'Can accept'}</div>
+                <div class="mt-0.5 text-base font-bold text-[#20251E] font-tabular">
+                  {fit.acceptedKg !== null
+                    ? `${fit.acceptedKg.toLocaleString('en-PH')} kg`
+                    : (isFil ? 'Kumpirmahin' : 'Confirm')}
+                </div>
+              </div>
+              <div>
+                <div class="text-[10px] font-semibold text-[#596052]">{isFil ? 'Matitirang ani' : 'Harvest remaining'}</div>
+                <div class="mt-0.5 text-base font-bold text-[#20251E] font-tabular">
+                  {fit.remainingKg !== null
+                    ? `${fit.remainingKg.toLocaleString('en-PH')} kg`
+                    : (isFil ? 'Kumpirmahin' : 'Confirm')}
+                </div>
               </div>
             </div>
 
-            <!-- Transparent Math Ledger -->
-            <div class="rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 p-3.5 grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div class="text-[10px] uppercase font-semibold text-[#596052]">Sample Price</div>
-                <div class="text-sm font-bold text-[#20251E]">
-                  {fit.samplePricePerKg ? `₱${fit.samplePricePerKg}/kg` : '---'}
-                </div>
-              </div>
-              <div>
-                <div class="text-[10px] uppercase font-semibold text-[#596052]">Accepted</div>
-                <div class="text-sm font-bold text-[#486320]">
-                  {fit.acceptedKg !== null ? `${fit.acceptedKg} kg` : 'Confirm'}
-                </div>
-              </div>
-              <div>
-                <div class="text-[10px] uppercase font-semibold text-[#486320]">After Transport</div>
-                <div class="text-sm font-bold text-[#486320]">
-                  {fit.afterTransportPay ? `₱${fit.afterTransportPay.toLocaleString()}` : '---'}
-                </div>
-              </div>
+            <div class="rounded-lg bg-[#FAF7EE] px-3 py-2 text-[11px] leading-relaxed text-[#596052]">
+              <strong class="text-[#20251E]">{fit.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</strong>
+              {#if fit.unknowns.length > 0}
+                <span class="block mt-0.5">
+                  {isFil ? 'Kumpirmahin pa:' : 'Still confirm:'}
+                  {(isFil ? fit.unknownsFil : fit.unknowns).join(', ')}
+                </span>
+              {/if}
             </div>
           </div>
 
