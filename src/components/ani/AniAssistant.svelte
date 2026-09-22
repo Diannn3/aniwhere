@@ -222,7 +222,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4 12 15-7-4 14-3-6-8-1Z"/><path d="m12 13 7-8"/></svg>
         </button>
       </form>
-      <p class="ani-footnote">{isFil() ? 'Demo data ngayon. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Demo data for now. Confirm price, capacity, and receiving terms before travelling.'}</p>
+      <p class="ani-footnote">{CURRENT_DATA_MODE === 'demo' ? (isFil() ? 'Demo data ngayon. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Demo data for now. Confirm price, capacity, and receiving terms before travelling.') : (isFil() ? 'Kumpirmahin pa rin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.')}</p>
     </section>
     <button type="button" class="ani-scrim" aria-label={isFil() ? 'Isara si Ani' : 'Close Ani'} onclick={closeAni}></button>
   {/if}
