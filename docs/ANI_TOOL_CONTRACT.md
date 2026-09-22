@@ -23,6 +23,9 @@ Returns deterministic confirmation questions/unknowns from FitResult.
 ## set_or_update_transport_amount
 Accepts an explicit farmer-entered nonnegative amount. It may recalculate amount-after-transport when price/accepted quantity exist. It never calls that result profit.
 
+## get_route_estimate
+Input: one known outlet ID plus the authoritative current harvest origin. Uses AniWhere's routing layer, not model knowledge. The result always identifies the origin as a municipality-centroid reference point, carries straight-line distance, and includes road distance/time only when a reviewed routed artifact exists. Missing routing remains missing; no driving minutes are invented. Route facts never change market fit, accepted quantity, buyer demand, or transport expense.
+
 ## navigate_to
 Allowlist only: `/`, `/discover`, `/saved`, `/compare`, `/places/:known-slug`. Parameters pass existing serializers/validation.
 
