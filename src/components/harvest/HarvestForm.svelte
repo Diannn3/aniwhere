@@ -218,8 +218,13 @@
     {#if cropChoice === 'other'}
       <label class="mt-3 block">
         <span class="sr-only">{lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'}</span>
-        <input bind:this={otherCropInputEl} bind:value={otherCrop} type="text" autocomplete="off" placeholder={lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'} class={`min-h-12 w-full rounded-lg border bg-[#FFFDF8] px-3 text-base text-[#20251E] ${errors.crop ? 'border-[#6E3511]' : 'border-[#20251E]/15'} focus:border-[#597928] focus:outline-none focus:ring-2 focus:ring-[#597928]/25`} />
+        <input bind:this={otherCropInputEl} bind:value={otherCrop} type="text" maxlength="80" autocomplete="off" placeholder={lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'} class={`min-h-12 w-full rounded-lg border bg-[#FFFDF8] px-3 text-base text-[#20251E] ${errors.crop ? 'border-[#6E3511]' : 'border-[#20251E]/15'} focus:border-[#597928] focus:outline-none focus:ring-2 focus:ring-[#597928]/25`} />
       </label>
+      <p class="mt-2 text-xs leading-relaxed text-[#4A5245]">
+        {lang === 'fil'
+          ? 'Para sa ibang ani, hindi pa kumpleto ang detalyadong matching. Ang hindi tiyak na terms ay mananatiling “Kumpirmahin.”'
+          : 'Detailed matching is not complete for other crops yet. Unknown terms will stay as “Contact to confirm.”'}
+      </p>
     {/if}
     {#if errors.crop}<p id="crop-error" class="mt-2 text-sm font-semibold text-[#6E3511]">{errors.crop}</p>{/if}
   </fieldset>
@@ -237,7 +242,11 @@
 
     <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20">
       <span class="block text-sm font-bold text-[#20251E]">{t('locationLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
-      <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Munisipalidad kung saan manggagaling ang ani.' : 'Municipality where the harvest will leave from.'}</span>
+      <span class="mt-1 block text-xs text-[#4A5245]">
+        {lang === 'fil'
+          ? 'Munisipalidad kung saan manggagaling ang ani. Ang sentro ng munisipyo ang batayang lokasyon para sa layo, hindi ang eksaktong bukid.'
+          : 'Municipality where the harvest will leave from. Distance uses the municipality center as a reference point, not your exact farm.'}
+      </span>
       <select id="harvest-origin" bind:this={municipalitySelectEl} bind:value={originMunicipality} aria-describedby={errors.originMunicipality ? 'origin-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none">
         {#each LAGUNA_MUNICIPALITIES as municipality}
           <option value={municipality.id}>{municipality.name}</option>
@@ -264,9 +273,9 @@
     </button>
     {#if showDetails}
       <div class="mt-4 grid grid-cols-1 gap-3 border-t quiet-rule pt-4 sm:grid-cols-3">
-        <label><span class="block text-xs font-bold text-[#20251E]">{t('varietyLabel', lang)}</span><input bind:value={variety} type="text" placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
-        <label><span class="block text-xs font-bold text-[#20251E]">{t('gradeLabel', lang)}</span><input bind:value={grade} type="text" placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
-        <label><span class="block text-xs font-bold text-[#20251E]">{t('packagingLabel', lang)}</span><input bind:value={packaging} type="text" placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('varietyLabel', lang)}</span><input bind:value={variety} type="text" maxlength="80" placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('gradeLabel', lang)}</span><input bind:value={grade} type="text" maxlength="80" placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('packagingLabel', lang)}</span><input bind:value={packaging} type="text" maxlength="80" placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
       </div>
     {/if}
   </div>
