@@ -15,7 +15,7 @@ test('keeps partial quantities and unknown capacity distinct in the comparison l
   const accepted = metricRow(ledger, 'Accepted quantity');
   const remaining = metricRow(ledger, 'Remaining harvest');
   const gross = metricRow(ledger, 'Gross amount');
-  const afterTransport = metricRow(ledger, 'After entered transport');
+  const afterTransport = metricRow(ledger, 'After transport amount');
   const confirmation = metricRow(ledger, 'Confirm before travel');
 
   await expect(fit.getByRole('cell').first()).toContainText(/accepts part of your harvest/i);
@@ -160,4 +160,21 @@ test('no-match outlet detail prioritizes other selling options over outreach', a
   await expect(page.getByRole('button', { name: 'Prepare message' })).toHaveCount(0);
   await expect(alternatives).toHaveAttribute('href', /crop=tomato/);
   await expect(alternatives).toHaveAttribute('href', /kg=300/);
+});
+
+
+test('comparison distinguishes recorded transport estimates from farmer-edited amounts', async ({ page }) => {
+  await page.goto(comparisonPath(['demo-processor', 'demo-market']));
+
+  const ledger = page.getByRole('table', { name: /comparison ledger/i });
+  const transport = metricRow(ledger, 'Transport amount used');
+  const after = metricRow(ledger, 'After transport amount');
+
+  await expect(transport).toContainText(/Recorded transport estimate/i);
+  await expect(page.getByText(/prefilled demo transport estimate/i)).toBeVisible();
+  await expect(after).toContainText(/Not profit or guaranteed income/i);
+
+  const processorTransport = page.getByLabel(/Transport for Demo Processor/i);
+  await processorTransport.fill('750');
+  await expect(transport).toContainText(/Your edited transport amount/i);
 });
