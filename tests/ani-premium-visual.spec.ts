@@ -88,7 +88,7 @@ test('Ani microphone denial keeps text fallback visible', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Ask Ani' }).click();
   await page.getByRole('button', { name: 'Use microphone' }).click();
-  await expect(page.getByText(/Microphone access is unavailable/i)).toBeVisible();
+  await expect(page.getByText(/microphone could not be opened/i)).toBeVisible();
   await expect(page.getByLabel('Message Ani')).toBeVisible();
 });
 
