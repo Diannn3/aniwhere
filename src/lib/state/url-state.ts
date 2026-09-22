@@ -120,7 +120,7 @@ export function parseCompareQuery(params: URLSearchParams | string): {
   const discover = parseDiscoverQuery(search);
 
   return {
-    placeIds: placeIds.length > 0 ? placeIds : ['demo-cooperative', 'demo-processor', 'demo-market'],
+    placeIds,
     harvest: discover.harvest,
     lang: discover.lang,
   };
