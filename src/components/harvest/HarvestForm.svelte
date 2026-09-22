@@ -33,6 +33,7 @@
   let showDetails = $state(false);
   let lang = $state<'en' | 'fil'>(initialLang);
   let errors = $state<Record<string, string>>({});
+  let publishingOwnDraft = false;
 
   let cropGroupEl: HTMLFieldSetElement | null = $state(null);
   let otherCropInputEl: HTMLInputElement | null = $state(null);
@@ -87,6 +88,7 @@
     });
     if (!validation.isValid) return;
 
+    publishingOwnDraft = true;
     publishHarvestContext({
       crop,
       quantityKg: Number(quantityKg),
@@ -166,6 +168,11 @@
   });
 
   onMount(() => subscribeHarvestContext((next) => {
+    if (publishingOwnDraft) {
+      publishingOwnDraft = false;
+      return;
+    }
+
     const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === next.crop);
     cropChoice = supportedCrop ? next.crop : 'other';
     otherCrop = supportedCrop ? '' : next.crop;
