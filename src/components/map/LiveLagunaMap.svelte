@@ -251,7 +251,7 @@
   <div class="map-fallback-shell">
     <div class="map-fallback-note" role="status">
       <strong>{lang === 'fil' ? 'Offline na mapa' : 'Offline map'}</strong>
-      <span>{lang === 'fil' ? 'Hindi nag-load ang live map. Gamit ang ligtas na guhit-mapa.' : 'The live map did not load. Using the resilient map instead.'}</span>
+      <span>{lang === 'fil' ? 'Hindi nag-load ang interaktibong mapa. Gamit muna ang ligtas na guhit-mapa.' : 'The interactive map did not load. Using the resilient map instead.'}</span>
     </div>
     <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {onSelect} />
   </div>
