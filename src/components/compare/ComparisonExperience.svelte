@@ -7,7 +7,11 @@
   import { evaluateFit } from '../../lib/domain/match';
   import { getCropLabel } from '../../lib/domain/crops';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
-  import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import {
+    distanceForBasis,
+    getOutletRouteEstimate,
+    sharedDistanceBasis,
+  } from '../../lib/routing/routing-matrix';
   import { parseCompareQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
@@ -71,6 +75,14 @@
   const cropName = $derived(getCropLabel(harvest.crop, lang));
   const originMun = $derived(LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]);
   const comparedOutlets = $derived(selectedIds.map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id)).filter((o): o is Outlet => Boolean(o)).slice(0, 3));
+  const comparisonDistanceBasis = $derived(
+    sharedDistanceBasis(
+      comparedOutlets.map((outlet) => {
+        const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng);
+        return getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance);
+      })
+    )
+  );
 
   function copy(en: string, fil: string) { return isFil ? fil : en; }
   function formatPeso(value: number | null) { return value === null ? copy('Not calculated', 'Hindi nakalkula') : `₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}`; }
@@ -197,6 +209,11 @@
               'Tingnan ang mahahalagang detalye ng bawat lugar nang hindi nag-i-scroll nang pahalang.',
             )}
           </p>
+          <p class="mt-2 text-xs leading-5 text-[#596052]">
+            {comparisonDistanceBasis === 'road'
+              ? copy('Distance uses road estimates for every selected place.', 'Layo sa kalsada ang gamit sa lahat ng napiling lugar.')
+              : copy('Distance uses straight-line values for every selected place, not exact travel distance.', 'Tuwid na layo ang gamit sa lahat ng napiling lugar, hindi eksaktong haba ng biyahe.')}
+          </p>
         </div>
 
         <div class="grid gap-4">
@@ -244,9 +261,9 @@
                 <div class="bg-[#FFFDF8] p-3">
                   <dt class="text-[11px] font-semibold text-[#596052]">{copy('Distance', 'Layo')}</dt>
                   <dd class="mt-0.5 text-xs font-bold leading-5 text-[#20251E]">
-                    {route.source === 'road'
-                      ? `${route.roadDistanceKm?.toFixed(1)} km ${copy('by road', 'sa kalsada')}`
-                      : `${distance.toFixed(1)} km ${copy('straight-line', 'tuwid na layo')}`}
+                    {comparisonDistanceBasis === 'road'
+                      ? `${distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km ${copy('by road', 'sa kalsada')}`
+                      : `${distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km ${copy('straight-line', 'tuwid na layo')}`}
                   </dd>
                 </div>
               </dl>
@@ -303,8 +320,19 @@
       <section class="hidden sm:block" aria-labelledby="ledger-title">
         <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div><h2 id="ledger-title" class="font-serif text-2xl font-bold tracking-[-0.02em] text-[#20251E]">{copy('Decision ledger', 'Talaan ng desisyon')}</h2><p class="mt-1 text-sm text-[#4A5245]">{copy('Each row measures the same detail across all selected outlets.', 'Pareho ang sinusukat ng bawat hanay sa lahat ng napiling outlet.')}</p></div>
-          <p id="ledger-scroll-note" class="text-xs font-medium text-[#4E7380]">{copy('On a phone, scroll the table sideways to compare.', 'Sa phone, i-scroll nang pakaliwa o pakanan ang talaan upang maghambing.')}</p>
+          <p id="ledger-scroll-note" class="text-xs font-medium text-[#4E7380]">{copy('The full ledger stays available on larger screens.', 'Makikita ang buong talaan sa mas malaking screen.')}</p>
         </div>
+        <p class="mb-3 text-xs leading-5 text-[#596052]">
+          {comparisonDistanceBasis === 'road'
+            ? copy(
+                'All selected places have road estimates, so distance is compared on the same road-distance basis.',
+                'May road estimate ang lahat ng napiling lugar kaya pare-parehong layo sa kalsada ang ginagamit.',
+              )
+            : copy(
+                'Distance uses straight-line values for every selected place so the comparison stays on one basis. These are not exact travel distances.',
+                'Tuwid na layo ang gamit sa lahat ng napiling lugar para pare-pareho ang batayan. Hindi ito eksaktong haba ng biyahe.',
+              )}
+        </p>
         <div class="matrix-scroll max-w-full min-w-0 overflow-x-auto rounded-xl border border-[#20251E]/15 bg-white shadow-[0_1px_3px_rgba(32,37,30,0.05)]" tabindex="0" aria-describedby="ledger-scroll-note">
           <table class="w-full min-w-[900px] border-collapse text-left text-sm">
             <caption class="sr-only">{copy('Comparison ledger for selected outlets', 'Talaan ng paghahambing para sa mga napiling outlet')}</caption>
@@ -322,14 +350,14 @@
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Gross amount', 'Kabuuang halaga')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatPeso(fit.grossPay)}</td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Transport amount used', 'Halagang biyahe na gagamitin')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const value = transportValue(outlet, recordedTransport)}<td class="px-4 py-4 align-top"><label class="sr-only" for={`transport-${outlet.id}`}>{copy(`Transport for ${outlet.name}`, `Gastos sa biyahe para sa ${outlet.name}`)}</label><div class="relative max-w-[170px]"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span><input id={`transport-${outlet.id}`} type="number" min="0" step="50" inputmode="decimal" value={value} placeholder={copy('Not entered', 'Wala pang halaga')} oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)} class={`min-h-[44px] w-full rounded-lg border bg-white py-2 pl-7 pr-3 font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/20'}`} /></div><p class="mt-1.5 text-xs leading-4 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('After transport amount', 'Matapos ang halagang biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const afterTransport = transport === null ? null : fit.afterTransportPay}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{formatPeso(afterTransport)}</p><p class="mt-1 text-xs leading-4 text-[#4A5245]">{transport === null ? copy('Enter transport to calculate.', 'Maglagay ng gastos upang makalkula.') : copy('Not profit or guaranteed income.', 'Hindi ito tubo o garantisadong kita.')}</p></td>{/each}</tr>
-              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}{@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{route.source === 'road' ? route.roadDistanceKm?.toFixed(1) : distance.toFixed(1)} km</p><p class="mt-1 text-xs text-[#4A5245]">{route.source === 'road'
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}{@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km</p><p class="mt-1 text-xs text-[#4A5245]">{comparisonDistanceBasis === 'road'
   ? copy(
-      `Road estimate from ${originMun.name} municipality center · ~${route.roadDurationMinutes} min drive`,
-      `Tantya mula sa sentro ng ${originMun.name} · ~${route.roadDurationMinutes} min biyahe`,
+      `Road distance from ${originMun.name} municipality center · ~${route.roadDurationMinutes} min drive`,
+      `Layo sa kalsada mula sa sentro ng ${originMun.name} · ~${route.roadDurationMinutes} min biyahe`,
     )
   : copy(
-      `Straight-line from ${originMun.name} municipality center; road route unavailable.`,
-      `Tuwid na layo mula sa sentro ng ${originMun.name}; walang rutang pangkalsada.`,
+      `Straight-line from ${originMun.name} municipality center; used consistently across all selected places.`,
+      `Tuwid na layo mula sa sentro ng ${originMun.name}; pare-pareho itong gamit sa lahat ng napiling lugar.`,
     )}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Source and freshness', 'Pinagmulan at kasariwaan')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold text-[#20251E]">{fit.sourceLabel || copy('Source unknown', 'Hindi alam ang pinagmulan')}</p><dl class="mt-2 grid gap-1 text-xs text-[#4A5245]"><div class="flex justify-between gap-3"><dt>{copy('Updated', 'Na-update')}</dt><dd class="tabular-nums text-right">{formatEvidenceDate(fit.dataUpdatedAt)}</dd></div><div class="flex justify-between gap-3"><dt>{copy('Valid until', 'May bisa hanggang')}</dt><dd class="tabular-nums text-right">{formatEvidenceDate(fit.dataValidUntil)}</dd></div></dl></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Confirm before travel', 'Kumpirmahin bago bumiyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const questions = isFil ? fit.conditionsToConfirmFil : fit.conditionsToConfirm}{@const unknowns = isFil ? fit.unknownsFil : fit.unknowns}<td class="px-4 py-4 align-top">{#if unknowns.length > 0}<p class="mb-2 text-xs font-semibold text-[#4E7380]">{copy('Still unknown:', 'Hindi pa alam:')} {unknowns.join(', ')}</p>{/if}{#if questions.length > 0}<ul class="space-y-1.5 text-xs leading-5 text-[#4A5245]">{#each questions as question}<li class="flex gap-2"><span aria-hidden="true" class="text-[#6E3511]">—</span><span>{question}</span></li>{/each}</ul>{:else}<p class="text-xs leading-5 text-[#4A5245]">{copy('No additional question is recorded. Confirm current terms before travel.', 'Walang nakatalang dagdag na tanong. Kumpirmahin pa rin ang kasalukuyang kondisyon bago bumiyahe.')}</p>{/if}</td>{/each}</tr>
