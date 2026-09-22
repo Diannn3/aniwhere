@@ -134,6 +134,18 @@ test('makes all four fit filters understandable and exposes selected state', asy
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/showing .* of/i);
 });
 
+test('keeps price arithmetic available without overwhelming the primary result card', async ({ page }) => {
+  await page.goto(discoverPath);
+  const processor = outletCard(page, 'Demo Processor');
+
+  await expect(processor.getByText(/₱.*\/ kg/i).first()).toBeVisible();
+  await expect(processor.getByText('Gross amount')).toBeHidden();
+
+  await processor.getByText('See calculation').click();
+  await expect(processor.getByText('Gross amount')).toBeVisible();
+  await expect(processor.getByText(/not profit or guaranteed income/i)).toBeVisible();
+});
+
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
