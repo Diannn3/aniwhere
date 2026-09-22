@@ -37,6 +37,7 @@
   let mapContainer: HTMLDivElement;
   let liveReady = $state(false);
   let liveFailed = $state(false);
+  let slowLoading = $state(false);
   let map: any;
   let maplibre: any;
   let originMarker: any;
@@ -188,9 +189,12 @@
 
   onMount(() => {
     let destroyed = false;
+    const slowTimer = window.setTimeout(() => {
+      if (!liveReady && !destroyed) slowLoading = true;
+    }, 2500);
     const timeout = window.setTimeout(() => {
-      if (!liveReady) liveFailed = true;
-    }, 9000);
+      if (!liveReady && !destroyed) liveFailed = true;
+    }, 7000);
 
     (async () => {
       try {
@@ -216,7 +220,9 @@
 
         map.on('load', () => {
           if (destroyed) return;
+          window.clearTimeout(slowTimer);
           window.clearTimeout(timeout);
+          slowLoading = false;
           liveReady = true;
           syncMap();
         });
@@ -233,6 +239,7 @@
 
     return () => {
       destroyed = true;
+      window.clearTimeout(slowTimer);
       window.clearTimeout(timeout);
       clearMarkers();
       map?.remove?.();
@@ -260,7 +267,13 @@
     <div class="map-status-bar">
       <div>
         <strong>{lang === 'fil' ? 'Interaktibong mapa' : 'Interactive map'}</strong>
-        <span>{liveReady ? (lang === 'fil' ? 'Pumili ng lugar upang makita ang ruta.' : 'Select an outlet to inspect the route.') : (lang === 'fil' ? 'Naglo-load…' : 'Loading…')}</span>
+        <span>
+          {liveReady
+            ? (lang === 'fil' ? 'Pumili ng lugar upang makita ang ruta.' : 'Select an outlet to inspect the route.')
+            : slowLoading
+              ? (lang === 'fil' ? 'Medyo matagal ang mapa. Maaari mong gamitin ang listahan habang naghihintay.' : 'The map is taking longer. You can keep using the list while it loads.')
+              : (lang === 'fil' ? 'Naglo-load…' : 'Loading…')}
+        </span>
       </div>
       <span class="map-source">{MAP_ATTRIBUTION}</span>
     </div>
