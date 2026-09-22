@@ -141,7 +141,7 @@
       <section class="mx-auto max-w-2xl rounded-2xl border border-[#20251E]/15 bg-white px-6 py-12 text-center shadow-[0_1px_3px_rgba(32,37,30,0.05)]">
         <h2 class="font-serif text-2xl font-bold text-[#20251E]">{copy('No outlets selected', 'Walang napiling outlet')}</h2>
         <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-[#4A5245]">{copy('Select up to three outlets from discovery to compare the same details side by side.', 'Pumili ng hanggang tatlong outlet mula sa paghahanap upang maihambing ang parehong detalye nang magkatabi.')}</p>
-        <a href="/discover" class="mt-6 inline-flex min-h-[44px] items-center rounded-lg bg-[#486320] px-5 py-2.5 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#3A5219] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Find selling options', 'Maghanap ng mapagbebentahan')}</a>
+        <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="mt-6 inline-flex min-h-[44px] items-center rounded-lg bg-[#486320] px-5 py-2.5 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#3A5219] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Find selling options', 'Maghanap ng mapagbebentahan')}</a>
       </section>
     {:else}
       <section aria-labelledby="ledger-title">
