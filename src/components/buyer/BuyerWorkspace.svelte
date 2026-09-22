@@ -371,10 +371,11 @@
           </div>
 
           <!-- Status Filter Tabs -->
-          <div class="inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl p-1 gap-1" role="tablist">
+          <div class="inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl p-1 gap-1" role="group" aria-label={isFil ? 'Salain ayon sa katayuan' : 'Filter offers by status'}>
             <button
               type="button"
               onclick={() => { activeFilter = 'all'; }}
+              aria-pressed={activeFilter === 'all'}
               class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                 activeFilter === 'all' ? 'bg-[#597928] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
               }`}
@@ -384,6 +385,7 @@
             <button
               type="button"
               onclick={() => { activeFilter = 'published'; }}
+              aria-pressed={activeFilter === 'published'}
               class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                 activeFilter === 'published' ? 'bg-[#597928] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
               }`}
@@ -393,6 +395,7 @@
             <button
               type="button"
               onclick={() => { activeFilter = 'in_review'; }}
+              aria-pressed={activeFilter === 'in_review'}
               class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                 activeFilter === 'in_review' ? 'bg-[#6E3511] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
               }`}
@@ -402,6 +405,7 @@
             <button
               type="button"
               onclick={() => { activeFilter = 'draft'; }}
+              aria-pressed={activeFilter === 'draft'}
               class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                 activeFilter === 'draft' ? 'bg-[#4B5563] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
               }`}
