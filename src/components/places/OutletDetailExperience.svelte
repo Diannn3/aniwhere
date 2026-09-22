@@ -31,6 +31,7 @@
   let showMessageModal = $state(false);
   let showContactModal = $state(false);
   let copiedMessage = $state(false);
+  let copyMessageNotice = $state('');
   let messageTrigger: HTMLButtonElement | null = $state(null);
   let contactTrigger: HTMLButtonElement | null = $state(null);
   let messagePanel: HTMLDivElement | null = $state(null);
@@ -123,14 +124,29 @@
     return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function handleCopyMessage() {
-    const text = messageTemplate;
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(text);
+  async function handleCopyMessage() {
+    copyMessageNotice = '';
+
+    if (!navigator?.clipboard?.writeText) {
+      copiedMessage = false;
+      copyMessageNotice = isFil
+        ? 'Hindi available ang automatic copy. Piliin ang mensahe at kopyahin ito nang manu-mano.'
+        : 'Automatic copy is unavailable. Select the message and copy it manually.';
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(messageTemplate);
       copiedMessage = true;
-      setTimeout(() => {
+      copyMessageNotice = isFil ? 'Nakopya ang mensahe.' : 'Message copied.';
+      window.setTimeout(() => {
         copiedMessage = false;
       }, 2500);
+    } catch {
+      copiedMessage = false;
+      copyMessageNotice = isFil
+        ? 'Hindi nakopya ang mensahe. Piliin ang text at kopyahin ito nang manu-mano.'
+        : 'The message could not be copied. Select the text and copy it manually.';
     }
   }
 
@@ -645,6 +661,10 @@
           ? ' Hindi awtomatikong nagpapadala ng SMS ang AniWhere. Kopyahin ang mensahe at ipadala mo mismo kung may beripikadong contact.'
           : ' AniWhere does not send automated SMS. Copy the message and send it yourself only when you have a verified contact.'}
       </div>
+
+      {#if copyMessageNotice}
+        <p class="text-xs text-[#4A5245]" role="status" aria-live="polite">{copyMessageNotice}</p>
+      {/if}
 
       <div class="flex items-center justify-end gap-3 pt-2">
         <button
