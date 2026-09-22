@@ -404,15 +404,15 @@
       <ul class="space-y-3">
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
           <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
-          <span>What grade and ripeness standard do you require for {harvest.crop}?</span>
+          <span>{isFil ? `Anong grade at antas ng pagkahinog ang kailangan ninyo para sa ${cropName}?` : `What grade and ripeness standard do you require for ${cropName}?`}</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
           <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
-          <span>What packaging or crate specification is required at delivery?</span>
+          <span>{isFil ? 'Anong packaging o uri ng crate ang kailangan sa delivery?' : 'What packaging or crate specification is required at delivery?'}</span>
         </li>
         <li class="flex items-start gap-3 p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 text-xs sm:text-sm text-[#20251E]">
           <span class="w-5 h-5 rounded-full bg-[#486320]/15 text-[#486320] flex items-center justify-center font-bold flex-shrink-0 mt-0.5">?</span>
-          <span>What are the exact receiving hours and gate cutoffs on {harvest.readyDate}?</span>
+          <span>{isFil ? `Ano ang eksaktong oras ng pagtanggap at cutoff sa ${harvest.readyDate}?` : `What are the exact receiving hours and gate cutoffs on ${harvest.readyDate}?`}</span>
         </li>
 
         {#if fitResult.conditionsToConfirm && fitResult.conditionsToConfirm.length > 0}
@@ -543,10 +543,12 @@
     <!-- Provenance / Timestamp Attribution Footer -->
     <div class="pt-4 border-t border-[#20251E]/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#596052]">
       <div>
-        Source: <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || 'Source unknown'} &bull; {outlet.sampleOfferDate}</span>
+        {isFil ? 'Pinagmulan' : 'Source'}:
+        <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || (isFil ? 'Hindi alam' : 'Source unknown')} &bull; {outlet.sampleOfferDate}</span>
       </div>
       <div>
-        Fixture: <span class="font-medium text-[#20251E]">Illustrative Laguna demo &bull; NextGen Agri Hackathon 2026</span>
+        {isFil ? 'Uri ng datos' : 'Data mode'}:
+        <span class="font-medium text-[#20251E]">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'} &bull; NextGen Agri Hackathon 2026</span>
       </div>
     </div>
   </section>
@@ -564,7 +566,7 @@
           type="button"
           onclick={() => (showMessageModal = false)}
           class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
-          aria-label="Close"
+          aria-label={isFil ? 'Isara' : 'Close'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -583,7 +585,10 @@
       </div>
 
       <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
-        <strong>Demo notice:</strong> AniWhere does not send automated SMS. Use this text on your phone.
+        <strong>{isFil ? 'Paalala sa demo:' : 'Demo notice:'}</strong>
+        {isFil
+          ? ' Hindi awtomatikong nagpapadala ng SMS ang AniWhere. Kopyahin ang mensahe at ipadala mo mismo kung may beripikadong contact.'
+          : ' AniWhere does not send automated SMS. Copy the message and send it yourself only when you have a verified contact.'}
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-2">
@@ -592,7 +597,7 @@
           onclick={() => (showMessageModal = false)}
           class="px-4 py-2 rounded-full text-xs font-semibold text-[#4A5245] hover:bg-[#20251E]/5 min-h-[44px]"
         >
-          Close
+          {isFil ? 'Isara' : 'Close'}
         </button>
 
         <button
@@ -604,12 +609,12 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            <span>Copied to clipboard!</span>
+            <span>{isFil ? 'Nakopya na!' : 'Copied to clipboard!'}</span>
           {:else}
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
             </svg>
-            <span>Copy message</span>
+            <span>{isFil ? 'Kopyahin ang mensahe' : 'Copy message'}</span>
           {/if}
         </button>
       </div>
@@ -671,7 +676,10 @@
         {/if}
 
         <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
-          <strong>Notice:</strong> This is a NextGen Agri Hackathon demo fixture. Real commercial transactions and phone calls are not executed in this prototype pass.
+          <strong>{isFil ? 'Paalala:' : 'Notice:'}</strong>
+          {isFil
+            ? ' Demo — halimbawang datos para sa NextGen Agri Hackathon. Hindi gumagawa ang AniWhere ng tawag, reserbasyon, o transaksyon.'
+            : ' Demo — sample data for the NextGen Agri Hackathon. AniWhere does not place calls, reserve capacity, or execute transactions.'}
         </div>
       </div>
 
@@ -681,7 +689,7 @@
           onclick={() => (showContactModal = false)}
           class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#486320] text-white hover:bg-[#435c1d] transition-all min-h-[44px]"
         >
-          Done
+          {isFil ? 'Tapos' : 'Done'}
         </button>
       </div>
     </div>
