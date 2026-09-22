@@ -108,12 +108,12 @@
     items.forEach((item, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'aniwhere-outlet-marker';
+      button.className = `aniwhere-outlet-marker status-${item.fit.status}`;
       if (item.outlet.id === selectedId) button.classList.add('is-selected');
       button.textContent = String(index + 1);
       button.setAttribute(
         'aria-label',
-        `${item.outlet.name}, ${item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na distansya' : 'straight-line distance'}`
+        `${item.outlet.name}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
       );
       button.setAttribute('aria-pressed', item.outlet.id === selectedId ? 'true' : 'false');
       button.addEventListener('click', () => onSelect(item.outlet.id));
@@ -487,16 +487,19 @@
 
   :global(.aniwhere-outlet-marker) {
     cursor: pointer;
-    background: #597928;
     color: #fffdf8;
   }
+
+  :global(.aniwhere-outlet-marker.status-match) { background: #597928; }
+  :global(.aniwhere-outlet-marker.status-partial) { background: #B86A2B; }
+  :global(.aniwhere-outlet-marker.status-confirm) { background: #4E7380; }
+  :global(.aniwhere-outlet-marker.status-no_match) { background: #6B7167; }
 
   :global(.aniwhere-outlet-marker:hover),
   :global(.aniwhere-outlet-marker:focus-visible),
   :global(.aniwhere-outlet-marker.is-selected) {
     outline: 3px solid #fcecd8;
     outline-offset: 2px;
-    background: #6e3511;
     transform: scale(1.08);
   }
 
