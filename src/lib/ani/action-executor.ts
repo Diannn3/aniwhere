@@ -3,6 +3,7 @@ import { safeStorage } from '../state/storage';
 import { serializeDiscoverQuery } from '../state/url-state';
 import type { HarvestQuery } from '../domain/types';
 import { publishHarvestContext } from './harvest-sync';
+import { publishTransportUpdate } from './ui-sync';
 import type { AniToolRequest, AniToolResult } from './types';
 
 export class AniActionExecutor {
@@ -13,9 +14,23 @@ export class AniActionExecutor {
       const harvest = (result.data as { harvest?: HarvestQuery } | undefined)?.harvest;
       if (!harvest) return;
       publishHarvestContext(harvest);
-      const view = new URLSearchParams(window.location.search).get('view') === 'map' ? 'map' : 'list';
-      const query = serializeDiscoverQuery(harvest, view, undefined, lang);
-      window.history.replaceState({}, '', `${window.location.pathname}?${query}`);
+      const current = new URLSearchParams(window.location.search);
+      const view = current.get('view') === 'map' ? 'map' : 'list';
+      const selectedPlaceId = current.get('place') || undefined;
+      const query = new URLSearchParams(serializeDiscoverQuery(harvest, view, selectedPlaceId, lang));
+      if (window.location.pathname === '/compare' && current.get('places')) {
+        query.set('places', current.get('places')!);
+      }
+      window.history.replaceState({}, '', `${window.location.pathname}?${query.toString()}`);
+      return;
+    }
+
+    if (request.name === 'set_or_update_transport_amount') {
+      const outletId = typeof request.args.outletId === 'string' ? request.args.outletId : '';
+      const amount = request.args.amount;
+      if (outletId && typeof amount === 'number' && Number.isFinite(amount) && amount >= 0) {
+        publishTransportUpdate({ outletId, amount });
+      }
       return;
     }
 
