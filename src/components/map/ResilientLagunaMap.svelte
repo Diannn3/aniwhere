@@ -257,26 +257,11 @@
         {@const isSelected = item.outlet.id === selectedId}
         {@const color = getStatusColor(item.fit.status)}
 
-        <g
-          class="cursor-pointer transition-transform duration-150 {isSelected ? 'scale-110' : 'hover:scale-105'}"
-          tabindex="0"
-          role="button"
-          aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name : 'straight-line from ' + originMun.name + ' municipality center'}`}
-          onclick={(e) => {
-            e.stopPropagation();
-            onSelect(item.outlet.id);
-          }}
-          onkeydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelect(item.outlet.id);
-            }
-          }}
-        >
+        <g class="transition-transform duration-150 {isSelected ? 'scale-110' : ''}">
+
           <!-- Pulsing Focus / Selection ring -->
           {#if isSelected}
-            <circle cx={pos.x} cy={pos.y} r="20" fill={color} fill-opacity="0.25" stroke={color} stroke-width="1.5" />
+            <circle cx={pos.x} cy={pos.y} r="20" fill={color} fill-opacity="0.25" stroke={color} stroke-width="1.5" pointer-events="none" />
           {/if}
 
           <!-- Pin Outer Circle -->
@@ -287,14 +272,28 @@
             fill={color}
             stroke="#FFFDF8"
             stroke-width="2"
-            class="shadow-sm"
+            class="cursor-pointer shadow-sm transition-transform duration-150 hover:scale-105"
+            tabindex="0"
+            role="button"
+            aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
+            onclick={(e) => {
+              e.stopPropagation();
+              onSelect(item.outlet.id);
+            }}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect(item.outlet.id);
+              }
+            }}
           />
 
           <!-- Pin Inner Core -->
-          <circle cx={pos.x} cy={pos.y} r={isSelected ? "4" : "3"} fill="#FFFDF8" />
+          <circle cx={pos.x} cy={pos.y} r={isSelected ? "4" : "3"} fill="#FFFDF8" pointer-events="none" />
 
           <!-- Floating Name Label -->
-          <g transform={`translate(${pos.x}, ${pos.y + 16})`}>
+          <g transform={`translate(${pos.x}, ${pos.y + 16})`} pointer-events="none">
             <rect
               x="-48"
               y="-2"
