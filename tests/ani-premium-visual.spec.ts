@@ -140,6 +140,25 @@ test('Ani local FAQ remains usable while an invalid home harvest blocks market t
   await expect(page.getByText(/Complete the required harvest fields before Ani checks market fit/i)).toBeVisible();
 });
 
+test('Ani can move from local help to online tools and back without keeping the provider active', async ({ page }) => {
+  await page.goto(discovery);
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+
+  await expect(page.getByRole('button', { name: 'Use online Ani' })).toBeVisible();
+  await page.getByRole('button', { name: 'Use online Ani' }).click();
+  await expect(page.getByText(/Preview mode\. This simulates online Ani/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Local help' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Local help' }).click();
+  await expect(page.getByText(/Back to local help/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Use online Ani' })).toBeVisible();
+
+  const input = page.getByLabel('Message Ani');
+  await input.fill('Is the price live?');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText(/Not necessarily\. AniWhere distinguishes demo or reference prices/i)).toBeVisible();
+});
+
 test('Ani local FAQ does not guess when no bundled answer matches', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Ask Ani' }).click();
