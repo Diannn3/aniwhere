@@ -204,3 +204,44 @@ A production pilot still needs:
 For the research findings, code changes, security decisions, and exact next queue from this hardening pass, see:
 
 `docs/ANIWHERE_TRUST_MODEL_V2_IMPLEMENTATION_2026-09-18.md`
+
+---
+
+## 10. Local Ani Help & Offline/PWA Boundary
+
+Ani now includes a bundled bilingual FAQ layer intended for low-connectivity use.
+
+### What local help is
+
+- a fixed, reviewed set of Filipino/English AniWhere explanations;
+- matched locally in the browser;
+- available without an online AI call once the application has loaded;
+- safe to use even when the current harvest form is incomplete because it explains product concepts rather than calculating market facts.
+
+### What local help is not
+
+It is **not** an offline language model and it does not generate fresh market information. It cannot create or refresh:
+
+- buyer demand;
+- active offers;
+- capacity;
+- prices;
+- route requests;
+- map tiles;
+- transactions or reservations.
+
+Online Ani remains optional and explicit. When enabled, any market-bearing response still depends on the deterministic AniWhere tool layer and the currently valid harvest state.
+
+### PWA/service-worker behavior
+
+The service worker is a resilience layer, not a freshness guarantee.
+
+- The first successful load requires a connection.
+- Core navigation is network-first when connectivity exists.
+- Cached page fallbacks are used only when the network request fails.
+- Farmer query strings are not intentionally persisted as cache keys; navigation responses are cached by pathname.
+- `/api/` requests are not intercepted by the service worker.
+- Static assets may be reused from cache.
+- Live map tiles, fresh road-route requests, and online Ani still require network access.
+
+Cached demo or previously loaded information must never be described as current merely because it remains available offline.
