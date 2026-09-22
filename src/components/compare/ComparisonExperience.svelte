@@ -248,6 +248,7 @@
               <div class="mt-3 rounded-xl border border-[#20251E]/10 bg-[#FFFDF8] p-3">
                 <label class="text-xs font-semibold text-[#20251E]" for={`mobile-transport-${outlet.id}`}>
                   {copy('Transport amount used', 'Halagang biyahe na gagamitin')}
+                  <span class="sr-only">{copy(` for ${outlet.name}`, ` para sa ${outlet.name}`)}</span>
                 </label>
                 <div class="relative mt-2">
                   <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span>
