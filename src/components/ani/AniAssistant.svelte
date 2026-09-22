@@ -6,6 +6,7 @@
   import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
   import { AniActionExecutor } from '../../lib/ani/action-executor';
   import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { CURRENT_DATA_MODE } from '../../lib/data/current-market';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
   let lang = $state<'en' | 'fil'>(initialLang);
@@ -99,7 +100,7 @@
       if (event.error) { status = 'error'; notice = event.error; }
     });
     try {
-      await provider.connect({ language: lang, dataMode: 'demo', harvest: currentHarvest() });
+      await provider.connect({ language: lang, dataMode: CURRENT_DATA_MODE, harvest: currentHarvest() });
       notice = provider.kind === 'mock'
         ? (isFil() ? 'Preview mode. Hindi ito live market AI.' : 'Preview mode. This is not live market AI.')
         : (isFil() ? 'Handa si Ani.' : 'Ani is ready.');
