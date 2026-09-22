@@ -59,7 +59,23 @@ test('keeps Filipino selected while navigating home, discovery, and saved outlet
 
   const navigation = page.getByRole('navigation', { name: /pangunahing nabigasyon/i });
   await navigation.getByRole('link', { name: /nai-save/i }).click();
-  await expect(page).toHaveURL(/\/saved\?lang=fil/);
+  await expect(page).toHaveURL(/\/saved\?/);
+  await expect.poll(() => {
+    const url = new URL(page.url());
+    return {
+      crop: url.searchParams.get('crop'),
+      kg: url.searchParams.get('kg'),
+      origin: url.searchParams.get('origin'),
+      ready: url.searchParams.get('ready'),
+      lang: url.searchParams.get('lang'),
+    };
+  }).toEqual({
+    crop: 'tomato',
+    kg: '300',
+    origin: 'los-banos',
+    ready: '2026-09-24',
+    lang: 'fil',
+  });
   await expect(page.locator('html')).toHaveAttribute('lang', 'fil');
 
   await page.getByRole('link', { name: /aniwhere tahanan/i }).click();
