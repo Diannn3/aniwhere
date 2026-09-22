@@ -143,18 +143,23 @@
 
   async function requestMic() {
     notice = isFil() ? 'Humihingi ng pahintulot sa mikropono.' : 'Requesting microphone permission.';
+    if (!provider?.startListening) {
+      notice = isFil()
+        ? 'Hindi available ang voice dito. Maaari kang mag-type kay Ani.'
+        : 'Voice is unavailable here. You can type to Ani instead.';
+      inputEl?.focus();
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop());
-      if (!provider?.startListening) {
-        notice = isFil() ? 'Hindi pa nakakonekta ang voice sa build na ito. Maaari kang mag-type.' : 'Voice is not connected in this build yet. You can type instead.';
-        return;
-      }
+      // The provider owns microphone acquisition so the browser is asked only once per listening session.
       await provider.startListening();
       status = 'listening';
       notice = isFil() ? 'Nakikinig si Ani. Pindutin muli para huminto.' : 'Ani is listening. Press again to stop.';
     } catch {
-      notice = isFil() ? 'Walang pahintulot sa mikropono. Maaari kang mag-type kay Ani.' : 'Microphone access is unavailable. You can type to Ani instead.';
+      notice = isFil()
+        ? 'Hindi mabuksan ang mikropono. Maaari kang mag-type kay Ani.'
+        : 'The microphone could not be opened. You can type to Ani instead.';
       inputEl?.focus();
     }
   }
@@ -200,6 +205,7 @@
         {#if messages.length === 0}
           <div class="ani-welcome">
             <p>{isFil() ? 'Matutulungan kitang ilagay ang ani, intindihin ang fit, at pumunta sa tamang bahagi ng AniWhere.' : 'I can help you enter a harvest, understand fit, and move through AniWhere.'}</p>
+            <p class="trust-note">{isFil() ? 'Mag-type para tahimik na text reply. Gamitin ang mikropono kung gusto mong magsalita kay Ani.' : 'Type for a quiet text reply. Use the microphone when you want to speak with Ani.'}</p>
             <p class="trust-note">{isFil() ? 'Ang market fit ay kinukuwenta ng AniWhere, hindi ni Ani.' : 'Market fit is calculated by AniWhere, not by Ani.'}</p>
           </div>
         {:else}
