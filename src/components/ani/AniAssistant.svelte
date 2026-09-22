@@ -443,7 +443,7 @@
         {/if}
       </div>
 
-      <div class="ani-transcript" aria-label={isFil() ? 'Usapan kay Ani' : 'Conversation with Ani'}>
+      <div class="ani-transcript" role="log" aria-live="polite" aria-relevant="additions text" aria-label={isFil() ? 'Usapan kay Ani' : 'Conversation with Ani'}>
         {#if messages.length === 0}
           <div class="ani-welcome">
             {#if homeNeedsValidDraft()}
@@ -490,7 +490,7 @@
         {/if}
 
         {#if choices.length > 0 && localMode}
-          <div class="faq-choices" aria-label={isFil() ? 'Mga posibleng tanong' : 'Possible questions'}>
+          <div class="faq-choices" role="group" aria-label={isFil() ? 'Mga posibleng tanong' : 'Possible questions'}>
             {#each choices as faq (faq.id)}
               <button type="button" class="faq-choice" onclick={() => chooseFaq(faq)}>
                 <span>{faq.question[lang]}</span>
@@ -519,7 +519,7 @@
               </button>
             </div>
 
-            <div class="topic-list" aria-label={isFil() ? 'Mga topic ng local na tulong' : 'Local help topics'}>
+            <div class="topic-list" role="group" aria-label={isFil() ? 'Mga topic ng local na tulong' : 'Local help topics'}>
               <button
                 type="button"
                 class:active={selectedTopic === 'all'}
