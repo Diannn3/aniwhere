@@ -448,22 +448,37 @@
           <div class="ani-welcome">
             {#if homeNeedsValidDraft()}
               <div class="harvest-context is-invalid" role="status">
-                <span>{isFil() ? 'Kailangan munang ayusin' : 'Harvest details needed'}</span>
+                <span>{isFil() ? 'Kailangan pa ng detalye para sa market check' : 'Harvest details needed for market checks'}</span>
                 <strong>
                   {isFil()
-                    ? 'Kumpletuhin ang crop, dami, munisipalidad, at petsa bago mag-check ng market fit.'
-                    : 'Complete crop, quantity, municipality, and ready date before checking market fit.'}
+                    ? 'Gumagana pa rin ang local na tulong. Kumpletuhin ang crop, dami, munisipalidad, at petsa bago gumamit ng market tools.'
+                    : 'Local help still works. Complete crop, quantity, municipality, and ready date before using market tools.'}
                 </strong>
               </div>
             {:else if sharedHarvest}
-              <div class="harvest-context" aria-label={isFil() ? 'Kasalukuyang ani na ginagamit ni Ani' : 'Current harvest Ani is using'}>
+              <div class="harvest-context" aria-label={isFil() ? 'Kasalukuyang harvest context' : 'Current harvest context'}>
                 <span>{isFil() ? 'Kasalukuyang ani' : 'Current harvest'}</span>
                 <strong>{harvestSummary()}</strong>
               </div>
             {/if}
-            <p>{isFil() ? 'Matutulungan kitang ilagay ang ani, intindihin ang fit, at pumunta sa tamang bahagi ng AniWhere.' : 'I can help you enter a harvest, understand fit, and move through AniWhere.'}</p>
-            <p class="trust-note">{isFil() ? 'Mag-type para tahimik na text reply. Gamitin ang mikropono kung gusto mong magsalita kay Ani.' : 'Type for a quiet text reply. Use the microphone when you want to speak with Ani.'}</p>
-            <p class="trust-note">{isFil() ? 'Ang market fit ay kinukuwenta ng AniWhere, hindi ni Ani.' : 'Market fit is calculated by AniWhere, not by Ani.'}</p>
+            <p>
+              {localMode
+                ? (isFil()
+                    ? 'Magtanong tungkol sa paggamit ng AniWhere, fit labels, presyo, biyahe, mapa, Saved, Compare, at offline mode.'
+                    : 'Ask about using AniWhere, fit labels, prices, transport, maps, Saved, Compare, and offline mode.')
+                : (isFil()
+                    ? 'Online Ani ito. Maaari itong gumamit ng AniWhere tools para sa market-context questions.'
+                    : 'This is online Ani. It can use AniWhere tools for market-context questions.')}
+            </p>
+            <p class="trust-note">
+              {localMode
+                ? (isFil()
+                    ? 'Preloaded at text-only ang local na sagot. Hindi nito kinukuwenta ang market fit.'
+                    : 'Local answers are preloaded and text-only. They do not calculate market fit.')
+                : (isFil()
+                    ? 'Ang deterministic AniWhere tools ang authority sa market fit — hindi sariling hula ni Ani.'
+                    : 'Deterministic AniWhere tools remain authoritative for market fit — not Ani’s own guess.')}
+            </p>
           </div>
         {:else}
           {#each messages as message (message.id)}
@@ -472,6 +487,78 @@
               <p>{message.text}</p>
             </article>
           {/each}
+        {/if}
+
+        {#if choices.length > 0 && localMode}
+          <div class="faq-choices" aria-label={isFil() ? 'Mga posibleng tanong' : 'Possible questions'}>
+            {#each choices as faq (faq.id)}
+              <button type="button" class="faq-choice" onclick={() => chooseFaq(faq)}>
+                <span>{faq.question[lang]}</span>
+                <span aria-hidden="true">›</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+
+        {#if activeFaq?.action && localMode}
+          <a class="faq-action" href={actionHref(activeFaq.action.route)} onclick={closeAni}>
+            <span>{activeFaq.action.label[lang]}</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        {/if}
+
+        {#if localMode}
+          <section class="faq-topics" aria-labelledby="ani-local-help-title">
+            <div class="faq-topics__head">
+              <div>
+                <strong id="ani-local-help-title">{isFil() ? 'Preloaded na tulong' : 'Preloaded help'}</strong>
+                <span>{isFil() ? ' Gumagana sa loaded app kahit walang signal.' : ' Works on the loaded app without signal.'}</span>
+              </div>
+              <button type="button" class="online-link" onclick={() => void connectOnline()}>
+                {isFil() ? 'Gamitin ang online Ani' : 'Use online Ani'}
+              </button>
+            </div>
+
+            <div class="topic-list" aria-label={isFil() ? 'Mga topic ng local na tulong' : 'Local help topics'}>
+              <button
+                type="button"
+                class:active={selectedTopic === 'all'}
+                aria-pressed={selectedTopic === 'all'}
+                onclick={() => selectedTopic = 'all'}
+              >
+                {topicLabels.all[lang]}
+              </button>
+              {#each topicOrder as topic}
+                <button
+                  type="button"
+                  class:active={selectedTopic === topic}
+                  aria-pressed={selectedTopic === topic}
+                  onclick={() => selectedTopic = topic}
+                >
+                  {topicLabels[topic][lang]}
+                </button>
+              {/each}
+            </div>
+
+            <div class="faq-list">
+              {#each visibleFaqs().slice(0, 6) as faq (faq.id)}
+                <button type="button" class="faq-suggestion" onclick={() => chooseFaq(faq)}>
+                  <span>{faq.question[lang]}</span>
+                  <span aria-hidden="true">›</span>
+                </button>
+              {/each}
+            </div>
+          </section>
+        {:else}
+          <div class="online-mode" role="status">
+            <div>
+              <strong>{isFil() ? 'Online Ani' : 'Online Ani'}</strong>
+              <span>{isFil() ? ' Text at voice kapag available ang koneksyon.' : ' Text and voice when the connection is available.'}</span>
+            </div>
+            <button type="button" class="online-link" onclick={() => void returnToLocal()}>
+              {isFil() ? 'Local na tulong' : 'Local help'}
+            </button>
+          </div>
         {/if}
       </div>
 
