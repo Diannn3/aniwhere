@@ -22,4 +22,17 @@ describe('HarvestForm', () => {
     await fireEvent.click(screen.getByRole('button', { name: /quantity: enter a valid quantity/i }));
     await waitFor(() => expect(document.activeElement).toBe(quantity));
   });
+
+  it('explains municipality-level distance and unsupported-crop uncertainty before submission', async () => {
+    render(TestHarvestForm, { props: { initialLang: 'en' } });
+
+    expect(screen.getByText(/municipality center as a reference point, not your exact farm/i)).toBeTruthy();
+
+    await fireEvent.click(screen.getByRole('radio', { name: /other crop/i }));
+    expect(screen.getByText(/detailed matching is not complete for other crops yet/i)).toBeTruthy();
+
+    const cropName = screen.getByPlaceholderText(/enter crop name/i);
+    expect(cropName.getAttribute('maxlength')).toBe('80');
+  });
+
 });
