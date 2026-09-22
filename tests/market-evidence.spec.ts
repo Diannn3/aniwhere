@@ -34,3 +34,32 @@ test('keeps partial quantities and unknown capacity distinct in the comparison l
   await expect(unknownAfterTransport).toContainText('Not calculated');
   await expect(confirmation.getByRole('cell').nth(1)).toContainText(/still unknown: current capacity/i);
 });
+
+
+test('prepared inquiry never turns demo price into a buyer claim', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await page.getByRole('button', { name: 'Prepare message' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText(/current price, capacity, receiving schedule/i);
+  await expect(dialog).not.toContainText(/demo price of/i);
+  await expect(dialog).toContainText(/AniWhere does not send automated SMS/i);
+});
+
+test('Filipino outlet guidance localizes crop and confirmation questions', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=fil'
+  );
+
+  await expect(page.getByText(/Anong grade at antas ng pagkahinog.*kamatis/i)).toBeVisible();
+  await expect(page.getByText(/Anong packaging o uri ng crate/i)).toBeVisible();
+  await expect(page.getByText(/Ano ang eksaktong oras ng pagtanggap/i)).toBeVisible();
+  await expect(page.getByText(/Uri ng datos:/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Ihanda ang mensahe' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText(/300 kg na kamatis/i);
+  await expect(dialog).toContainText(/kasalukuyang presyo, kapasidad/i);
+});
