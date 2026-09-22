@@ -99,7 +99,7 @@
     originElement.textContent = 'A';
     originElement.setAttribute(
       'aria-label',
-      `${lang === 'fil' ? 'Reference point' : 'Reference point'}: ${origin.name} municipality center`
+      `${lang === 'fil' ? 'Batayang lokasyon' : 'Reference point'}: ${origin.name}${lang === 'fil' ? ', sentro ng munisipyo' : ' municipality center'}`
     );
     originMarker = new maplibre.Marker({ element: originElement, anchor: 'center' })
       .setLngLat([origin.lng, origin.lat])
@@ -285,7 +285,7 @@
           <strong>{selectedItem.outlet.name}</strong>
           <span class="route-origin">
             {lang === 'fil'
-              ? `Reference point: sentro ng ${origin.name}`
+              ? `Batayang lokasyon: sentro ng ${origin.name}`
               : `Reference point: ${origin.name} municipality center`}
           </span>
         </div>
