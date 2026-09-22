@@ -4,6 +4,7 @@
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
+  import { getCropLabel } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
@@ -56,6 +57,7 @@
   const routeEstimate = $derived(getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distanceKm));
 
   const isFil = $derived(lang === 'fil');
+  const cropName = $derived(getCropLabel(harvest.crop, lang));
   const hasVerifiedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
 
   function handleToggleSave() {
@@ -99,23 +101,19 @@
   );
 
   const priceQuestion = $derived(
-    fitResult.samplePricePerKg === null
+    fitResult.evidenceKind === 'buyer_offer' && fitResult.samplePricePerKg !== null
       ? (isFil
-          ? 'Nais ko rin pong malaman ang kasalukuyang presyo, receiving schedule, at grading requirements.'
-          : 'I would also like to confirm the current price, receiving schedule, and grading requirements.')
-      : fitResult.evidenceKind === 'demo'
-        ? (isFil
-            ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo at kung ang halimbawang presyong ₱${fitResult.samplePricePerKg}/kg ay naaangkop pa, pati ang grading at receiving schedule.`
-            : `I would like to confirm whether you are currently accepting deliveries and whether the demo price of ₱${fitResult.samplePricePerKg}/kg still applies, along with the receiving schedule and grading requirements.`)
-        : (isFil
-            ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa naka-post na presyong ₱${fitResult.samplePricePerKg}/kg at ano ang grading at receiving schedule.`
-            : `I would like to confirm whether you are currently accepting deliveries at the posted price of ₱${fitResult.samplePricePerKg}/kg and what the receiving schedule and grading requirements are.`)
+          ? `Nais ko pong kumpirmahin kung tumatanggap pa po kayo sa naka-post na presyong ₱${fitResult.samplePricePerKg}/kg at ano ang grading at receiving schedule.`
+          : `I would like to confirm whether you are currently accepting deliveries at the posted price of ₱${fitResult.samplePricePerKg}/kg and what the receiving schedule and grading requirements are.`)
+      : (isFil
+          ? 'Nais ko rin pong kumpirmahin ang kasalukuyang presyo, kapasidad, receiving schedule, at grading requirements.'
+          : 'I would also like to confirm the current price, capacity, receiving schedule, and grading requirements.')
   );
 
   const messageTemplate = $derived(
     isFil
-      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${harvest.crop} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Maraming salamat po.`
-      : `Good day. I have ${harvest.quantityKg} kg of ${harvest.crop} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Thank you.`
+      ? `Magandang araw po. Mayroon po akong ${harvest.quantityKg} kg na ${cropName} na handang anihin sa ${harvest.readyDate} mula sa ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Maraming salamat po.`
+      : `Good day. I have ${harvest.quantityKg} kg of ${cropName} ready for harvest on ${harvest.readyDate} from ${originMun.name}${harvestDetailSummary ? ` (${harvestDetailSummary})` : ''}. ${priceQuestion} Thank you.`
   );
 
   const backUrl = $derived(
