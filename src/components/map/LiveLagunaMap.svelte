@@ -136,17 +136,24 @@
       source.setData(data);
     } else {
       map.addSource('aniwhere-selected-route', { type: 'geojson', data });
-      map.addLayer({
-        id: 'aniwhere-selected-route-line',
-        type: 'line',
-        source: 'aniwhere-selected-route',
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: {
-          'line-color': '#4E7380',
-          'line-width': 4,
-          'line-opacity': 0.9,
+      const firstSymbolLayerId = map
+        .getStyle()
+        ?.layers?.find((layer: { type?: string }) => layer.type === 'symbol')?.id;
+
+      map.addLayer(
+        {
+          id: 'aniwhere-selected-route-line',
+          type: 'line',
+          source: 'aniwhere-selected-route',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': '#4E7380',
+            'line-width': 4,
+            'line-opacity': 0.9,
+          },
         },
-      });
+        firstSymbolLayerId
+      );
     }
 
     const actualRoad = selectedRoute?.source === 'road' && Boolean(selectedRoute.geometry);
