@@ -147,3 +147,17 @@ test('Filipino decision summary uses localized crop and uncertainty language', a
   await expect(page.getByText('Nakatalaang Tantiya sa Biyahe')).toBeVisible();
   await expect(page.getByText(/Tantiya sa demo record, hindi aktuwal na quote sa biyahe/i)).toBeVisible();
 });
+
+
+test('no-match outlet detail prioritizes other selling options over outreach', async ({ page }) => {
+  await page.goto(
+    '/places/demo-organic-shop?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await expect(page.getByText('Does not match').first()).toBeVisible();
+  const alternatives = page.getByRole('link', { name: 'Check other selling options' });
+  await expect(alternatives).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Prepare message' })).toHaveCount(0);
+  await expect(alternatives).toHaveAttribute('href', /crop=tomato/);
+  await expect(alternatives).toHaveAttribute('href', /kg=300/);
+});
