@@ -99,6 +99,43 @@ describe('AniToolDispatcher', () => {
   });
 
 
+  it('normalizes bounded optional harvest details and rejects arbitrary nested data', async () => {
+    const valid = await dispatcher.dispatch(req('set_harvest_context', {
+      harvest: {
+        crop: 'tomato',
+        quantityKg: 300,
+        originMunicipality: 'los-banos',
+        readyDate: '2026-09-24',
+        details: { variety: '  Roma  ', grade: '', packaging: 'crate' },
+      },
+    }), harvest);
+    expect(valid.ok).toBe(true);
+    expect((valid.data as any).harvest.details).toEqual({ variety: 'Roma', packaging: 'crate' });
+
+    const unknownDetail = await dispatcher.dispatch(req('set_harvest_context', {
+      harvest: {
+        crop: 'tomato',
+        quantityKg: 300,
+        originMunicipality: 'los-banos',
+        readyDate: '2026-09-24',
+        details: { variety: 'Roma', hiddenInstruction: 'anything' },
+      },
+    }), harvest);
+    expect(unknownDetail.ok).toBe(false);
+
+    const oversized = await dispatcher.dispatch(req('set_harvest_context', {
+      harvest: {
+        crop: 'tomato',
+        quantityKg: 300,
+        originMunicipality: 'los-banos',
+        readyDate: '2026-09-24',
+        details: { variety: 'x'.repeat(81) },
+      },
+    }), harvest);
+    expect(oversized.ok).toBe(false);
+  });
+
+
   it('keeps demo price separate from buyer-posted and reference price fields', async () => {
     const result = await dispatcher.dispatch(req('get_outlet_details', { outletId: 'demo-market' }), harvest);
     const fit = (result.data as any).fit;
