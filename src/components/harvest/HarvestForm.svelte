@@ -3,7 +3,7 @@
   import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { isValidIsoDate, validateHarvestInput } from '../../lib/domain/validation';
-  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
   import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
@@ -130,26 +130,24 @@
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
-    const urlCrop = params.get('crop');
-    const urlKg = Number(params.get('kg'));
-    const urlOrigin = params.get('origin');
-    const urlReady = params.get('ready');
-    const hasHarvestQuery = Boolean(urlCrop || params.has('kg') || urlOrigin || urlReady);
+    const hasHarvestQuery = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging']
+      .some((key) => params.has(key));
 
     if (urlLang === 'en' || urlLang === 'fil') lang = urlLang;
 
     if (hasHarvestQuery) {
-      const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === urlCrop);
-      cropChoice = supportedCrop ? urlCrop! : urlCrop ? 'other' : cropChoice;
-      otherCrop = supportedCrop ? '' : urlCrop || '';
-      quantityKg = Number.isFinite(urlKg) && urlKg > 0 ? urlKg : quantityKg;
-      originMunicipality = LAGUNA_MUNICIPALITIES.some((item) => item.id === urlOrigin) ? urlOrigin! : originMunicipality;
-      readyDate = urlReady || readyDate;
-      variety = params.get('variety') || '';
-      grade = params.get('grade') || '';
-      packaging = (params.get('packaging') || '').slice(0, 80);
-      variety = variety.slice(0, 80);
-      grade = grade.slice(0, 80);
+      const parsed = parseDiscoverQuery(params);
+      const parsedCrop = parsed.harvest.crop;
+      const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === parsedCrop);
+
+      cropChoice = supportedCrop ? parsedCrop : 'other';
+      otherCrop = supportedCrop || parsedCrop === 'other' ? '' : parsedCrop;
+      quantityKg = parsed.harvest.quantityKg;
+      originMunicipality = parsed.harvest.originMunicipality;
+      readyDate = parsed.harvest.readyDate || todayInManila();
+      variety = parsed.harvest.details?.variety || '';
+      grade = parsed.harvest.details?.grade || '';
+      packaging = parsed.harvest.details?.packaging || '';
       showDetails = Boolean(variety || grade || packaging);
       queueMicrotask(saveAndShareDraft);
       return;
