@@ -5,6 +5,7 @@
   import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
+  import { getCropLabel } from '../../lib/domain/crops';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
   import { parseCompareQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
@@ -66,12 +67,13 @@
   }));
 
   const isFil = $derived(lang === 'fil');
+  const cropName = $derived(getCropLabel(harvest.crop, lang));
   const originMun = $derived(LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]);
   const comparedOutlets = $derived(selectedIds.map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id)).filter((o): o is Outlet => Boolean(o)).slice(0, 3));
 
   function copy(en: string, fil: string) { return isFil ? fil : en; }
   function formatPeso(value: number | null) { return value === null ? copy('Not calculated', 'Hindi nakalkula') : `₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}`; }
-  function formatKg(value: number | null) { return value === null ? copy('Confirm', 'Kumpirmahin') : `${value.toLocaleString('en-PH')} kg`; }
+  function formatKg(value: number | null) { return value === null ? copy('Confirm first', 'Kumpirmahin muna') : `${value.toLocaleString('en-PH')} kg`; }
   function formatEvidenceDate(value: string | null | undefined) {
     if (!value) return copy('Not recorded', 'Walang tala');
     const date = new Date(value);
@@ -138,7 +140,7 @@
     </header>
 
     <section aria-label={copy('Harvest context', 'Konteksto ng ani')} class="grid gap-px overflow-hidden rounded-xl border border-[#20251E]/15 bg-[#20251E]/15 sm:grid-cols-4">
-      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold capitalize text-[#20251E]">{harvest.crop}</p></div>
+      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold text-[#20251E]">{cropName}</p></div>
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Quantity', 'Dami')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.quantityKg.toLocaleString('en-PH')} kg</p></div>
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('From', 'Mula sa')}</p><p class="mt-1 font-semibold text-[#20251E]">{originMun.name}</p></div>
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Ready date', 'Petsa ng ani')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.readyDate}</p></div>
@@ -146,7 +148,21 @@
 
     <aside class="grid gap-3 rounded-xl border border-[#6E3511]/20 bg-[#FCECD8] p-4 text-sm text-[#4A5245] sm:grid-cols-[auto_1fr] sm:items-start" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
       <svg class="mt-0.5 h-5 w-5 text-[#6E3511]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <div><p class="font-semibold text-[#20251E]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p><p class="mt-1 leading-5">{t('afterTransportNote', lang)}</p><p class="mt-1 text-xs leading-5 text-[#4A5245]">{copy('Edit only your transport amount below. A missing transport amount keeps the after-transport figure uncalculated.', 'I-edit lamang ang gastos mo sa biyahe sa ibaba. Kapag walang inilagay na gastos, hindi kakalkulahin ang matapos ang biyahe.')}</p></div>
+      <div>
+        <p class="font-semibold text-[#20251E]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p>
+        <p class="mt-1 leading-5">
+          {copy(
+            'After-transport figures are simple arithmetic using the transport amount shown below — not profit or guaranteed income.',
+            'Simpleng kalkulasyon lamang ang halagang matapos ang biyahe gamit ang halagang ipinapakita sa ibaba — hindi ito tubo o garantisadong kita.',
+          )}
+        </p>
+        <p class="mt-1 text-xs leading-5 text-[#4A5245]">
+          {copy(
+            'You can replace a prefilled demo transport estimate with your own amount. If no amount is available, AniWhere leaves the result uncalculated.',
+            'Maaari mong palitan ang naka-prefill na demo transport estimate ng sarili mong halaga. Kapag walang halaga, hindi ito kakalkulahin ng AniWhere.',
+          )}
+        </p>
+      </div>
     </aside>
 
     {#if comparedOutlets.length === 0}
@@ -176,8 +192,8 @@
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Remaining harvest', 'Natitirang ani')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatKg(fit.remainingKg)}</td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Price evidence', 'Ebidensya ng presyo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg)}</p><p class="mt-1 text-xs text-[#4A5245]">{evidenceKindLabel(fit.evidenceKind)}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Gross amount', 'Kabuuang halaga')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatPeso(fit.grossPay)}</td>{/each}</tr>
-              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Entered transport', 'Inilagay na gastos sa biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const value = transportValue(outlet, recordedTransport)}<td class="px-4 py-4 align-top"><label class="sr-only" for={`transport-${outlet.id}`}>{copy(`Transport for ${outlet.name}`, `Gastos sa biyahe para sa ${outlet.name}`)}</label><div class="relative max-w-[170px]"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span><input id={`transport-${outlet.id}`} type="number" min="0" step="50" inputmode="decimal" value={value} placeholder={copy('Not entered', 'Wala pang halaga')} oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)} class={`min-h-[44px] w-full rounded-lg border bg-white py-2 pl-7 pr-3 font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/20'}`} /></div><p class="mt-1.5 text-xs leading-4 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p></td>{/each}</tr>
-              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('After entered transport', 'Matapos ang inilagay na biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const afterTransport = transport === null ? null : fit.afterTransportPay}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{formatPeso(afterTransport)}</p><p class="mt-1 text-xs leading-4 text-[#4A5245]">{transport === null ? copy('Enter transport to calculate.', 'Maglagay ng gastos upang makalkula.') : copy('Not profit or guaranteed income.', 'Hindi ito tubo o garantisadong kita.')}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Transport amount used', 'Halagang biyahe na gagamitin')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const value = transportValue(outlet, recordedTransport)}<td class="px-4 py-4 align-top"><label class="sr-only" for={`transport-${outlet.id}`}>{copy(`Transport for ${outlet.name}`, `Gastos sa biyahe para sa ${outlet.name}`)}</label><div class="relative max-w-[170px]"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span><input id={`transport-${outlet.id}`} type="number" min="0" step="50" inputmode="decimal" value={value} placeholder={copy('Not entered', 'Wala pang halaga')} oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)} class={`min-h-[44px] w-full rounded-lg border bg-white py-2 pl-7 pr-3 font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/20'}`} /></div><p class="mt-1.5 text-xs leading-4 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('After transport amount', 'Matapos ang halagang biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const afterTransport = transport === null ? null : fit.afterTransportPay}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{formatPeso(afterTransport)}</p><p class="mt-1 text-xs leading-4 text-[#4A5245]">{transport === null ? copy('Enter transport to calculate.', 'Maglagay ng gastos upang makalkula.') : copy('Not profit or guaranteed income.', 'Hindi ito tubo o garantisadong kita.')}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}{@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{route.source === 'road' ? route.roadDistanceKm?.toFixed(1) : distance.toFixed(1)} km</p><p class="mt-1 text-xs text-[#4A5245]">{route.source === 'road'
   ? copy(
       `Road estimate from ${originMun.name} municipality center · ~${route.roadDurationMinutes} min drive`,
