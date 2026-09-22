@@ -8,7 +8,7 @@ test('live map fails over to the resilient SVG map when MapLibre cannot load', a
   await page.goto(mapPath);
 
   await expect(page.getByText('Offline map')).toBeVisible();
-  await expect(page.getByText('The live map did not load. Using the resilient map instead.')).toBeVisible();
+  await expect(page.getByText('The interactive map did not load. Using the resilient map instead.')).toBeVisible();
   await expect(page.getByText('Laguna Market Corridor')).toBeVisible();
 });
 
