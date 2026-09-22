@@ -478,7 +478,7 @@
               : 'border-[#91AC67]/40 bg-[#EAF3DE]/60 text-[#3B5B16] hover:border-[#597928]'
           }`}
         >
-          {lang === 'fil' ? 'Tugma' : 'Full match'} ({statusCounts.match})
+          {lang === 'fil' ? 'Tugma sa ani' : 'Matches harvest'} ({statusCounts.match})
         </button>
 
         <button
@@ -491,7 +491,7 @@
               : 'border-[#E0A96D]/40 bg-[#FCECD8]/60 text-[#6E3511] hover:border-[#6E3511]'
           }`}
         >
-          {lang === 'fil' ? 'Bahagya' : 'Partial'} ({statusCounts.partial})
+          {lang === 'fil' ? 'Tumatanggap ng bahagi' : 'Accepts part'} ({statusCounts.partial})
         </button>
 
         <button
@@ -504,7 +504,7 @@
               : 'border-[#4E7380]/40 bg-[#EBF2F5]/60 text-[#2A4B56] hover:border-[#4E7380]'
           }`}
         >
-          {lang === 'fil' ? 'Kumpirmahin' : 'Confirm'} ({statusCounts.confirm})
+          {lang === 'fil' ? 'Kumpirmahin muna' : 'Confirm first'} ({statusCounts.confirm})
         </button>
 
         <button
