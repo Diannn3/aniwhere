@@ -58,7 +58,7 @@
 
   const isFil = $derived(lang === 'fil');
   const cropName = $derived(getCropLabel(harvest.crop, lang));
-  const hasVerifiedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
+  const hasRecordedContact = $derived(Boolean(outlet.contactPhone || outlet.contactEmail));
 
   function handleToggleSave() {
     saved = toggleSavedOutlet(outlet.id);
@@ -522,9 +522,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
         </svg>
         <span>
-          {hasVerifiedContact
-            ? (isFil ? 'Pampublikong kontak' : 'Public contact')
-            : (isFil ? 'Walang beripikadong kontak' : 'No verified contact')}
+          {hasRecordedContact
+            ? (isFil ? 'Detalye ng kontak' : 'Contact details')
+            : (isFil ? 'Walang nakatalang kontak' : 'No recorded contact')}
         </span>
       </button>
 
@@ -655,10 +655,10 @@
           </div>
         </div>
 
-        {#if hasVerifiedContact}
+        {#if hasRecordedContact}
           <div class="p-3 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-2">
             <div class="text-[11px] font-semibold text-[#596052] uppercase">
-              {isFil ? 'Beripikadong pampublikong kontak' : 'Verified public contact'}
+              {isFil ? 'Nakatala na contact field' : 'Recorded contact field'}
             </div>
             {#if outlet.contactPhone}
               <div class="font-mono text-xs text-[#20251E]">{outlet.contactPhone}</div>
@@ -666,12 +666,17 @@
             {#if outlet.contactEmail}
               <div class="text-xs text-[#20251E]">{outlet.contactEmail}</div>
             {/if}
+            <p class="text-[11px] leading-relaxed text-[#6E3511]">
+              {isFil
+                ? 'Demo field ito, hindi beripikadong real-world contact. Huwag tumawag o mag-message batay sa demo record.'
+                : 'This is a demo field, not a verified real-world contact. Do not call or message based on the demo record.'}
+            </p>
           </div>
         {:else}
           <div class="p-3 rounded-xl bg-[#4E7380]/8 border border-[#4E7380]/18 text-xs text-[#2A4B56]">
             {isFil
-              ? 'Walang beripikadong pampublikong phone o email na nakaimbak para sa record na ito. Huwag gumamit ng imbentong contact details.'
-              : 'No verified public phone or email is stored for this record. AniWhere does not substitute invented contact details.'}
+              ? 'Walang nakatalang phone o email para sa record na ito. Hindi gumagawa ang AniWhere ng imbentong contact details.'
+              : 'No phone or email is recorded for this entry. AniWhere does not substitute invented contact details.'}
           </div>
         {/if}
 
