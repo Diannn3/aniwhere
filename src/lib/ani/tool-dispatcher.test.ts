@@ -68,6 +68,44 @@ describe('AniToolDispatcher', () => {
     expect(result.error?.code).toBe('not_found');
   });
 
+
+  it('allows typed discovery map navigation only for known outlets', async () => {
+    const result = await dispatcher.dispatch(req('navigate_to', {
+      path: '/discover',
+      view: 'map',
+      outletId: 'demo-market',
+    }), harvest);
+    expect(result.ok).toBe(true);
+    expect(result.data).toMatchObject({
+      path: '/discover',
+      view: 'map',
+      selectedOutletId: 'demo-market',
+      requiresUiNavigation: true,
+    });
+
+    const unknownOutlet = await dispatcher.dispatch(req('navigate_to', {
+      path: '/discover',
+      view: 'map',
+      outletId: 'missing-outlet',
+    }), harvest);
+    expect(unknownOutlet.ok).toBe(false);
+    expect(unknownOutlet.error?.code).toBe('not_found');
+
+    const invalidView = await dispatcher.dispatch(req('navigate_to', {
+      path: '/discover',
+      view: 'satellite',
+    }), harvest);
+    expect(invalidView.ok).toBe(false);
+    expect(invalidView.error?.code).toBe('invalid_arguments');
+
+    const stateOnWrongRoute = await dispatcher.dispatch(req('navigate_to', {
+      path: '/saved',
+      view: 'map',
+    }), harvest);
+    expect(stateOnWrongRoute.ok).toBe(false);
+    expect(stateOnWrongRoute.error?.code).toBe('not_allowed');
+  });
+
   it('rejects arbitrary navigation', async () => {
     const result = await dispatcher.dispatch(req('navigate_to', { path: 'https://example.com' }), harvest);
     expect(result.ok).toBe(false);
