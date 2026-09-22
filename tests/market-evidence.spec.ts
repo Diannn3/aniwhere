@@ -28,8 +28,8 @@ test('keeps partial quantities and unknown capacity distinct in the comparison l
   const unknownAfterTransport = afterTransport.getByRole('cell').nth(1);
 
   await expect(fit.getByRole('cell').nth(1)).toContainText(/contact to confirm/i);
-  await expect(unknownAccepted).toHaveText('Confirm');
-  await expect(unknownRemaining).toHaveText('Confirm');
+  await expect(unknownAccepted).toHaveText('Confirm first');
+  await expect(unknownRemaining).toHaveText('Confirm first');
   await expect(unknownGross).toHaveText('Not calculated');
   await expect(unknownAfterTransport).toContainText('Not calculated');
   await expect(confirmation.getByRole('cell').nth(1)).toContainText(/still unknown: current capacity/i);
@@ -65,15 +65,15 @@ test('Filipino outlet guidance localizes crop and confirmation questions', async
 });
 
 
-test('demo contact fields are never presented as verified real-world contacts', async ({ page }) => {
+test('missing demo contact details never become invented real-world contacts', async ({ page }) => {
   await page.goto(
     '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
   );
 
-  await page.getByRole('button', { name: 'Contact details' }).click();
+  await page.getByRole('button', { name: 'No recorded contact' }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog).toContainText('Recorded contact field');
-  await expect(dialog).toContainText(/demo field, not a verified real-world contact/i);
+  await expect(dialog).toContainText(/No phone or email is recorded for this entry/i);
+  await expect(dialog).toContainText(/does not substitute invented contact details/i);
   await expect(dialog).not.toContainText('Verified public contact');
 });
 
@@ -131,7 +131,7 @@ test('outlet detail never turns unknown capacity into a full-harvest claim', asy
   await expect(page.getByText('Confirm first').first()).toBeVisible();
   await expect(page.getByText('Remaining harvest is not known yet')).toBeVisible();
   await expect(page.getByText('Full harvest match')).toHaveCount(0);
-  await expect(page.getByText('Recorded Transport Estimate')).toBeVisible();
+  await expect(page.getByText('Recorded Transport Estimate', { exact: true })).toBeVisible();
   await expect(page.getByText(/Demo-record estimate, not an actual hauling quote/i)).toBeVisible();
   await expect(page.getByText(/not profit or guaranteed income/i)).toBeVisible();
 });
@@ -185,7 +185,7 @@ test('mobile comparison cards keep transport editing and decision facts usable',
   await page.goto(comparisonPath(['demo-processor', 'demo-market']));
 
   await expect(page.getByRole('heading', { name: 'Compare at a glance' })).toBeVisible();
-  const processorTransport = page.getByLabel(/Transport amount used for Demo Processor/i);
+  const processorTransport = page.locator('#mobile-transport-demo-processor');
   await expect(processorTransport).toBeVisible();
 
   await processorTransport.fill('750');
