@@ -45,10 +45,11 @@ test('mobile map selection stays on the map until the farmer asks for the list',
   const processorPin = page.getByRole('button', { name: /Demo Processor:.*km/i });
   await processorPin.click();
 
-  await expect(page.getByText('Can accept')).toBeVisible();
-  await expect(page.getByText('Harvest remaining')).toBeVisible();
-  await expect(page.getByText('300 kg', { exact: true })).toBeVisible();
-  await expect(page.getByText('0 kg', { exact: true })).toBeVisible();
+  const preview = page.getByRole('region', { name: 'Selected map place' });
+  await expect(preview.getByText('Can accept', { exact: true })).toBeVisible();
+  await expect(preview.getByText('Harvest remaining', { exact: true })).toBeVisible();
+  await expect(preview.getByText('300 kg', { exact: true })).toBeVisible();
+  await expect(preview.getByText('0 kg', { exact: true })).toBeVisible();
 
   await expect(page.getByText('Offline map')).toBeVisible();
   await expect(page).toHaveURL(/view=map/);
