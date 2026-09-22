@@ -146,6 +146,25 @@ test('keeps price arithmetic available without overwhelming the primary result c
   await expect(processor.getByText(/not profit or guaranteed income/i)).toBeVisible();
 });
 
+test('comparison never preselects outlets and preserves harvest context when empty', async ({ page }) => {
+  await page.goto('/compare?crop=tomato&kg=450&origin=calamba&ready=2026-09-25&view=list&lang=fil');
+
+  await expect(page.getByRole('heading', { name: 'Walang napiling outlet' })).toBeVisible();
+  const back = page.getByRole('link', { name: /Maghanap ng mapagbebentahan/i });
+  await expect(back).toHaveAttribute('href', /kg=450/);
+  await expect(back).toHaveAttribute('href', /origin=calamba/);
+  await expect(back).toHaveAttribute('href', /ready=2026-09-25/);
+  await expect(back).toHaveAttribute('href', /lang=fil/);
+
+  await back.click();
+  await expectHarvestQuery(page, {
+    kg: '450',
+    origin: 'calamba',
+    ready: '2026-09-25',
+    lang: 'fil',
+  });
+});
+
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
