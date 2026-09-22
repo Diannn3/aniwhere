@@ -125,6 +125,9 @@
       class="w-full h-full max-h-[540px]"
       viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
       fill="none"
+      onclick={(event) => {
+        if (event.target === event.currentTarget) onSelect('');
+      }}
       xmlns="http://www.w3.org/2000/svg"
       role="group"
       aria-label={lang === 'fil'
@@ -143,8 +146,7 @@
         width={SVG_WIDTH}
         height={SVG_HEIGHT}
         fill="url(#grid-dots-enhanced)"
-        class="cursor-pointer"
-        onclick={() => onSelect('')}
+        pointer-events="none"
       />
 
       <!-- Laguna de Bay lake contour with ripple lines -->
@@ -155,8 +157,6 @@
         stroke="#4E7380"
         stroke-width="1.5"
         stroke-opacity="0.3"
-        class="cursor-pointer"
-        onclick={() => onSelect('')}
         pointer-events="none"
       />
       <text
