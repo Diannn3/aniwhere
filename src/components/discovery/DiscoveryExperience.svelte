@@ -216,8 +216,10 @@
   }
 
   function handleSelectPin(id: string) {
-    selectedOutletId = id;
+    selectedOutletId = id || undefined;
     syncDiscoveryUrl();
+
+    if (!id) return;
 
     // On phones, keep the map visible so the farmer can read the route card.
     // Desktop already shows map and list together, so reveal the selected card there too.
