@@ -13,12 +13,11 @@ test('live map fails over to the resilient SVG map when MapLibre cannot load', a
 });
 
 test('default build never invents road distance or drive time', async ({ page }) => {
-  await page.goto(mapPath);
+  await page.goto(
+    '/compare?places=demo-processor,demo-market,demo-msme-confirm&crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en'
+  );
 
-  const selectedRouteCard = page.getByLabel('Interactive map of Laguna market outlets').locator('..');
-  await expect(page.getByText('Straight-line distance').first()).toBeVisible();
-  await expect(page.getByText('Road route').first()).toBeVisible();
-  await expect(page.getByText('Unavailable').first()).toBeVisible();
-  await expect(page.getByText(/dashed line is geographic context only/i)).toBeVisible();
-  await expect(selectedRouteCard).toBeAttached();
+  await expect(page.getByText('Straight-line distance; road route unavailable.').first()).toBeVisible();
+  await expect(page.getByText(/Road estimate/)).toHaveCount(0);
+  await expect(page.getByText(/min drive/)).toHaveCount(0);
 });
