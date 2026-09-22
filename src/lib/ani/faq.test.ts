@@ -10,7 +10,9 @@ describe('Ani local FAQ', () => {
   });
 
   it.each([
+    ['What does Accepts part of your harvest mean?', 'partial-match'],
     ['What does Partial match mean?', 'partial-match'],
+    ['Ano ang ibig sabihin ng Tugma sa ani?', 'full-match'],
     ['Ano ang ibig sabihin ng Full match?', 'full-match'],
     ['gastos sa transport', 'transport-expense'],
     ['after transport ba ay tubo?', 'not-profit'],
@@ -30,6 +32,21 @@ describe('Ani local FAQ', () => {
 
   it('returns no result for unrelated text', () => {
     expect(matchAniFaq('kumusta ang panahon bukas').kind).toBe('none');
+  });
+
+  it('keeps canonical trust boundaries in the bundled answers', () => {
+    const full = ANI_FAQS.find((faq) => faq.id === 'full-match');
+    const partial = ANI_FAQS.find((faq) => faq.id === 'partial-match');
+    const price = ANI_FAQS.find((faq) => faq.id === 'sample-price');
+    const distance = ANI_FAQS.find((faq) => faq.id === 'distance');
+    const offline = ANI_FAQS.find((faq) => faq.id === 'offline-help');
+
+    expect(full?.question.en).toBe('What does Matches your harvest mean?');
+    expect(full?.answer.en).toMatch(/not a sale, reservation, or promise/i);
+    expect(partial?.answer.en).toMatch(/only the accepted quantity/i);
+    expect(price?.answer.en).toMatch(/expired offers are not active demand/i);
+    expect(distance?.answer.en).toMatch(/municipality center.*not your exact farm/i);
+    expect(offline?.answer.en).toMatch(/does not create fresh buyer demand/i);
   });
 
   it('normalizes accents and punctuation', () => {
