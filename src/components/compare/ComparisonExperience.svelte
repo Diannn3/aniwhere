@@ -150,7 +150,13 @@
     <section aria-label={copy('Harvest context', 'Konteksto ng ani')} class="grid gap-px overflow-hidden rounded-xl border border-[#20251E]/15 bg-[#20251E]/15 sm:grid-cols-4">
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold text-[#20251E]">{cropName}</p></div>
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Quantity', 'Dami')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.quantityKg.toLocaleString('en-PH')} kg</p></div>
-      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('From', 'Mula sa')}</p><p class="mt-1 font-semibold text-[#20251E]">{originMun.name}</p></div>
+      <div class="bg-[#FFFDF8] px-4 py-3">
+        <p class="text-xs font-semibold text-[#596052]">{copy('Origin municipality', 'Munisipalidad')}</p>
+        <p class="mt-1 font-semibold text-[#20251E]">{originMun.name}</p>
+        <p class="mt-1 text-[10px] leading-4 text-[#596052]">
+          {copy('Distance reference: municipality center', 'Batayan ng layo: sentro ng munisipyo')}
+        </p>
+      </div>
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Ready date', 'Petsa ng ani')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.readyDate}</p></div>
     </section>
 
