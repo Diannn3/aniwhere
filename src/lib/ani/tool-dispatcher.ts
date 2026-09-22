@@ -171,10 +171,42 @@ export class AniToolDispatcher {
         }
         case 'navigate_to': {
           const path = request.args.path;
+          const view = request.args.view;
+          const outletId = request.args.outletId;
           if (typeof path !== 'string') return error(request, 'invalid_arguments', 'A route is required.');
+          if (view !== undefined && view !== 'list' && view !== 'map') {
+            return error(request, 'invalid_arguments', 'Discovery view must be list or map.');
+          }
+          if (outletId !== undefined && typeof outletId !== 'string') {
+            return error(request, 'invalid_arguments', 'Outlet selection must use a known outlet ID.');
+          }
+
           const allowedPlace = /^\/places\/[a-z0-9-]+$/.test(path) && CURRENT_OUTLETS.some((outlet) => path === `/places/${outlet.slug}`);
           if (!ROUTE_ALLOWLIST.has(path) && !allowedPlace) return error(request, 'not_allowed', 'That route is not available to Ani.');
-          return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: { path, requiresUiNavigation: true } };
+
+          if ((view !== undefined || outletId !== undefined) && path !== '/discover') {
+            return error(request, 'not_allowed', 'View and outlet selection are only available on discovery.');
+          }
+
+          const selectedOutlet = outletId === undefined ? undefined : findOutlet(outletId);
+          if (outletId !== undefined && !selectedOutlet) {
+            return error(request, 'not_found', 'The requested discovery outlet was not found.');
+          }
+
+          return {
+            requestId: request.id,
+            tool: request.name,
+            ok: true,
+            dataMode: CURRENT_DATA_MODE,
+            data: {
+              path,
+              ...(path === '/discover' ? {
+                view: view ?? 'list',
+                selectedOutletId: selectedOutlet?.id ?? null,
+              } : {}),
+              requiresUiNavigation: true,
+            },
+          };
         }
         case 'save_outlet': {
           const outlet = findOutlet(request.args.outletId);
