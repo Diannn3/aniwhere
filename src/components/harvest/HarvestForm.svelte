@@ -6,7 +6,7 @@
   import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
-  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   type HarvestDraft = {
     cropChoice: string;
@@ -68,6 +68,34 @@
     });
   }
 
+  function saveAndShareDraft() {
+    saveDraft();
+
+    const crop = cropLabel();
+    const validation = validateHarvestInput({
+      crop,
+      quantityKg,
+      originMunicipality,
+      readyDate,
+    });
+    if (!validation.isValid) return;
+
+    publishHarvestContext({
+      crop,
+      quantityKg: Number(quantityKg),
+      originMunicipality,
+      readyDate,
+      details:
+        variety.trim() || grade.trim() || packaging.trim()
+          ? {
+              ...(variety.trim() ? { variety: variety.trim().slice(0, 80) } : {}),
+              ...(grade.trim() ? { grade: grade.trim().slice(0, 80) } : {}),
+              ...(packaging.trim() ? { packaging: packaging.trim().slice(0, 80) } : {}),
+            }
+          : undefined,
+    });
+  }
+
   function focusField(field: string) {
     const target =
       field === 'crop'
@@ -109,8 +137,11 @@
       readyDate = urlReady || readyDate;
       variety = params.get('variety') || '';
       grade = params.get('grade') || '';
-      packaging = params.get('packaging') || '';
+      packaging = (params.get('packaging') || '').slice(0, 80);
+      variety = variety.slice(0, 80);
+      grade = grade.slice(0, 80);
       showDetails = Boolean(variety || grade || packaging);
+      queueMicrotask(saveAndShareDraft);
       return;
     }
 
@@ -124,6 +155,7 @@
       grade,
       packaging,
     });
+    queueMicrotask(saveAndShareDraft);
   });
 
   onMount(() => subscribeHarvestContext((next) => {
@@ -180,7 +212,7 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} oninput={saveDraft} onchange={saveDraft} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
+<form onsubmit={handleSubmit} oninput={saveAndShareDraft} onchange={saveAndShareDraft} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
   <div class="flex items-start justify-between gap-4 border-b quiet-rule pb-5">
     <div class="max-w-xl">
       <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
