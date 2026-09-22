@@ -281,7 +281,7 @@
       <span class="block text-sm font-bold text-[#20251E]">{t('quantityLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
       <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Kabuuang timbang na handa mong dalhin.' : 'Total weight you are ready to bring.'}</span>
       <span class="mt-3 flex items-center gap-2">
-        <input id="harvest-quantity" bind:this={quantityInputEl} bind:value={quantityKg} type="number" min="1" max="100000" step="1" inputmode="numeric" aria-describedby={errors.quantityKg ? 'quantity-error' : undefined} class="min-h-10 min-w-0 flex-1 bg-transparent text-2xl font-bold text-[#20251E] outline-none" />
+        <input id="harvest-quantity" bind:this={quantityInputEl} bind:value={quantityKg} type="number" min="1" max="100000" step="1" inputmode="numeric" aria-invalid={Boolean(errors.quantityKg)} aria-describedby={errors.quantityKg ? 'quantity-error' : undefined} class="min-h-11 min-w-0 flex-1 bg-transparent text-2xl font-bold text-[#20251E] outline-none" />
         <span class="font-tabular text-sm font-bold text-[#4A5245]">kg</span>
       </span>
       {#if errors.quantityKg}<span id="quantity-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.quantityKg}</span>{/if}
@@ -294,7 +294,7 @@
           ? 'Munisipalidad kung saan manggagaling ang ani. Ang sentro ng munisipyo ang batayang lokasyon para sa layo, hindi ang eksaktong bukid.'
           : 'Municipality where the harvest will leave from. Distance uses the municipality center as a reference point, not your exact farm.'}
       </span>
-      <select id="harvest-origin" bind:this={municipalitySelectEl} bind:value={originMunicipality} aria-describedby={errors.originMunicipality ? 'origin-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none">
+      <select id="harvest-origin" bind:this={municipalitySelectEl} bind:value={originMunicipality} aria-invalid={Boolean(errors.originMunicipality)} aria-describedby={errors.originMunicipality ? 'origin-error' : undefined} class="mt-3 min-h-11 w-full bg-transparent text-base font-bold text-[#20251E] outline-none">
         {#each LAGUNA_MUNICIPALITIES as municipality}
           <option value={municipality.id}>{municipality.name}</option>
         {/each}
@@ -305,7 +305,7 @@
     <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20 sm:col-span-2">
       <span class="block text-sm font-bold text-[#20251E]">{t('readyDateLabel', lang)}</span>
       <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Ilagay ang petsang handa nang dalhin ang ani.' : 'Set the day the harvest will be ready to move.'}</span>
-      <input id="harvest-ready-date" bind:this={readyDateInputEl} bind:value={readyDate} type="date" min={todayInManila()} aria-describedby={errors.readyDate ? 'ready-date-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none" />
+      <input id="harvest-ready-date" bind:this={readyDateInputEl} bind:value={readyDate} type="date" min={todayInManila()} aria-invalid={Boolean(errors.readyDate)} aria-describedby={errors.readyDate ? 'ready-date-error' : undefined} class="mt-3 min-h-11 w-full bg-transparent text-base font-bold text-[#20251E] outline-none" />
       {#if errors.readyDate}<span id="ready-date-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.readyDate}</span>{/if}
     </label>
   </div>
