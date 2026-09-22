@@ -6,7 +6,11 @@
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
-  import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import {
+    publishHarvestContext,
+    publishHarvestDraftValidity,
+    subscribeHarvestContext,
+  } from '../../lib/ani/harvest-sync';
 
   type HarvestDraft = {
     cropChoice: string;
@@ -87,6 +91,7 @@
       originMunicipality,
       readyDate,
     });
+    publishHarvestDraftValidity(validation.isValid);
     if (!validation.isValid) return;
 
     publishingOwnDraft = true;
@@ -194,6 +199,7 @@
       readyDate,
     });
 
+    publishHarvestDraftValidity(validation.isValid);
     if (!validation.isValid) {
       errors = lang === 'fil' ? validation.errorsFil : validation.errors;
       requestAnimationFrame(() => errorSummaryEl?.focus());
