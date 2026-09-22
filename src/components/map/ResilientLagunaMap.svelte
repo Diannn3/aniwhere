@@ -157,6 +157,7 @@
         stroke-opacity="0.3"
         class="cursor-pointer"
         onclick={() => onSelect('')}
+        pointer-events="none"
       />
       <text
         x="240"
@@ -167,6 +168,7 @@
         fill="#4E7380"
         fill-opacity="0.75"
         text-anchor="middle"
+        pointer-events="none"
       >
         Laguna de Bay
       </text>
@@ -180,6 +182,7 @@
         stroke-width="1"
         stroke-dasharray="3 3"
         stroke-opacity="0.4"
+        pointer-events="none"
       />
       <text
         x="195"
@@ -190,6 +193,7 @@
         fill="#597928"
         fill-opacity="0.75"
         text-anchor="middle"
+        pointer-events="none"
       >
         Mt. Makiling
       </text>
@@ -202,6 +206,7 @@
         stroke-opacity="0.16"
         stroke-dasharray="4 4"
         fill="none"
+        pointer-events="none"
       />
 
       <!-- Active Connection Line between Origin and Selected Outlet -->
