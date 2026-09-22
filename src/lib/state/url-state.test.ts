@@ -71,6 +71,18 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.lang).toBe('fil');
   });
 
+  it('rejects malformed selected-place and comparison ids from URLs', () => {
+    const discover = parseDiscoverQuery(
+      'crop=tomato&kg=300&origin=los-banos&place=%3Cscript%3Ealert(1)%3C%2Fscript%3E'
+    );
+    expect(discover.selectedPlaceId).toBeUndefined();
+
+    const compare = parseCompareQuery(
+      'places=demo-market,demo-market,%3Cscript%3E,demo-processor,UPPER_CASE&crop=tomato&kg=300&origin=los-banos'
+    );
+    expect(compare.placeIds).toEqual(['demo-market', 'demo-processor']);
+  });
+
   it('does not invent comparison selections when places are absent', () => {
     const parsed = parseCompareQuery('crop=tomato&kg=300&origin=los-banos');
 
