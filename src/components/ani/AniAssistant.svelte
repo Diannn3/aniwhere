@@ -159,16 +159,65 @@
     notice = isFil() ? 'Tapos na ang pagsusuri ng AniWhere.' : 'AniWhere finished checking.';
   }
 
+  function actionHref(route: string) {
+    const target = new URL(route, window.location.origin);
+
+    if (!(onHome && !harvestDraftValid)) {
+      const query = new URLSearchParams(
+        serializeDiscoverQuery(currentHarvest(), 'list', undefined, lang),
+      );
+      for (const [key, value] of query.entries()) {
+        target.searchParams.set(key, value);
+      }
+    } else if (lang === 'fil') {
+      target.searchParams.set('lang', 'fil');
+    }
+
+    if (route === '/compare') {
+      const places = new URLSearchParams(window.location.search).get('places');
+      if (places) target.searchParams.set('places', places);
+    }
+
+    return ${target.pathname}${target.search};
+  }
+
+  async function disposeProvider() {
+    unsubscribe?.();
+    unsubscribe = undefined;
+    const current = provider;
+    provider = undefined;
+    await current?.close();
+  }
+
   async function openAni() {
     if (open) return;
     open = true;
+    localMode = true;
+    status = 'idle';
+    choices = [];
+    activeFaq = null;
+    selectedTopic = 'all';
     document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'true');
     document.documentElement.style.overflow = 'hidden';
     setBackgroundInert(true);
-    status = 'connecting';
-    notice = isFil() ? 'Binubuksan si Ani.' : 'Opening Ani.';
+    notice = isFil()
+      ? 'Handa ang local na tulong. Naka-bundle ang mga sagot na ito sa AniWhere.'
+      : 'Local help is ready. These answers are bundled with AniWhere.';
     await tick();
     inputEl?.focus();
+  }
+
+  async function connectOnline() {
+    if (!open || !localMode) return;
+
+    localMode = false;
+    choices = [];
+    activeFaq = null;
+    status = 'connecting';
+    notice = isFil() ? 'Kumokonekta sa online Ani…' : 'Connecting to online Ani…';
+
+    await disposeProvider();
+
     const useMock = import.meta.env.DEV || import.meta.env.PUBLIC_ANI_PROVIDER === 'mock';
     if (useMock) {
       provider = new MockAniProvider();
@@ -176,35 +225,62 @@
       const { GeminiLiveAniProvider } = await import('../../lib/ani/gemini-live-provider');
       provider = new GeminiLiveAniProvider();
     }
+
     unsubscribe = provider.subscribe((event) => {
       if (event.status) status = event.status;
       if (event.message) messages = [...messages, event.message];
       if (event.toolRequest) void handleToolRequest(event.toolRequest);
-      if (event.error) { status = 'error'; notice = event.error; }
+      if (event.error) {
+        status = 'error';
+        notice = event.error;
+      }
     });
+
     try {
-      await provider.connect({ language: lang, dataMode: CURRENT_DATA_MODE, harvest: currentHarvest() });
+      await provider.connect({
+        language: lang,
+        dataMode: CURRENT_DATA_MODE,
+        harvest: currentHarvest(),
+      });
       notice = provider.kind === 'mock'
-        ? (isFil() ? 'Preview mode. Hindi ito live market AI.' : 'Preview mode. This is not live market AI.')
-        : (isFil() ? 'Handa si Ani.' : 'Ani is ready.');
+        ? (isFil()
+            ? 'Preview mode. Online behavior lang ito; demo market data pa rin.'
+            : 'Preview mode. This simulates online Ani; market data is still demo data.')
+        : (isFil() ? 'Handa ang online Ani.' : 'Online Ani is ready.');
     } catch {
-      status = 'offline';
+      await disposeProvider();
+      localMode = true;
+      status = 'idle';
       notice = isFil()
-        ? 'Hindi makakonekta si Ani ngayon. Magagamit mo pa rin ang AniWhere nang normal.'
-        : 'Ani cannot connect right now. You can keep using AniWhere normally.';
+        ? 'Hindi makakonekta ang online Ani. Magagamit mo pa rin ang local na tulong.'
+        : 'Online Ani could not connect. Local help is still available.';
     }
+  }
+
+  async function returnToLocal() {
+    await disposeProvider();
+    localMode = true;
+    status = 'idle';
+    choices = [];
+    activeFaq = null;
+    notice = isFil()
+      ? 'Bumalik sa local na tulong. Walang online na sagot ang ginagamit.'
+      : 'Back to local help. No online answer is being used.';
+    await tick();
+    inputEl?.focus();
   }
 
   function closeAni() {
     open = false;
+    localMode = true;
+    status = 'idle';
+    choices = [];
+    activeFaq = null;
     document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'false');
     document.documentElement.style.overflow = '';
     setBackgroundInert(false);
     notice = '';
-    void provider?.close();
-    unsubscribe?.();
-    provider = undefined;
-    unsubscribe = undefined;
+    void disposeProvider();
     requestAnimationFrame(() => {
       const mobileTrigger = document.getElementById('ani-mobile-trigger') as HTMLButtonElement | null;
       if (mobileTrigger && mobileTrigger.offsetParent !== null) mobileTrigger.focus();
@@ -212,35 +288,102 @@
     });
   }
 
+  function chooseFaq(faq: AniFaq) {
+    choices = [];
+    activeFaq = faq;
+    messages = [
+      ...messages,
+      {
+        id: `faq-${faq.id}-${Date.now()}`,
+        role: 'ani',
+        text: faq.answer[lang],
+        createdAt: Date.now(),
+      },
+    ];
+    notice = isFil()
+      ? 'Local na preloaded na sagot mula sa AniWhere.'
+      : 'Preloaded local answer from AniWhere.';
+  }
+
   async function submit() {
     const text = input.trim();
-    if (!text || !provider || status === 'offline' || status === 'error') return;
-    if (homeNeedsValidDraft()) {
-      notice = isFil()
-        ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
-        : 'Complete the required harvest fields before Ani checks market fit.';
-      inputEl?.focus();
+    if (!text) return;
+
+    messages = [
+      ...messages,
+      { id: `farmer-${Date.now()}`, role: 'farmer', text, createdAt: Date.now() },
+    ];
+    input = '';
+
+    if (localMode) {
+      const result = matchAniFaq(text);
+      if (result.kind === 'answer') {
+        chooseFaq(result.faq);
+      } else if (result.kind === 'choices') {
+        choices = result.faqs;
+        activeFaq = null;
+        notice = isFil()
+          ? 'May ilang malapit na preloaded na tanong. Piliin ang pinakaangkop.'
+          : 'A few preloaded questions are close. Choose the best match.';
+      } else {
+        choices = [];
+        activeFaq = null;
+        messages = [
+          ...messages,
+          {
+            id: `faq-none-${Date.now()}`,
+            role: 'ani',
+            text: isFil()
+              ? 'Wala pa akong local na sagot para diyan. Pumili ng topic sa ibaba o gamitin ang online Ani kapag may koneksyon.'
+              : 'I do not have a local answer for that yet. Browse a topic below or use online Ani when you have a connection.',
+            createdAt: Date.now(),
+          },
+        ];
+        notice = isFil()
+          ? 'Walang eksaktong local na sagot.'
+          : 'No exact local answer is available.';
+      }
       return;
     }
-    messages = [...messages, { id: `farmer-${Date.now()}`, role: 'farmer', text, createdAt: Date.now() }];
-    input = '';
-    try { await provider.sendText(text); }
-    catch {
-      status = 'offline';
-      notice = isFil() ? 'Naputol ang koneksyon. Gamitin muna ang manual na AniWhere.' : 'Connection interrupted. Use the manual AniWhere controls for now.';
+
+    if (!provider || status === 'offline' || status === 'error' || status === 'connecting') {
+      notice = isFil()
+        ? 'Hindi pa handa ang online Ani. Maaari kang bumalik sa local na tulong.'
+        : 'Online Ani is not ready yet. You can return to local help.';
+      return;
+    }
+
+    try {
+      await provider.sendText(text);
+    } catch {
+      await disposeProvider();
+      localMode = true;
+      status = 'idle';
+      notice = isFil()
+        ? 'Naputol ang koneksyon. Bumalik si Ani sa local na tulong.'
+        : 'The connection was interrupted. Ani returned to local help.';
     }
   }
 
   async function requestMic() {
-    if (homeNeedsValidDraft()) {
+    if (localMode) {
       notice = isFil()
-        ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago gamitin si Ani.'
-        : 'Complete the required harvest fields before using Ani.';
+        ? 'Text-only ang local na tulong. Piliin ang online Ani para gumamit ng voice.'
+        : 'Local help is text-only. Switch to online Ani to use voice.';
       inputEl?.focus();
       return;
     }
+
+    if (!provider || status === 'connecting' || status === 'offline' || status === 'error') {
+      notice = isFil()
+        ? 'Hindi pa handa ang online voice. Maaari kang mag-type o bumalik sa local na tulong.'
+        : 'Online voice is not ready. You can type or return to local help.';
+      inputEl?.focus();
+      return;
+    }
+
     notice = isFil() ? 'Humihingi ng pahintulot sa mikropono.' : 'Requesting microphone permission.';
-    if (!provider?.startListening) {
+    if (!provider.startListening) {
       notice = isFil()
         ? 'Hindi available ang voice dito. Maaari kang mag-type kay Ani.'
         : 'Voice is unavailable here. You can type to Ani instead.';
@@ -249,10 +392,12 @@
     }
 
     try {
-      // The provider owns microphone acquisition so the browser is asked only once per listening session.
+      // The provider owns microphone acquisition so permission is requested only once per session.
       await provider.startListening();
       status = 'listening';
-      notice = isFil() ? 'Nakikinig si Ani. Pindutin muli para huminto.' : 'Ani is listening. Press again to stop.';
+      notice = isFil()
+        ? 'Nakikinig ang online Ani. Pindutin muli para huminto.'
+        : 'Online Ani is listening. Press again to stop.';
     } catch {
       notice = isFil()
         ? 'Hindi mabuksan ang mikropono. Maaari kang mag-type kay Ani.'
