@@ -27,6 +27,16 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.lang).toBe('en');
   });
 
+  it('drops oversized URL text instead of letting it become harvest state', () => {
+    const oversized = 'x'.repeat(81);
+    const parsed = parseDiscoverQuery(
+      `crop=${oversized}&kg=300&origin=los-banos&variety=${oversized}&grade=Grade+A&packaging=${oversized}`
+    );
+
+    expect(parsed.harvest.crop).toBe('other');
+    expect(parsed.harvest.details).toEqual({ grade: 'Grade A' });
+  });
+
   it('uses Manila local date instead of a hard-coded prototype date', () => {
     expect(todayInManila(new Date('2026-09-17T16:30:00Z'))).toBe('2026-09-18');
   });
