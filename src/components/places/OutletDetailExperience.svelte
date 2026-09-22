@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { evaluateFit } from '../../lib/domain/match';
@@ -31,6 +31,12 @@
   let showMessageModal = $state(false);
   let showContactModal = $state(false);
   let copiedMessage = $state(false);
+  let messageTrigger: HTMLButtonElement | null = $state(null);
+  let contactTrigger: HTMLButtonElement | null = $state(null);
+  let messagePanel: HTMLDivElement | null = $state(null);
+  let contactPanel: HTMLDivElement | null = $state(null);
+  let messageCloseButton: HTMLButtonElement | null = $state(null);
+  let contactCloseButton: HTMLButtonElement | null = $state(null);
 
   onMount(() => {
     saved = isOutletSaved(outlet.id);
@@ -62,6 +68,52 @@
 
   function handleToggleSave() {
     saved = toggleSavedOutlet(outlet.id);
+  }
+
+  async function openMessageDialog() {
+    showMessageModal = true;
+    await tick();
+    messageCloseButton?.focus();
+  }
+
+  async function openContactDialog() {
+    showContactModal = true;
+    await tick();
+    contactCloseButton?.focus();
+  }
+
+  function closeMessageDialog() {
+    showMessageModal = false;
+    requestAnimationFrame(() => messageTrigger?.focus());
+  }
+
+  function closeContactDialog() {
+    showContactModal = false;
+    requestAnimationFrame(() => contactTrigger?.focus());
+  }
+
+  function handleDialogKeydown(event: KeyboardEvent, panel: HTMLElement | null, close: () => void) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+      return;
+    }
+    if (event.key !== 'Tab' || !panel) return;
+
+    const focusable = [...panel.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function formatEvidenceDate(value: string | null | undefined): string {
@@ -502,8 +554,9 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <!-- 1. Prepare Message CTA -->
       <button
+        bind:this={messageTrigger}
         type="button"
-        onclick={() => (showMessageModal = true)}
+        onclick={openMessageDialog}
         class="w-full min-h-[48px] px-5 py-3 rounded-full bg-[#486320] text-white font-semibold text-sm hover:bg-[#47621f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -514,8 +567,9 @@
 
       <!-- 2. Public Contact Details -->
       <button
+        bind:this={contactTrigger}
         type="button"
-        onclick={() => (showContactModal = true)}
+        onclick={openContactDialog}
         class="w-full min-h-[48px] px-5 py-3 rounded-full bg-white border border-[#20251E]/20 text-[#20251E] font-semibold text-sm hover:bg-[#FFFDF8] hover:border-[#597928] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
       >
         <svg class="w-4 h-4 text-[#486320]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -556,16 +610,17 @@
 
 <!-- Modal: Prepare Message -->
 {#if showMessageModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-2xl border border-[#20251E]/15 max-w-lg w-full p-6 space-y-4 shadow-xl">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="prepare-message-title">
+    <div bind:this={messagePanel} onkeydown={(event) => handleDialogKeydown(event, messagePanel, closeMessageDialog)} class="bg-white rounded-2xl border border-[#20251E]/15 max-w-lg w-full p-6 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
-        <h3 class="text-lg font-serif font-bold text-[#20251E]">
+        <h3 id="prepare-message-title" class="text-lg font-serif font-bold text-[#20251E]">
           {isFil ? 'Ihanda ang Mensahe sa Mamimili' : 'Prepare Inquiry Message'}
         </h3>
         <button
+          bind:this={messageCloseButton}
           type="button"
-          onclick={() => (showMessageModal = false)}
-          class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
+          onclick={closeMessageDialog}
+          class="w-11 h-11 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10"
           aria-label={isFil ? 'Isara' : 'Close'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -594,7 +649,7 @@
       <div class="flex items-center justify-end gap-3 pt-2">
         <button
           type="button"
-          onclick={() => (showMessageModal = false)}
+          onclick={closeMessageDialog}
           class="px-4 py-2 rounded-full text-xs font-semibold text-[#4A5245] hover:bg-[#20251E]/5 min-h-[44px]"
         >
           {isFil ? 'Isara' : 'Close'}
@@ -624,16 +679,17 @@
 
 <!-- Modal: Public Contact Details -->
 {#if showContactModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-2xl border border-[#20251E]/15 max-w-md w-full p-6 space-y-4 shadow-xl">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="contact-details-title">
+    <div bind:this={contactPanel} onkeydown={(event) => handleDialogKeydown(event, contactPanel, closeContactDialog)} class="bg-white rounded-2xl border border-[#20251E]/15 max-w-md w-full p-6 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
-        <h3 class="text-lg font-serif font-bold text-[#20251E]">
+        <h3 id="contact-details-title" class="text-lg font-serif font-bold text-[#20251E]">
           {outlet.name}
         </h3>
         <button
+          bind:this={contactCloseButton}
           type="button"
-          onclick={() => (showContactModal = false)}
-          class="w-10 h-10 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10 min-h-[44px]"
+          onclick={closeContactDialog}
+          class="w-11 h-11 rounded-full flex items-center justify-center text-[#4A5245] hover:bg-[#20251E]/10"
           aria-label="Close"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -691,7 +747,7 @@
       <div class="flex items-center justify-end pt-2">
         <button
           type="button"
-          onclick={() => (showContactModal = false)}
+          onclick={closeContactDialog}
           class="px-5 py-2.5 rounded-full text-xs font-bold bg-[#486320] text-white hover:bg-[#435c1d] transition-all min-h-[44px]"
         >
           {isFil ? 'Tapos' : 'Done'}
