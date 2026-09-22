@@ -78,7 +78,7 @@ test('keeps invalid discovery harvest edits from changing farmer results', async
   await expect(page.getByRole('alert')).toContainText(/valid quantity greater than 0 kg/i);
   await expect(page.getByLabel(/quantity.*kg/i)).toHaveAttribute('aria-invalid', 'true');
   expect(page.url()).toBe(originalUrl);
-  await expect(page.getByRole('button', { name: /close harvest editor/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /cancel harvest edit/i })).toBeVisible();
 });
 
 test('edits the discovery harvest and updates the address without discarding language', async ({ page }) => {
