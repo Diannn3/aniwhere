@@ -28,6 +28,12 @@ function boundedTextParam(search: URLSearchParams, key: string, maxLength = 80):
   return value;
 }
 
+function validOutletId(value: string | null | undefined): string | undefined {
+  const normalized = value?.trim();
+  if (!normalized || normalized.length > 80 || !/^[a-z0-9-]+$/.test(normalized)) return undefined;
+  return normalized;
+}
+
 export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDiscoverQuery {
   const search = typeof params === 'string' ? new URLSearchParams(params) : params;
 
@@ -49,7 +55,7 @@ export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDisc
   const rawView = search.get('view');
   const finalView: 'list' | 'map' = rawView === 'map' ? 'map' : 'list';
 
-  const rawPlace = search.get('place') || undefined;
+  const rawPlace = validOutletId(search.get('place'));
 
   const rawLang = search.get('lang');
   const finalLang: 'en' | 'fil' = rawLang === 'fil' ? 'fil' : 'en';
@@ -119,8 +125,9 @@ export function parseCompareQuery(params: URLSearchParams | string): {
   const rawPlaces = search.get('places') || '';
   const placeIds = rawPlaces
     .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
+    .map((value) => validOutletId(value))
+    .filter((value): value is string => Boolean(value))
+    .filter((value, index, values) => values.indexOf(value) === index)
     .slice(0, 3);
 
   const discover = parseDiscoverQuery(search);
