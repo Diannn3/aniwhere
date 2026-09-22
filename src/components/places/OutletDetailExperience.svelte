@@ -264,8 +264,8 @@
           <span class="text-[#20251E]/20">&bull;</span>
           <span class="text-xs bg-[#486320]/10 text-[#486320] px-2.5 py-0.5 rounded-full font-medium">
             {routeEstimate.source === 'road'
-              ? `${routeEstimate.roadDistanceKm?.toFixed(1)} km ${isFil ? 'sa kalsada' : 'by road'} · ${originMun.name} ${isFil ? 'sentro ng munisipyo' : 'municipality center'}`
-              : `${distanceKm.toFixed(1)} km ${isFil ? 'tuwid na layo' : 'straight-line'} · ${originMun.name} ${isFil ? 'sentro ng munisipyo' : 'municipality center'}`}
+              ? `${routeEstimate.roadDistanceKm?.toFixed(1)} km ${isFil ? 'sa kalsada' : 'by road'} · ${originMun.name.split(',')[0]} ${isFil ? 'sentro ng munisipyo' : 'municipality center'}`
+              : `${distanceKm.toFixed(1)} km ${isFil ? 'tuwid na layo' : 'straight-line'} · ${originMun.name.split(',')[0]} ${isFil ? 'sentro ng munisipyo' : 'municipality center'}`}
           </span>
         </div>
 
@@ -549,7 +549,7 @@
       <div class="grid gap-2 text-xs text-[#596052] pt-1 sm:grid-cols-3 sm:items-start">
         <span>
           {isFil ? 'Batayang lokasyon' : 'Reference point'}:
-          <strong>{originMun.name}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
+          <strong>{originMun.name.split(',')[0]}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
         </span>
         <span>
           {routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid na layo' : 'Straight-line')}:
