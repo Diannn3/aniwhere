@@ -2,7 +2,6 @@
   import { onMount, tick } from 'svelte';
   import AniAvatar from './AniAvatar.svelte';
   import { MockAniProvider } from '../../lib/ani/mock-provider';
-  import { GeminiLiveAniProvider } from '../../lib/ani/gemini-live-provider';
   import type { AniAvatarState, AniMessage, AniProvider, AniProviderStatus, AniToolRequest } from '../../lib/ani/types';
   import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
   import { AniActionExecutor } from '../../lib/ani/action-executor';
@@ -87,7 +86,12 @@
     await tick();
     inputEl?.focus();
     const useMock = import.meta.env.DEV || import.meta.env.PUBLIC_ANI_PROVIDER === 'mock';
-    provider = useMock ? new MockAniProvider() : new GeminiLiveAniProvider();
+    if (useMock) {
+      provider = new MockAniProvider();
+    } else {
+      const { GeminiLiveAniProvider } = await import('../../lib/ani/gemini-live-provider');
+      provider = new GeminiLiveAniProvider();
+    }
     unsubscribe = provider.subscribe((event) => {
       if (event.status) status = event.status;
       if (event.message) messages = [...messages, event.message];
