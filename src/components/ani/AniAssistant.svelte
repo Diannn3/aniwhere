@@ -6,6 +6,8 @@
   import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
   import { AniActionExecutor } from '../../lib/ani/action-executor';
   import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import type { HarvestQuery } from '../../lib/domain/types';
   import { CURRENT_DATA_MODE } from '../../lib/data/current-market';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
@@ -19,6 +21,8 @@
   let trigger: HTMLButtonElement | null = $state(null);
   let inputEl: HTMLInputElement | null = $state(null);
   let unsubscribe: (() => void) | undefined;
+  let unsubscribeHarvest: (() => void) | undefined;
+  let sharedHarvest = $state<HarvestQuery | null>(null);
   let provider: AniProvider | undefined;
   const dispatcher = new AniToolDispatcher();
   const actionExecutor = new AniActionExecutor();
@@ -27,7 +31,13 @@
   const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
 
   onMount(() => {
-    lang = parseDiscoverQuery(window.location.search).lang;
+    const parsed = parseDiscoverQuery(window.location.search);
+    lang = parsed.lang;
+    sharedHarvest = parsed.harvest;
+    unsubscribeHarvest = subscribeHarvestContext((next) => {
+      sharedHarvest = next;
+    });
+
     const handleWindowKeydown = (event: KeyboardEvent) => {
       if (open && event.key === 'Escape') {
         event.preventDefault();
@@ -43,12 +53,20 @@
       document.documentElement.style.overflow = '';
       setBackgroundInert(false);
       unsubscribe?.();
+      unsubscribeHarvest?.();
       void provider?.close();
     };
   });
 
   function currentHarvest() {
-    return parseDiscoverQuery(window.location.search).harvest;
+    const params = new URLSearchParams(window.location.search);
+    const hasExplicitHarvest = ['crop', 'kg', 'origin'].every((key) => params.has(key));
+
+    if (hasExplicitHarvest) {
+      return parseDiscoverQuery(params).harvest;
+    }
+
+    return sharedHarvest ?? parseDiscoverQuery(params).harvest;
   }
 
   function setBackgroundInert(value: boolean) {
