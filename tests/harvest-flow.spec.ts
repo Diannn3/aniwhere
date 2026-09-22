@@ -150,6 +150,18 @@ test('makes all four fit filters understandable and exposes selected state', asy
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/showing .* of/i);
 });
 
+test('clears a selected map place when a fit filter hides it', async ({ page }) => {
+  await page.goto(
+    '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&place=demo-processor&lang=en'
+  );
+  await expect(page).toHaveURL(/place=demo-processor/);
+
+  const filters = page.getByRole('group', { name: /filter by fit status/i });
+  await filters.getByRole('button', { name: /confirm first/i }).click();
+
+  await expect(page).not.toHaveURL(/place=/);
+});
+
 test('explains the three-place comparison limit instead of silently blocking the farmer', async ({ page }) => {
   await page.goto(discoverPath);
 
