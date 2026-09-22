@@ -575,7 +575,7 @@
           <button
             type="button"
             onclick={() => statusFilter = 'all'}
-            class="px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
+            class="min-h-11 px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
           >
             {t('clearFilters', lang)}
           </button>
