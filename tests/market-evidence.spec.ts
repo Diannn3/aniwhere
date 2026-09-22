@@ -76,3 +76,22 @@ test('demo contact fields are never presented as verified real-world contacts', 
   await expect(dialog).toContainText(/demo field, not a verified real-world contact/i);
   await expect(dialog).not.toContainText('Verified public contact');
 });
+
+
+test('outlet dialogs focus safely and return the farmer to the triggering action', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  const prepare = page.getByRole('button', { name: 'Prepare message' });
+  await prepare.focus();
+  await prepare.click();
+
+  const dialog = page.getByRole('dialog', { name: 'Prepare Inquiry Message' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('button[aria-label="Close"]')).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(prepare).toBeFocused();
+});
