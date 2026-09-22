@@ -564,19 +564,49 @@
 
       <form class="ani-composer" onsubmit={(e) => { e.preventDefault(); void submit(); }}>
         <label class="sr-only" for="ani-input">{isFil() ? 'Mensahe kay Ani' : 'Message Ani'}</label>
-        <input bind:this={inputEl} id="ani-input" bind:value={input} type="text" autocomplete="off" placeholder={isFil() ? 'hal. May 300 kg akong kamatis…' : 'e.g. I have 300 kg of tomatoes…'} disabled={status === 'offline'} aria-describedby={homeNeedsValidDraft() ? 'ani-draft-warning' : undefined} />
-        <button type="button" class:listening={status === 'listening'} class="mic-button" disabled={status === 'offline' || homeNeedsValidDraft()} aria-pressed={status === 'listening'} aria-label={status === 'listening' ? (isFil() ? 'Huminto sa pakikinig' : 'Stop listening') : (isFil() ? 'Gamitin ang mikropono' : 'Use microphone')} onclick={() => status === 'listening' ? void stopListening() : void requestMic()}>
+        <input
+          bind:this={inputEl}
+          id="ani-input"
+          bind:value={input}
+          type="text"
+          autocomplete="off"
+          placeholder={localMode
+            ? (isFil() ? 'hal. Ano ang ibig sabihin ng Tugma sa ani?' : 'e.g. What does Matches your harvest mean?')
+            : (isFil() ? 'hal. Aling outlet ang puwedeng i-check?' : 'e.g. Which outlets can I check?')}
+          disabled={!localMode && status === 'offline'}
+          aria-describedby={homeNeedsValidDraft() ? 'ani-draft-warning' : undefined}
+        />
+        <button
+          type="button"
+          class:listening={status === 'listening'}
+          class="mic-button"
+          disabled={!localMode && (status === 'offline' || status === 'connecting' || status === 'error')}
+          aria-pressed={status === 'listening'}
+          aria-label={status === 'listening'
+            ? (isFil() ? 'Huminto sa pakikinig' : 'Stop listening')
+            : (isFil() ? 'Gamitin ang mikropono' : 'Use microphone')}
+          onclick={() => status === 'listening' ? void stopListening() : void requestMic()}
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
-        <button type="submit" class="send-button" disabled={!input.trim() || status === 'offline' || homeNeedsValidDraft()} aria-label={isFil() ? 'Ipadala' : 'Send'}>
+        <button
+          type="submit"
+          class="send-button"
+          disabled={!input.trim() || (!localMode && (status === 'offline' || status === 'error' || status === 'connecting'))}
+          aria-label={isFil() ? 'Ipadala' : 'Send'}
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4 12 15-7-4 14-3-6-8-1Z"/><path d="m12 13 7-8"/></svg>
         </button>
       </form>
       {#if homeNeedsValidDraft()}
         <p id="ani-draft-warning" class="ani-draft-warning" role="status">
-          {isFil()
-            ? 'Ayusin muna ang harvest form sa likod bago magtanong kay Ani tungkol sa market fit.'
-            : 'Fix the harvest form first before asking Ani to check market fit.'}
+          {localMode
+            ? (isFil()
+                ? 'Local FAQ ay magagamit pa rin. Kailangan lang ayusin ang harvest form bago sa market checks.'
+                : 'Local FAQ still works. Fix the harvest form before market checks.')
+            : (isFil()
+                ? 'Hindi gagamit ng stale harvest si AniWhere. Ayusin ang harvest form bago tumakbo ang market tools.'
+                : 'AniWhere will not use stale harvest data. Fix the harvest form before market tools run.')}
         </p>
       {/if}
       <p class="ani-footnote">{CURRENT_DATA_MODE === 'demo' ? (isFil() ? 'Demo data ngayon. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Demo data for now. Confirm price, capacity, and receiving terms before travelling.') : (isFil() ? 'Kumpirmahin pa rin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.')}</p>
