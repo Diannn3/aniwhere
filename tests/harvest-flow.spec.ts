@@ -194,11 +194,10 @@ test('explains the three-place comparison limit instead of silently blocking the
   await cards.nth(2).getByRole('checkbox').check();
 
   const fourth = cards.nth(3).getByRole('checkbox');
-  await fourth.check();
-
-  await expect(page.getByText(/compare up to three places. remove one first/i)).toBeAttached();
-  await expect(fourth).not.toBeChecked();
-  await expect(page.getByLabel('Comparison dock').getByText(/3 of 3 places selected/i)).toBeVisible();
+  await expect(fourth).toHaveAttribute('aria-disabled', 'true');
+  const dock = page.getByLabel('Comparison dock');
+  await expect(dock.getByText(/3 of 3 places selected/i)).toBeVisible();
+  await expect(dock.getByText(/Maximum of 3. Remove one before choosing another/i)).toBeVisible();
 });
 
 test('keeps price arithmetic available without overwhelming the primary result card', async ({ page }) => {
@@ -263,7 +262,7 @@ test('selects outlets in discovery and compares them in a semantic decision ledg
   await expect(ledger.getByRole('rowheader', { name: 'Accepted quantity' })).toBeVisible();
 
   await ledger.getByLabel('Transport for Demo Processor').fill('7100');
-  await expect(page.locator('[aria-live="polite"]')).toContainText(/after transport updated/i);
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: /after transport updated/i })).toHaveCount(1);
 });
 
 test('removing a compared outlet updates the URL so refresh does not restore it', async ({ page }) => {
