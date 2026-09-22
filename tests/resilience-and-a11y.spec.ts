@@ -77,6 +77,15 @@ type AuditTarget = {
 
 const auditTargets: AuditTarget[] = [
   { name: 'home', path: '/' },
+  {
+    name: 'Ani local help',
+    path: '/',
+    prepare: async (page) => {
+      await page.getByRole('button', { name: 'Ask Ani' }).click();
+      await expect(page.getByRole('dialog', { name: 'Ani' })).toBeVisible();
+    },
+  },
+
   { name: 'discovery list', path: discoverPath },
   { name: 'discovery map', path: `${discoverPath}&view=map` },
   { name: 'outlet detail', path: `/places/demo-cooperative?${new URL(discoverPath, 'http://aniwhere.local').searchParams}` },
