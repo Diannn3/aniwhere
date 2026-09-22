@@ -5,7 +5,7 @@
   import type { AniAvatarState, AniMessage, AniProvider, AniProviderStatus, AniToolRequest } from '../../lib/ani/types';
   import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
   import { AniActionExecutor } from '../../lib/ani/action-executor';
-  import { parseDiscoverQuery } from '../../lib/state/url-state';
+  import { parseDiscoverQuery, serializeDiscoverQuery } from '../../lib/state/url-state';
   import {
     subscribeHarvestContext,
     subscribeHarvestDraftValidity,
@@ -14,6 +14,7 @@
   import { getCropLabel } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { CURRENT_DATA_MODE } from '../../lib/data/current-market';
+  import { faqsForRoute, matchAniFaq, type AniFaq } from '../../lib/ani/faq';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
   let lang = $state<'en' | 'fil'>(initialLang);
@@ -32,6 +33,11 @@
   let harvestDraftValid = $state(true);
   let onHome = $state(false);
   let provider: AniProvider | undefined;
+  let localMode = $state(true);
+  let pathname = $state('/');
+  let choices = $state<AniFaq[]>([]);
+  let activeFaq = $state<AniFaq | null>(null);
+  let selectedTopic = $state<'all' | AniFaq['topic']>('all');
   const dispatcher = new AniToolDispatcher();
   const actionExecutor = new AniActionExecutor();
 
@@ -44,18 +50,33 @@
     const crop = getCropLabel(sharedHarvest.crop, lang);
     return `${sharedHarvest.quantityKg.toLocaleString('en-PH')} kg ${crop} · ${origin?.name ?? sharedHarvest.originMunicipality}`;
   };
+  const topicLabels: Record<'all' | AniFaq['topic'], { en: string; fil: string }> = {
+    all: { en: 'All help', fil: 'Lahat ng tulong' },
+    using: { en: 'Using AniWhere', fil: 'Paggamit ng AniWhere' },
+    match: { en: 'Fit labels', fil: 'Mga label ng fit' },
+    money: { en: 'Price & transport', fil: 'Presyo at biyahe' },
+    outlets: { en: 'Outlets & maps', fil: 'Outlet at mapa' },
+    saved: { en: 'Saved & Compare', fil: 'Nai-save at Compare' },
+    offline: { en: 'Offline & data', fil: 'Offline at data' },
+  };
+  const topicOrder: AniFaq['topic'][] = ['using', 'match', 'money', 'outlets', 'saved', 'offline'];
+  const visibleFaqs = () => {
+    const routeFaqs = faqsForRoute(pathname);
+    return selectedTopic === 'all' ? routeFaqs : routeFaqs.filter((faq) => faq.topic === selectedTopic);
+  };
 
   onMount(() => {
     const parsed = parseDiscoverQuery(window.location.search);
     lang = parsed.lang;
-    onHome = window.location.pathname === '/';
+    pathname = window.location.pathname;
+    onHome = pathname === '/';
     sharedHarvest = parsed.harvest;
     unsubscribeHarvest = subscribeHarvestContext((next) => {
       sharedHarvest = next;
     });
     unsubscribeHarvestValidity = subscribeHarvestDraftValidity((isValid) => {
       harvestDraftValid = isValid;
-      if (!isValid && onHome && open) {
+      if (!isValid && onHome && open && !localMode) {
         notice = isFil()
           ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
           : 'Complete the required harvest fields before Ani checks market fit.';
