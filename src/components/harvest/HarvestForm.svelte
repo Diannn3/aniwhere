@@ -2,11 +2,15 @@
   import { onMount } from 'svelte';
   import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { validateHarvestInput } from '../../lib/domain/validation';
-  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { isValidIsoDate, validateHarvestInput } from '../../lib/domain/validation';
+  import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import { t } from '../../content/translations';
-  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import {
+    publishHarvestContext,
+    publishHarvestDraftValidity,
+    subscribeHarvestContext,
+  } from '../../lib/ani/harvest-sync';
 
   type HarvestDraft = {
     cropChoice: string;
@@ -33,6 +37,7 @@
   let showDetails = $state(false);
   let lang = $state<'en' | 'fil'>(initialLang);
   let errors = $state<Record<string, string>>({});
+  let publishingOwnDraft = false;
 
   let cropGroupEl: HTMLFieldSetElement | null = $state(null);
   let otherCropInputEl: HTMLInputElement | null = $state(null);
@@ -44,14 +49,22 @@
   const cropLabel = () => (cropChoice === 'other' ? otherCrop.trim() : cropChoice);
 
   function restoreDraft(draft: HarvestDraft) {
-    cropChoice = draft.cropChoice || 'tomato';
-    otherCrop = draft.otherCrop || '';
-    quantityKg = Number(draft.quantityKg) || 300;
-    originMunicipality = draft.originMunicipality || 'los-banos';
-    readyDate = draft.readyDate || todayInManila();
-    variety = draft.variety || '';
-    grade = draft.grade || '';
-    packaging = draft.packaging || '';
+    const knownCropChoice =
+      draft.cropChoice === 'other' || SUPPORTED_CROPS.some((item) => item.key === draft.cropChoice);
+    const parsedQuantity = Number(draft.quantityKg);
+    const knownOrigin = LAGUNA_MUNICIPALITIES.some((item) => item.id === draft.originMunicipality);
+
+    cropChoice = knownCropChoice ? draft.cropChoice : 'tomato';
+    otherCrop = typeof draft.otherCrop === 'string' ? draft.otherCrop.trim().slice(0, 80) : '';
+    quantityKg =
+      Number.isFinite(parsedQuantity) && parsedQuantity > 0 && parsedQuantity <= 100000
+        ? parsedQuantity
+        : 300;
+    originMunicipality = knownOrigin ? draft.originMunicipality : 'los-banos';
+    readyDate = isValidIsoDate(draft.readyDate) ? draft.readyDate : todayInManila();
+    variety = typeof draft.variety === 'string' ? draft.variety.trim().slice(0, 80) : '';
+    grade = typeof draft.grade === 'string' ? draft.grade.trim().slice(0, 80) : '';
+    packaging = typeof draft.packaging === 'string' ? draft.packaging.trim().slice(0, 80) : '';
     showDetails = Boolean(variety || grade || packaging);
   }
 
@@ -65,6 +78,36 @@
       variety,
       grade,
       packaging,
+    });
+  }
+
+  function saveAndShareDraft() {
+    saveDraft();
+
+    const crop = cropLabel();
+    const validation = validateHarvestInput({
+      crop,
+      quantityKg,
+      originMunicipality,
+      readyDate,
+    });
+    publishHarvestDraftValidity(validation.isValid);
+    if (!validation.isValid) return;
+
+    publishingOwnDraft = true;
+    publishHarvestContext({
+      crop,
+      quantityKg: Number(quantityKg),
+      originMunicipality,
+      readyDate,
+      details:
+        variety.trim() || grade.trim() || packaging.trim()
+          ? {
+              ...(variety.trim() ? { variety: variety.trim().slice(0, 80) } : {}),
+              ...(grade.trim() ? { grade: grade.trim().slice(0, 80) } : {}),
+              ...(packaging.trim() ? { packaging: packaging.trim().slice(0, 80) } : {}),
+            }
+          : undefined,
     });
   }
 
@@ -92,25 +135,26 @@
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
-    const urlCrop = params.get('crop');
-    const urlKg = Number(params.get('kg'));
-    const urlOrigin = params.get('origin');
-    const urlReady = params.get('ready');
-    const hasHarvestQuery = Boolean(urlCrop || params.has('kg') || urlOrigin || urlReady);
+    const hasHarvestQuery = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging']
+      .some((key) => params.has(key));
 
     if (urlLang === 'en' || urlLang === 'fil') lang = urlLang;
 
     if (hasHarvestQuery) {
-      const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === urlCrop);
-      cropChoice = supportedCrop ? urlCrop! : urlCrop ? 'other' : cropChoice;
-      otherCrop = supportedCrop ? '' : urlCrop || '';
-      quantityKg = Number.isFinite(urlKg) && urlKg > 0 ? urlKg : quantityKg;
-      originMunicipality = LAGUNA_MUNICIPALITIES.some((item) => item.id === urlOrigin) ? urlOrigin! : originMunicipality;
-      readyDate = urlReady || readyDate;
-      variety = params.get('variety') || '';
-      grade = params.get('grade') || '';
-      packaging = params.get('packaging') || '';
+      const parsed = parseDiscoverQuery(params);
+      const parsedCrop = parsed.harvest.crop;
+      const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === parsedCrop);
+
+      cropChoice = supportedCrop ? parsedCrop : 'other';
+      otherCrop = supportedCrop || parsedCrop === 'other' ? '' : parsedCrop;
+      quantityKg = parsed.harvest.quantityKg;
+      originMunicipality = parsed.harvest.originMunicipality;
+      readyDate = parsed.harvest.readyDate || todayInManila();
+      variety = parsed.harvest.details?.variety || '';
+      grade = parsed.harvest.details?.grade || '';
+      packaging = parsed.harvest.details?.packaging || '';
       showDetails = Boolean(variety || grade || packaging);
+      queueMicrotask(saveAndShareDraft);
       return;
     }
 
@@ -124,9 +168,15 @@
       grade,
       packaging,
     });
+    queueMicrotask(saveAndShareDraft);
   });
 
   onMount(() => subscribeHarvestContext((next) => {
+    if (publishingOwnDraft) {
+      publishingOwnDraft = false;
+      return;
+    }
+
     const supportedCrop = SUPPORTED_CROPS.some((item) => item.key === next.crop);
     cropChoice = supportedCrop ? next.crop : 'other';
     otherCrop = supportedCrop ? '' : next.crop;
@@ -149,6 +199,7 @@
       readyDate,
     });
 
+    publishHarvestDraftValidity(validation.isValid);
     if (!validation.isValid) {
       errors = lang === 'fil' ? validation.errorsFil : validation.errors;
       requestAnimationFrame(() => errorSummaryEl?.focus());
@@ -180,7 +231,7 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} oninput={saveDraft} onchange={saveDraft} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
+<form onsubmit={handleSubmit} oninput={() => queueMicrotask(saveAndShareDraft)} onchange={() => queueMicrotask(saveAndShareDraft)} novalidate class="harvest-ticket space-y-6 p-4 sm:p-6">
   <div class="flex items-start justify-between gap-4 border-b quiet-rule pb-5">
     <div class="max-w-xl">
       <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
@@ -218,8 +269,13 @@
     {#if cropChoice === 'other'}
       <label class="mt-3 block">
         <span class="sr-only">{lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'}</span>
-        <input bind:this={otherCropInputEl} bind:value={otherCrop} type="text" autocomplete="off" placeholder={lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'} class={`min-h-12 w-full rounded-lg border bg-[#FFFDF8] px-3 text-base text-[#20251E] ${errors.crop ? 'border-[#6E3511]' : 'border-[#20251E]/15'} focus:border-[#597928] focus:outline-none focus:ring-2 focus:ring-[#597928]/25`} />
+        <input bind:this={otherCropInputEl} bind:value={otherCrop} type="text" maxlength="80" autocomplete="off" placeholder={lang === 'fil' ? 'Ilagay ang uri ng ani' : 'Enter crop name'} class={`min-h-12 w-full rounded-lg border bg-[#FFFDF8] px-3 text-base text-[#20251E] ${errors.crop ? 'border-[#6E3511]' : 'border-[#20251E]/15'} focus:border-[#597928] focus:outline-none focus:ring-2 focus:ring-[#597928]/25`} />
       </label>
+      <p class="mt-2 text-xs leading-relaxed text-[#4A5245]">
+        {lang === 'fil'
+          ? 'Para sa ibang ani, hindi pa kumpleto ang detalyadong matching. Ang hindi tiyak na terms ay mananatiling “Kumpirmahin.”'
+          : 'Detailed matching is not complete for other crops yet. Unknown terms will stay as “Contact to confirm.”'}
+      </p>
     {/if}
     {#if errors.crop}<p id="crop-error" class="mt-2 text-sm font-semibold text-[#6E3511]">{errors.crop}</p>{/if}
   </fieldset>
@@ -229,7 +285,7 @@
       <span class="block text-sm font-bold text-[#20251E]">{t('quantityLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
       <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Kabuuang timbang na handa mong dalhin.' : 'Total weight you are ready to bring.'}</span>
       <span class="mt-3 flex items-center gap-2">
-        <input id="harvest-quantity" bind:this={quantityInputEl} bind:value={quantityKg} type="number" min="1" max="100000" step="1" inputmode="numeric" aria-describedby={errors.quantityKg ? 'quantity-error' : undefined} class="min-h-10 min-w-0 flex-1 bg-transparent text-2xl font-bold text-[#20251E] outline-none" />
+        <input id="harvest-quantity" bind:this={quantityInputEl} bind:value={quantityKg} type="number" min="1" max="100000" step="1" inputmode="numeric" aria-invalid={Boolean(errors.quantityKg)} aria-describedby={errors.quantityKg ? 'quantity-error' : undefined} class="min-h-11 min-w-0 flex-1 bg-transparent text-2xl font-bold text-[#20251E] outline-none" />
         <span class="font-tabular text-sm font-bold text-[#4A5245]">kg</span>
       </span>
       {#if errors.quantityKg}<span id="quantity-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.quantityKg}</span>{/if}
@@ -237,8 +293,12 @@
 
     <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20">
       <span class="block text-sm font-bold text-[#20251E]">{t('locationLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
-      <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Munisipalidad kung saan manggagaling ang ani.' : 'Municipality where the harvest will leave from.'}</span>
-      <select id="harvest-origin" bind:this={municipalitySelectEl} bind:value={originMunicipality} aria-describedby={errors.originMunicipality ? 'origin-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none">
+      <span class="mt-1 block text-xs text-[#4A5245]">
+        {lang === 'fil'
+          ? 'Munisipalidad kung saan manggagaling ang ani. Ang sentro ng munisipyo ang batayang lokasyon para sa layo, hindi ang eksaktong bukid.'
+          : 'Municipality where the harvest will leave from. Distance uses the municipality center as a reference point, not your exact farm.'}
+      </span>
+      <select id="harvest-origin" bind:this={municipalitySelectEl} bind:value={originMunicipality} aria-invalid={Boolean(errors.originMunicipality)} aria-describedby={errors.originMunicipality ? 'origin-error' : undefined} class="mt-3 min-h-11 w-full bg-transparent text-base font-bold text-[#20251E] outline-none">
         {#each LAGUNA_MUNICIPALITIES as municipality}
           <option value={municipality.id}>{municipality.name}</option>
         {/each}
@@ -249,7 +309,7 @@
     <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20 sm:col-span-2">
       <span class="block text-sm font-bold text-[#20251E]">{t('readyDateLabel', lang)}</span>
       <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Ilagay ang petsang handa nang dalhin ang ani.' : 'Set the day the harvest will be ready to move.'}</span>
-      <input id="harvest-ready-date" bind:this={readyDateInputEl} bind:value={readyDate} type="date" min={todayInManila()} aria-describedby={errors.readyDate ? 'ready-date-error' : undefined} class="mt-3 min-h-10 w-full bg-transparent text-base font-bold text-[#20251E] outline-none" />
+      <input id="harvest-ready-date" bind:this={readyDateInputEl} bind:value={readyDate} type="date" min={todayInManila()} aria-invalid={Boolean(errors.readyDate)} aria-describedby={errors.readyDate ? 'ready-date-error' : undefined} class="mt-3 min-h-11 w-full bg-transparent text-base font-bold text-[#20251E] outline-none" />
       {#if errors.readyDate}<span id="ready-date-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.readyDate}</span>{/if}
     </label>
   </div>
@@ -264,9 +324,9 @@
     </button>
     {#if showDetails}
       <div class="mt-4 grid grid-cols-1 gap-3 border-t quiet-rule pt-4 sm:grid-cols-3">
-        <label><span class="block text-xs font-bold text-[#20251E]">{t('varietyLabel', lang)}</span><input bind:value={variety} type="text" placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
-        <label><span class="block text-xs font-bold text-[#20251E]">{t('gradeLabel', lang)}</span><input bind:value={grade} type="text" placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
-        <label><span class="block text-xs font-bold text-[#20251E]">{t('packagingLabel', lang)}</span><input bind:value={packaging} type="text" placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('varietyLabel', lang)}</span><input bind:value={variety} type="text" maxlength="80" placeholder={lang === 'fil' ? 'hal. Diamante' : 'e.g. Diamante'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('gradeLabel', lang)}</span><input bind:value={grade} type="text" maxlength="80" placeholder={lang === 'fil' ? 'hal. Grade A' : 'e.g. Grade A'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
+        <label><span class="block text-xs font-bold text-[#20251E]">{t('packagingLabel', lang)}</span><input bind:value={packaging} type="text" maxlength="80" placeholder={lang === 'fil' ? 'hal. plastic crate' : 'e.g. plastic crate'} class="mt-2 min-h-11 w-full rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] px-3 text-sm text-[#20251E]" /></label>
       </div>
     {/if}
   </div>

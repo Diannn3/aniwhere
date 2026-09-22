@@ -93,9 +93,9 @@
     }
   }
 
-  function formatCurrency(val: number | null | undefined): string {
-    if (val === null || val === undefined) return '—';
-    return `₱${val.toLocaleString('en-PH', { maximumFractionDigits: 0 })}`;
+  function formatKg(val: number | null | undefined): string {
+    if (val === null || val === undefined) return lang === 'fil' ? 'Kumpirmahin' : 'Confirm';
+    return `${val.toLocaleString('en-PH')} kg`;
   }
 </script>
 
@@ -125,9 +125,14 @@
       class="w-full h-full max-h-[540px]"
       viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
       fill="none"
+      onclick={(event) => {
+        if (event.target === event.currentTarget) onSelect('');
+      }}
       xmlns="http://www.w3.org/2000/svg"
       role="group"
-      aria-label="Laguna market map with farmer origin and buyer outlets"
+      aria-label={lang === 'fil'
+        ? 'Guhit-mapa ng mga outlet sa Laguna at batayang lokasyon ng munisipyo'
+        : 'Illustrative Laguna outlet map with municipality reference point'}
     >
       <!-- Base terrain contours -->
       <defs>
@@ -141,8 +146,7 @@
         width={SVG_WIDTH}
         height={SVG_HEIGHT}
         fill="url(#grid-dots-enhanced)"
-        class="cursor-pointer"
-        onclick={() => onSelect('')}
+        pointer-events="none"
       />
 
       <!-- Laguna de Bay lake contour with ripple lines -->
@@ -153,8 +157,7 @@
         stroke="#4E7380"
         stroke-width="1.5"
         stroke-opacity="0.3"
-        class="cursor-pointer"
-        onclick={() => onSelect('')}
+        pointer-events="none"
       />
       <text
         x="240"
@@ -165,6 +168,7 @@
         fill="#4E7380"
         fill-opacity="0.75"
         text-anchor="middle"
+        pointer-events="none"
       >
         Laguna de Bay
       </text>
@@ -178,6 +182,7 @@
         stroke-width="1"
         stroke-dasharray="3 3"
         stroke-opacity="0.4"
+        pointer-events="none"
       />
       <text
         x="195"
@@ -188,6 +193,7 @@
         fill="#597928"
         fill-opacity="0.75"
         text-anchor="middle"
+        pointer-events="none"
       >
         Mt. Makiling
       </text>
@@ -200,6 +206,7 @@
         stroke-opacity="0.16"
         stroke-dasharray="4 4"
         fill="none"
+        pointer-events="none"
       />
 
       <!-- Active Connection Line between Origin and Selected Outlet -->
@@ -250,26 +257,11 @@
         {@const isSelected = item.outlet.id === selectedId}
         {@const color = getStatusColor(item.fit.status)}
 
-        <g
-          class="cursor-pointer transition-transform duration-150 {isSelected ? 'scale-110' : 'hover:scale-105'}"
-          tabindex="0"
-          role="button"
-          aria-label={`${item.outlet.name}: ${item.fit.statusLabel}, ${item.distanceKm} km`}
-          onclick={(e) => {
-            e.stopPropagation();
-            onSelect(item.outlet.id);
-          }}
-          onkeydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelect(item.outlet.id);
-            }
-          }}
-        >
+        <g class="transition-transform duration-150 {isSelected ? 'scale-110' : ''}">
+
           <!-- Pulsing Focus / Selection ring -->
           {#if isSelected}
-            <circle cx={pos.x} cy={pos.y} r="20" fill={color} fill-opacity="0.25" stroke={color} stroke-width="1.5" />
+            <circle cx={pos.x} cy={pos.y} r="20" fill={color} fill-opacity="0.25" stroke={color} stroke-width="1.5" pointer-events="none" />
           {/if}
 
           <!-- Pin Outer Circle -->
@@ -280,14 +272,28 @@
             fill={color}
             stroke="#FFFDF8"
             stroke-width="2"
-            class="shadow-sm"
+            class="cursor-pointer shadow-sm"
+            tabindex="0"
+            role="button"
+            aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
+            onclick={(e) => {
+              e.stopPropagation();
+              onSelect(item.outlet.id);
+            }}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect(item.outlet.id);
+              }
+            }}
           />
 
           <!-- Pin Inner Core -->
-          <circle cx={pos.x} cy={pos.y} r={isSelected ? "4" : "3"} fill="#FFFDF8" />
+          <circle cx={pos.x} cy={pos.y} r={isSelected ? "4" : "3"} fill="#FFFDF8" pointer-events="none" />
 
           <!-- Floating Name Label -->
-          <g transform={`translate(${pos.x}, ${pos.y + 16})`}>
+          <g transform={`translate(${pos.x}, ${pos.y + 16})`} pointer-events="none">
             <rect
               x="-48"
               y="-2"
@@ -319,7 +325,9 @@
       <g
         transform={`translate(${originPos.x}, ${originPos.y})`}
         role="region"
-        aria-label={`Your location: ${originMun.name}`}
+        aria-label={lang === 'fil'
+          ? `Batayang lokasyon: ${originMun.name}, sentro ng munisipyo`
+          : `Reference point: ${originMun.name} municipality center`}
       >
         <circle cx="0" cy="0" r="14" fill="#6E3511" fill-opacity="0.2" />
         <circle cx="0" cy="0" r="8" fill="#6E3511" stroke="#FFFDF8" stroke-width="2" />
@@ -343,7 +351,7 @@
             fill="#FFFDF8"
             text-anchor="middle"
           >
-            {lang === 'fil' ? 'Iyong Lokasyon' : 'Your Origin'}
+            {lang === 'fil' ? 'Sentro ng bayan' : 'Municipality center'}
           </text>
         </g>
       </g>
@@ -352,6 +360,8 @@
     <!-- Mobile Non-Modal Pin Inspection Bottom Sheet (P1.1 44px touch targets & zero pin occlusion) -->
     {#if selectedItem && !isDetailView}
       <div
+        role="region"
+        aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}
         class="lg:hidden absolute bottom-3 left-3 right-3 z-20 bg-[#FFFDF8]/98 backdrop-blur-md border border-[#597928]/30 rounded-2xl p-4 shadow-xl space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-150"
       >
         <div class="flex items-start justify-between gap-2">
@@ -369,7 +379,9 @@
                 {lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}
               </span>
               <span class="text-[11px] text-[#596052] font-medium">
-                {selectedItem.distanceKm} km {lang === 'fil' ? 'mula' : 'from'} {originMun.name.split(',')[0]}
+                {lang === 'fil'
+                  ? `${selectedItem.distanceKm} km tuwid · mula sa sentro ng ${originMun.name.split(',')[0]}`
+                  : `${selectedItem.distanceKm} km straight-line · from ${originMun.name.split(',')[0]} municipality center`}
               </span>
             </div>
 
@@ -394,19 +406,23 @@
           </button>
         </div>
 
-        <!-- Quick Financial Metric Preview -->
-        <div class="flex items-center justify-between bg-[#F9FBF7] rounded-xl p-2.5 px-3 border border-[#20251E]/8 text-xs">
+        <!-- Decision-first quantity preview -->
+        <div class="grid grid-cols-2 gap-2 bg-[#F9FBF7] rounded-xl p-2.5 px-3 border border-[#20251E]/8 text-xs">
           <div>
-            <span class="block text-[10px] text-[#596052]">{t('samplePrice', lang)}</span>
+            <span class="block text-[10px] text-[#596052]">
+              {lang === 'fil' ? 'Kayang tanggapin' : 'Can accept'}
+            </span>
             <span class="font-bold text-[#20251E] font-tabular">
-              {selectedItem.fit.samplePricePerKg ? `₱${selectedItem.fit.samplePricePerKg}/kg` : '—'}
+              {formatKg(selectedItem.fit.acceptedKg)}
             </span>
           </div>
 
           <div class="text-right">
-            <span class="block text-[10px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
-            <span class="font-bold text-base text-[#486320] font-tabular">
-              {formatCurrency(selectedItem.fit.afterTransportPay)}
+            <span class="block text-[10px] text-[#596052]">
+              {lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}
+            </span>
+            <span class="font-bold text-[#20251E] font-tabular">
+              {formatKg(selectedItem.fit.remainingKg)}
             </span>
           </div>
         </div>

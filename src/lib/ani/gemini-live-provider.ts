@@ -146,7 +146,8 @@ export class GeminiLiveAniProvider implements AniProvider {
     this.outputTranscript = '';
     this.inputTranscript = '';
     this.inputTranscriptEmitted = true;
-    this.suppressAudio = false;
+    // Typed requests are intentionally silent. Farmers can choose spoken replies by using the microphone.
+    this.suppressAudio = true;
     this.emit({ type: 'status', status: 'working' });
     this.socket!.send(JSON.stringify({
       clientContent: {
@@ -232,7 +233,7 @@ export class GeminiLiveAniProvider implements AniProvider {
     if (outputText) {
       this.flushVoiceInputTranscript();
       this.outputTranscript += outputText;
-      this.emit({ type: 'status', status: 'speaking' });
+      this.emit({ type: 'status', status: this.suppressAudio ? 'working' : 'speaking' });
     }
 
     for (const part of message.serverContent?.modelTurn?.parts || []) {

@@ -5,13 +5,19 @@
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
+  import { validateHarvestInput } from '../../lib/domain/validation';
   import { SUPPORTED_CROPS, getCropLabel } from '../../lib/domain/crops';
-  import { serializeDiscoverQuery, parseDiscoverQuery, type ParsedDiscoverQuery } from '../../lib/state/url-state';
+  import { serializeDiscoverQuery, parseDiscoverQuery, todayInManila, type ParsedDiscoverQuery } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
-  import { distanceForSorting, getOutletRouteEstimate, type OutletRouteEstimate } from '../../lib/routing/routing-matrix';
-  import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import {
+    distanceForBasis,
+    getOutletRouteEstimate,
+    sharedDistanceBasis,
+    type OutletRouteEstimate,
+  } from '../../lib/routing/routing-matrix';
+  import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
     initialQuery,
@@ -26,14 +32,13 @@
 
   // Filters
   let statusFilter = $state<'all' | 'match' | 'partial' | 'confirm' | 'no_match'>('all');
-  let categoryFilter = $state<string>('all');
-  let sortBy = $state<'fit' | 'distance' | 'payout' | 'price' | 'transport'>('fit');
-  let searchQuery = $state<string>('');
+  let sortBy = $state<'fit' | 'distance'>('fit');
 
   // Local state
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
+  let compareNotice = $state('');
 
   // Editable harvest draft
   let editCrop = $state(initialQuery.harvest.crop);
@@ -43,6 +48,7 @@
   let editVariety = $state(initialQuery.harvest.details?.variety || '');
   let editGrade = $state(initialQuery.harvest.details?.grade || '');
   let editPackaging = $state(initialQuery.harvest.details?.packaging || '');
+  let editErrors = $state<Record<string, string>>({});
 
   onMount(() => {
     savedIds = getSavedOutletIds();
@@ -115,6 +121,16 @@
     })
   );
 
+  const statusCounts = $derived({
+    all: processedOutlets.length,
+    match: processedOutlets.filter((item) => item.fit.status === 'match').length,
+    partial: processedOutlets.filter((item) => item.fit.status === 'partial').length,
+    confirm: processedOutlets.filter((item) => item.fit.status === 'confirm').length,
+    no_match: processedOutlets.filter((item) => item.fit.status === 'no_match').length,
+  });
+
+  const distanceBasis = $derived(sharedDistanceBasis(processedOutlets.map((item) => item.route)));
+
   // Filter & Sort
   const filteredOutlets = $derived<ProcessedOutlet[]>(
     processedOutlets
@@ -123,37 +139,17 @@
         if (statusFilter !== 'all' && item.fit.status !== statusFilter) {
           return false;
         }
-        // Category filter
-        if (categoryFilter !== 'all' && item.outlet.category !== categoryFilter) {
-          return false;
-        }
-        // Search text
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchName = item.outlet.name.toLowerCase().includes(q);
-          const matchMun = item.outlet.municipality.toLowerCase().includes(q);
-          if (!matchName && !matchMun) return false;
-        }
         return true;
       })
       .sort((a, b) => {
         if (sortBy === 'distance') {
-          return distanceForSorting(a.route) - distanceForSorting(b.route);
-        }
-        if (sortBy === 'price') {
-          return (b.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY) - (a.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY);
-        }
-        if (sortBy === 'payout') {
-          return (b.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY) - (a.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY);
-        }
-        if (sortBy === 'transport') {
-          return (a.fit.enteredTransport ?? Number.POSITIVE_INFINITY) - (b.fit.enteredTransport ?? Number.POSITIVE_INFINITY);
+          return distanceForBasis(a.route, distanceBasis) - distanceForBasis(b.route, distanceBasis);
         }
         // Default: 'fit'
         const rank = { match: 1, partial: 2, confirm: 3, no_match: 4 };
         const diff = rank[a.fit.status] - rank[b.fit.status];
         if (diff !== 0) return diff;
-        return distanceForSorting(a.route) - distanceForSorting(b.route);
+        return distanceForBasis(a.route, distanceBasis) - distanceForBasis(b.route, distanceBasis);
       })
   );
 
@@ -167,16 +163,61 @@
   }
 
   function handleToggleCompare(id: string) {
+    compareNotice = '';
+
     if (comparedIds.includes(id)) {
       comparedIds = comparedIds.filter((item) => item !== id);
-    } else {
-      if (comparedIds.length >= 3) return; // Cap at 3 per contract
-      comparedIds = [...comparedIds, id];
+      return;
     }
+
+    if (comparedIds.length >= 3) {
+      compareNotice = lang === 'fil'
+        ? 'Hanggang tatlong lugar lang ang maaaring paghambingin. Alisin muna ang isa.'
+        : 'You can compare up to three places. Remove one first.';
+      return;
+    }
+
+    comparedIds = [...comparedIds, id];
+  }
+
+  function resetHarvestEditDraft() {
+    editCrop = harvest.crop;
+    editKg = harvest.quantityKg;
+    editOrigin = harvest.originMunicipality;
+    editReadyDate = harvest.readyDate || '';
+    editVariety = harvest.details?.variety || '';
+    editGrade = harvest.details?.grade || '';
+    editPackaging = harvest.details?.packaging || '';
+    editErrors = {};
+  }
+
+  function toggleHarvestEditor() {
+    if (!isEditingHarvest) {
+      resetHarvestEditDraft();
+      isEditingHarvest = true;
+      return;
+    }
+
+    resetHarvestEditDraft();
+    isEditingHarvest = false;
   }
 
   function handleApplyHarvestEdit(e: SubmitEvent) {
     e.preventDefault();
+
+    const validation = validateHarvestInput({
+      crop: editCrop,
+      quantityKg: Number(editKg),
+      originMunicipality: editOrigin,
+      readyDate: editReadyDate || undefined,
+    });
+
+    if (!validation.isValid) {
+      editErrors = lang === 'fil' ? validation.errorsFil : validation.errors;
+      return;
+    }
+
+    editErrors = {};
     harvest = {
       ...harvest,
       crop: editCrop,
@@ -194,22 +235,61 @@
     };
     isEditingHarvest = false;
 
-    // Sync URL without reload
+    // Changing the harvest invalidates a selected result until the farmer chooses again.
+    selectedOutletId = undefined;
+    statusFilter = 'all';
+    publishHarvestContext(harvest);
+
+    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, undefined, lang);
+    window.history.replaceState({}, '', `/discover?${newQuery}`);
+  }
+
+  function syncDiscoveryUrl() {
     const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
-  function handleSelectPin(id: string) {
-    selectedOutletId = id;
-    if (activeMobileView === 'map') {
-      activeMobileView = 'list';
-    }
-    setTimeout(() => {
-      const el = document.getElementById(`outlet-card-${id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  function setStatusFilter(next: 'all' | 'match' | 'partial' | 'confirm' | 'no_match') {
+    statusFilter = next;
+
+    if (selectedOutletId && next !== 'all') {
+      const selected = processedOutlets.find((item) => item.outlet.id === selectedOutletId);
+      if (!selected || selected.fit.status !== next) {
+        selectedOutletId = undefined;
+        syncDiscoveryUrl();
       }
-    }, 50);
+    }
+  }
+
+  function scrollSelectedIntoView(id: string) {
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`outlet-card-${id}`);
+      el?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    });
+  }
+
+  function setView(view: 'list' | 'map') {
+    activeMobileView = view;
+    syncDiscoveryUrl();
+    if (view === 'list' && selectedOutletId) {
+      scrollSelectedIntoView(selectedOutletId);
+    }
+  }
+
+  function handleSelectPin(id: string) {
+    selectedOutletId = id || undefined;
+    syncDiscoveryUrl();
+
+    if (!id) return;
+
+    // On phones, keep the map visible so the farmer can read the route card.
+    // Desktop already shows map and list together, so reveal the selected card there too.
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      scrollSelectedIntoView(id);
+    }
   }
 
   function formatCurrency(val: number | null | undefined): string {
@@ -222,6 +302,13 @@
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
     return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function fitReasonBorder(status: FitResult['status']): string {
+    if (status === 'match') return 'border-[#597928]';
+    if (status === 'partial') return 'border-[#B86A2B]';
+    if (status === 'confirm') return 'border-[#4E7380]';
+    return 'border-[#8C9388]';
   }
 
   function priceLabelFor(fit: FitResult): string {
@@ -244,7 +331,10 @@
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
           {harvest.quantityKg.toLocaleString()} kg {getCropLabel(harvest.crop, lang)}
           <span class="text-[#4A5245] font-normal text-xs sm:text-sm block sm:inline sm:ml-2">
-            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull; {filteredOutlets.length} {lang === 'fil' ? 'lugar na natagpuan' : 'places found'}
+            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull;
+            {statusFilter === 'all'
+              ? `${processedOutlets.length} ${lang === 'fil' ? 'lugar na natagpuan' : 'places found'}`
+              : `${lang === 'fil' ? 'ipinapakita' : 'showing'} ${filteredOutlets.length} ${lang === 'fil' ? 'sa' : 'of'} ${processedOutlets.length}`}
           </span>
         </h1>
       </div>
@@ -252,21 +342,31 @@
       <!-- Edit harvest toggle button -->
       <button
         type="button"
-        onclick={() => isEditingHarvest = !isEditingHarvest}
-        aria-label={isEditingHarvest ? (lang === 'fil' ? 'Isara ang pag-edit ng ani' : 'Close harvest editor') : t('editHarvest', lang)}
+        onclick={toggleHarvestEditor}
+        aria-label={isEditingHarvest ? (lang === 'fil' ? 'Kanselahin ang pag-edit ng ani' : 'Cancel harvest edit') : t('editHarvest', lang)}
         class="premium-control inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-[#20251E]/15 bg-[#FFFDF8] text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors shrink-0 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        <span>{isEditingHarvest ? (lang === 'fil' ? 'Isara' : 'Close') : t('editHarvest', lang)}</span>
+        <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
     </div>
 
     <!-- Collapsible Quick Harvest Editor -->
     {#if isEditingHarvest}
-      <form onsubmit={handleApplyHarvestEdit} class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+      <form onsubmit={handleApplyHarvestEdit} novalidate class="mt-3.5 pt-3.5 border-t border-[#20251E]/10 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+        {#if Object.keys(editErrors).length > 0}
+          <div role="alert" class="sm:col-span-5 rounded-xl border border-[#6E3511]/30 bg-[#FCECD8]/60 px-3 py-2 text-xs text-[#6E3511]">
+            <strong>{lang === 'fil' ? 'Suriin muna ang ani.' : 'Check the harvest details first.'}</strong>
+            <ul class="mt-1 list-inside list-disc">
+              {#each Object.values(editErrors) as message}
+                <li>{message}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
         <div>
           <label for="edit-crop-select" class="block text-xs font-bold text-[#20251E] mb-1">{t('cropLabel', lang)}</label>
           <select id="edit-crop-select" bind:value={editCrop} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold">
@@ -278,7 +378,8 @@
 
         <div>
           <label for="edit-kg-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('quantityLabel', lang)} (kg)</label>
-          <input id="edit-kg-input" type="number" bind:value={editKg} min="1" max="100000" class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          <input id="edit-kg-input" type="number" bind:value={editKg} min="1" max="100000" inputmode="numeric" aria-invalid={Boolean(editErrors.quantityKg)} aria-describedby={editErrors.quantityKg ? 'edit-kg-error' : undefined} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          {#if editErrors.quantityKg}<p id="edit-kg-error" class="mt-1 text-xs font-semibold text-[#6E3511]">{editErrors.quantityKg}</p>{/if}
         </div>
 
         <div>
@@ -292,7 +393,8 @@
 
         <div>
           <label for="edit-ready-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('readyDateLabel', lang)}</label>
-          <input id="edit-ready-input" type="date" bind:value={editReadyDate} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          <input id="edit-ready-input" type="date" bind:value={editReadyDate} min={todayInManila()} aria-invalid={Boolean(editErrors.readyDate)} aria-describedby={editErrors.readyDate ? 'edit-ready-error' : undefined} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+          {#if editErrors.readyDate}<p id="edit-ready-error" class="mt-1 text-xs font-semibold text-[#6E3511]">{editErrors.readyDate}</p>{/if}
         </div>
 
         <button
@@ -305,15 +407,15 @@
         <div class="sm:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#20251E]/8">
           <div>
             <label for="edit-variety-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('varietyLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
-            <input id="edit-variety-input" type="text" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+            <input id="edit-variety-input" type="text" maxlength="80" bind:value={editVariety} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
           <div>
             <label for="edit-grade-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('gradeLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
-            <input id="edit-grade-input" type="text" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+            <input id="edit-grade-input" type="text" maxlength="80" bind:value={editGrade} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
           <div>
             <label for="edit-packaging-input" class="block text-xs font-bold text-[#20251E] mb-1">{t('packagingLabel', lang)} <span class="font-normal text-[#596052]">({lang === 'fil' ? 'opsyonal' : 'optional'})</span></label>
-            <input id="edit-packaging-input" type="text" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
+            <input id="edit-packaging-input" type="text" maxlength="80" bind:value={editPackaging} class="w-full bg-[#FFFDF8] border border-[#20251E]/20 rounded-xl px-3 py-1.5 text-sm font-semibold" />
           </div>
         </div>
       </form>
@@ -326,10 +428,15 @@
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
       <!-- Mobile Segmented Toggle -->
-      <div class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs" role="group" aria-label="View toggle">
+      <div
+        class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
+        role="group"
+        aria-label={lang === 'fil' ? 'Piliin ang listahan o mapa' : 'Choose list or map view'}
+      >
         <button
           type="button"
-          onclick={() => activeMobileView = 'list'}
+          onclick={() => setView('list')}
+          aria-pressed={activeMobileView === 'list'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'list'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
@@ -344,7 +451,8 @@
 
         <button
           type="button"
-          onclick={() => activeMobileView = 'map'}
+          onclick={() => setView('map')}
+          aria-pressed={activeMobileView === 'map'}
           class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'map'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
@@ -361,53 +469,72 @@
       <div class="h-4 w-px bg-[#20251E]/15 hidden sm:block shrink-0"></div>
 
       <!-- Filter Pills (Horizontally scrollable on mobile) -->
-      <div class="flex items-center gap-1.5 shrink-0" role="group" aria-label="Status filter">
+      <div
+        class="flex items-center gap-1.5 shrink-0"
+        role="group"
+        aria-label={lang === 'fil' ? 'I-filter ayon sa pagkakatugma' : 'Filter by fit status'}
+      >
         <button
           type="button"
-          onclick={() => statusFilter = 'all'}
+          onclick={() => setStatusFilter('all')}
+          aria-pressed={statusFilter === 'all'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'all'
               ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
               : 'border-[#20251E]/15 bg-[#FFFDF8] text-[#4A5245] hover:border-[#597928]/40'
           }`}
         >
-          {lang === 'fil' ? 'Lahat' : 'All'} ({processedOutlets.length})
+          {lang === 'fil' ? 'Lahat' : 'All'} ({statusCounts.all})
         </button>
 
         <button
           type="button"
-          onclick={() => statusFilter = 'match'}
+          onclick={() => setStatusFilter('match')}
+          aria-pressed={statusFilter === 'match'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'match'
               ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
               : 'border-[#91AC67]/40 bg-[#EAF3DE]/60 text-[#3B5B16] hover:border-[#597928]'
           }`}
         >
-          {lang === 'fil' ? 'Tugma' : 'Full match'}
+          {lang === 'fil' ? 'Tugma sa ani' : 'Matches harvest'} ({statusCounts.match})
         </button>
 
         <button
           type="button"
-          onclick={() => statusFilter = 'partial'}
+          onclick={() => setStatusFilter('partial')}
+          aria-pressed={statusFilter === 'partial'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'partial'
               ? 'border-[#6E3511] bg-[#6E3511] text-[#FFFDF8]'
               : 'border-[#E0A96D]/40 bg-[#FCECD8]/60 text-[#6E3511] hover:border-[#6E3511]'
           }`}
         >
-          {lang === 'fil' ? 'Bahagya' : 'Partial'}
+          {lang === 'fil' ? 'Tumatanggap ng bahagi' : 'Accepts part'} ({statusCounts.partial})
         </button>
 
         <button
           type="button"
-          onclick={() => statusFilter = 'confirm'}
+          onclick={() => setStatusFilter('confirm')}
+          aria-pressed={statusFilter === 'confirm'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'confirm'
               ? 'border-[#4E7380] bg-[#4E7380] text-[#FFFDF8]'
               : 'border-[#4E7380]/40 bg-[#EBF2F5]/60 text-[#2A4B56] hover:border-[#4E7380]'
           }`}
         >
-          {lang === 'fil' ? 'Kumpirmahin' : 'Confirm'}
+          {lang === 'fil' ? 'Kumpirmahin muna' : 'Confirm first'} ({statusCounts.confirm})
+        </button>
+
+        <button
+          type="button"
+          onclick={() => setStatusFilter('no_match')}
+          aria-pressed={statusFilter === 'no_match'}
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${statusFilter === 'no_match'
+            ? 'border-[#20251E] bg-[#20251E] text-[#FFFDF8]'
+            : 'border-[#20251E]/20 bg-[#FFFDF8] text-[#4A5245] hover:border-[#20251E]/45'}`}
+        >
+          {lang === 'fil' ? 'Hindi tugma' : "Doesn't match"} ({statusCounts.no_match})
         </button>
       </div>
     </div>
@@ -421,29 +548,38 @@
           bind:value={sortBy}
           class="min-h-11 bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl px-2.5 py-1 text-xs font-semibold text-[#20251E] outline-none cursor-pointer"
         >
-          <option value="fit">{lang === 'fil' ? 'Status ng Pagkakatugma' : 'Fit status'}</option>
-          <option value="distance">{lang === 'fil' ? 'Pinakamalapit' : 'Nearest'}</option>
-          <option value="payout">{lang === 'fil' ? 'Halaga Matapos ang Biyahe' : 'Amount after transport'}</option>
-          <option value="price">{lang === 'fil' ? 'Presyo / kg' : 'Price / kg'}</option>
-          <option value="transport">{lang === 'fil' ? 'Mababang Biyahe' : 'Lowest Transport'}</option>
+          <option value="fit">{lang === 'fil' ? 'Tugma muna' : 'Match first'}</option>
+          <option value="distance">
+            {distanceBasis === 'road'
+              ? (lang === 'fil' ? 'Pinakamalapit sa kalsada' : 'Nearest by road')
+              : (lang === 'fil' ? 'Pinakamalapit (tuwid na layo)' : 'Nearest (straight-line)')}
+          </option>
         </select>
       </div>
 
-      {#if statusFilter !== 'all' || categoryFilter !== 'all' || searchQuery}
+      {#if statusFilter !== 'all'}
         <button
           type="button"
-          onclick={() => {
-            statusFilter = 'all';
-            categoryFilter = 'all';
-            searchQuery = '';
-          }}
-          class="text-xs text-[#6E3511] font-bold hover:underline cursor-pointer"
+          onclick={() => setStatusFilter('all')}
+          class="min-h-11 px-2 text-xs text-[#6E3511] font-bold hover:underline cursor-pointer"
         >
           {t('clearFilters', lang)}
         </button>
       {/if}
     </div>
   </div>
+
+  {#if sortBy === 'distance'}
+    <p class="text-[11px] leading-relaxed text-[#596052]">
+      {distanceBasis === 'road'
+        ? (lang === 'fil'
+            ? 'Pare-parehong distansya sa kalsada ang gamit sa pag-aayos ng lahat ng lugar.'
+            : 'Every place is ranked using road distance on the same basis.')
+        : (lang === 'fil'
+            ? 'Tuwid na layo ang ginagamit para sa lahat ng lugar upang patas ang paghahambing. Hindi ito eksaktong haba ng biyahe.'
+            : 'Straight-line distance is used for every place so the comparison stays consistent. It is not the exact travel distance.')}
+    </p>
+  {/if}
 
   <!-- 3. Main Responsive 2-Column Split -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -469,12 +605,8 @@
           </p>
           <button
             type="button"
-            onclick={() => {
-              statusFilter = 'all';
-              categoryFilter = 'all';
-              searchQuery = '';
-            }}
-            class="px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
+            onclick={() => setStatusFilter('all')}
+            class="min-h-11 px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
           >
             {t('clearFilters', lang)}
           </button>
@@ -530,9 +662,9 @@
                   <circle cx="12" cy="9" r="2.5" />
                 </svg>
                 <span>
-                  {item.route.source === 'road'
-                    ? `${item.route.roadDistanceKm?.toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
-                    : `${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na distansya' : 'straight-line'}`}
+                  {distanceBasis === 'road'
+                    ? `${distanceForBasis(item.route, distanceBasis).toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
+                    : `${distanceForBasis(item.route, distanceBasis).toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line'}`}
                 </span>
               </span>
             </div>
@@ -584,7 +716,7 @@
             {/if}
 
             <!-- Fit Reason Explanation -->
-            <p class="text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 border-[#597928] pl-2.5 py-1">
+            <p class={`text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 ${fitReasonBorder(item.fit.status)} pl-2.5 py-1`}>
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
 
@@ -602,51 +734,56 @@
               {/if}
             </div>
 
-            <!-- Honest Math Transparency Box -->
+            <!-- Price evidence stays visible; arithmetic is progressively disclosed. -->
             {#if item.fit.samplePricePerKg !== null}
-              <div class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                  <div>
+              <details class="group rounded-xl border border-[#20251E]/10 bg-[#F9FBF7]">
+                <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 sm:px-3.5">
+                  <span>
                     <span class="block text-[11px] text-[#596052]">{priceLabelFor(item.fit)}</span>
-                    <span class="font-bold text-[#20251E] font-tabular">₱{item.fit.samplePricePerKg} / kg</span>
-                    <span class="block text-[10px] text-[#596052]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
-                  </div>
-                  <div>
-                    <span class="block text-[11px] text-[#596052]">{lang === 'fil' ? 'Kabuuang Halaga' : 'Gross Subtotal'}</span>
-                    <span class="font-bold text-[#20251E] font-tabular">{formatCurrency(item.fit.grossPay)}</span>
-                    <span class="block text-[10px] text-[#596052]">{item.fit.acceptedKg}kg &times; ₱{item.fit.samplePricePerKg}</span>
-                  </div>
-                  <div>
-                    <span class="block text-[11px] text-[#596052]">{t('enteredTransport', lang)}</span>
-                    <span class="font-bold text-[#6E3511] font-tabular">
-                      {item.fit.enteredTransport !== null ? `-${formatCurrency(item.fit.enteredTransport)}` : '—'}
-                    </span>
-                    <span class="block text-[10px] text-[#6E3511]">{lang === 'fil' ? 'bawas sa biyahe' : 'hauling cost'}</span>
-                  </div>
-                  <div>
-                    <span class="block text-[11px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
-                    <span class="font-bold text-base text-[#486320] font-tabular">
-                      {formatCurrency(item.fit.afterTransportPay)}
-                    </span>
-                    <span class="block text-[10px] text-[#486320] font-medium">{lang === 'fil' ? 'bago gastos sa bukid' : 'before farm costs'}</span>
-                  </div>
-                </div>
+                    <span class="font-tabular text-sm font-bold text-[#20251E]">₱{item.fit.samplePricePerKg} / kg</span>
+                  </span>
+                  <span class="flex items-center gap-1.5 text-[11px] font-bold text-[#486320]">
+                    {lang === 'fil' ? 'Tingnan ang kalkulasyon' : 'See calculation'}
+                    <svg class="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </summary>
 
-                <!-- Anti-Profit Claim Strict Disclaimer -->
-                <p class="text-[10px] text-[#596052] border-t border-[#20251E]/8 pt-1.5 leading-tight">
-                  {t('afterTransportNote', lang)}
-                </p>
-              </div>
+                <div class="border-t border-[#20251E]/8 px-3 py-3 sm:px-3.5">
+                  <div class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+                    <div>
+                      <span class="block text-[11px] text-[#596052]">{lang === 'fil' ? 'Kabuuang halaga' : 'Gross amount'}</span>
+                      <span class="font-bold text-[#20251E] font-tabular">{formatCurrency(item.fit.grossPay)}</span>
+                      <span class="block text-[10px] text-[#596052]">{item.fit.acceptedKg?.toLocaleString() ?? '—'} kg &times; ₱{item.fit.samplePricePerKg}</span>
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-[#596052]">{t('enteredTransport', lang)}</span>
+                      <span class="font-bold text-[#6E3511] font-tabular">
+                        {item.fit.enteredTransport !== null ? `-${formatCurrency(item.fit.enteredTransport)}` : (lang === 'fil' ? 'Hindi inilagay' : 'Not entered')}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
+                      <span class="font-bold text-base text-[#486320] font-tabular">
+                        {item.fit.afterTransportPay !== null ? formatCurrency(item.fit.afterTransportPay) : (lang === 'fil' ? 'Hindi makalkula' : 'Not calculated')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p class="mt-2 border-t border-[#20251E]/8 pt-2 text-[10px] leading-relaxed text-[#596052]">
+                    {t('afterTransportNote', lang)}
+                  </p>
+                </div>
+              </details>
             {/if}
 
             <!-- Card Actions Footer -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
               <!-- Add to compare checkbox -->
-              <label class="flex items-center gap-2 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
+              <label class="flex min-h-11 items-center gap-2 rounded-lg px-1 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={item.isCompared}
-                  disabled={!item.isCompared && comparedIds.length >= 3}
+                  aria-disabled={!item.isCompared && comparedIds.length >= 3}
                   onchange={() => handleToggleCompare(item.outlet.id)}
                   class="rounded text-[#486320] focus:ring-[#597928] w-4 h-4 cursor-pointer"
                 />
@@ -691,26 +828,44 @@
         </h4>
         <p class="leading-relaxed">
           {lang === 'fil'
-            ? 'Pumili ng pin sa mapa upang makita ang ruta mula sa iyong munisipalidad. Palaging tawagan ang mamimili bago umalis upang kumpirmahin ang iskedyul ng pagtanggap.'
-            : 'Select any pin to highlight the destination from your municipality. Always contact the receiving facility to confirm operating hours before loading cargo.'}
+            ? 'Pumili ng pin upang makita ang layo at ruta mula sa batayang lokasyon ng munisipyo. Kumpirmahin muna ang pagtanggap bago bumiyahe.'
+            : 'Select a pin to see distance and route context from the municipality reference point. Confirm receiving terms before travel.'}
         </p>
+        {#if selectedOutletId}
+          <button
+            type="button"
+            onclick={() => setView('list')}
+            class="premium-control mt-2 inline-flex min-h-11 items-center rounded-xl border border-[#597928]/30 px-3 py-2 font-bold text-[#486320] hover:bg-[#FCECD8]/45 lg:hidden"
+          >
+            {lang === 'fil' ? 'Tingnan ang napiling lugar sa listahan' : 'View selected place in the list'}
+          </button>
+        {/if}
       </div>
     </div>
 
   </div>
 
   <!-- 4. Floating Bottom Compare Bar (Appears when >= 1 outlet is selected) -->
+  <p class="sr-only" aria-live="polite">{compareNotice}</p>
+
   {#if comparedIds.length > 0}
     <aside
       class="fixed bottom-14 md:bottom-6 left-4 right-4 max-w-lg mx-auto z-40 bg-[#20251E] text-[#FFFDF8] rounded-2xl p-3.5 px-4 shadow-xl border border-[#FFFDF8]/20 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
       aria-label="Comparison dock"
     >
-      <div class="flex items-center gap-2 text-xs">
-        <span class="w-6 h-6 rounded-full bg-[#486320] font-bold flex items-center justify-center text-xs font-tabular">
+      <div class="min-w-0 flex items-start gap-2 text-xs">
+        <span class="mt-0.5 w-6 h-6 shrink-0 rounded-full bg-[#486320] font-bold flex items-center justify-center text-xs font-tabular">
           {comparedIds.length}
         </span>
-        <span class="font-medium">
-          {lang === 'fil' ? `${comparedIds.length} ng 3 lugar ang napili` : `${comparedIds.length} of 3 places selected`}
+        <span class="min-w-0">
+          <span class="block font-medium">
+            {lang === 'fil' ? `${comparedIds.length} ng 3 lugar ang napili` : `${comparedIds.length} of 3 places selected`}
+          </span>
+          {#if comparedIds.length >= 3}
+            <span class="mt-0.5 block text-[10px] leading-4 text-[#FFFDF8]/70">
+              {lang === 'fil' ? 'Hanggang 3 lang. Alisin muna ang isa para pumili ng iba.' : 'Maximum of 3. Remove one before choosing another.'}
+            </span>
+          {/if}
         </span>
       </div>
 
@@ -718,14 +873,14 @@
         <button
           type="button"
           onclick={() => comparedIds = []}
-          class="text-xs text-[#FFFDF8]/70 hover:text-[#FFFDF8] px-2 py-1 cursor-pointer"
+          class="min-h-11 px-3 py-2 rounded-lg text-xs font-semibold text-[#FFFDF8]/80 hover:text-[#FFFDF8] hover:bg-white/8 cursor-pointer"
         >
           {lang === 'fil' ? 'Alisin' : 'Clear'}
         </button>
 
         <a
           href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-          class="px-4 py-1.5 rounded-xl bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+          class="min-h-11 px-4 py-2 rounded-xl bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
         >
           <span>{lang === 'fil' ? 'Ihambing' : 'Compare'}</span>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

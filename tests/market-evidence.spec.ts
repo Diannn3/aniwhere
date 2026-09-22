@@ -15,7 +15,7 @@ test('keeps partial quantities and unknown capacity distinct in the comparison l
   const accepted = metricRow(ledger, 'Accepted quantity');
   const remaining = metricRow(ledger, 'Remaining harvest');
   const gross = metricRow(ledger, 'Gross amount');
-  const afterTransport = metricRow(ledger, 'After entered transport');
+  const afterTransport = metricRow(ledger, 'After transport amount');
   const confirmation = metricRow(ledger, 'Confirm before travel');
 
   await expect(fit.getByRole('cell').first()).toContainText(/accepts part of your harvest/i);
@@ -28,9 +28,171 @@ test('keeps partial quantities and unknown capacity distinct in the comparison l
   const unknownAfterTransport = afterTransport.getByRole('cell').nth(1);
 
   await expect(fit.getByRole('cell').nth(1)).toContainText(/contact to confirm/i);
-  await expect(unknownAccepted).toHaveText('Confirm');
-  await expect(unknownRemaining).toHaveText('Confirm');
+  await expect(unknownAccepted).toHaveText('Confirm first');
+  await expect(unknownRemaining).toHaveText('Confirm first');
   await expect(unknownGross).toHaveText('Not calculated');
   await expect(unknownAfterTransport).toContainText('Not calculated');
   await expect(confirmation.getByRole('cell').nth(1)).toContainText(/still unknown: current capacity/i);
+});
+
+
+test('prepared inquiry never turns demo price into a buyer claim', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await page.getByRole('button', { name: 'Prepare message' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText(/current price, capacity, receiving schedule/i);
+  await expect(dialog).not.toContainText(/demo price of/i);
+  await expect(dialog).toContainText(/AniWhere does not send automated SMS/i);
+});
+
+test('Filipino outlet guidance localizes crop and confirmation questions', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=fil'
+  );
+
+  await expect(page.getByText(/Anong grade at antas ng pagkahinog.*kamatis/i)).toBeVisible();
+  await expect(page.getByText(/Anong packaging o uri ng crate/i)).toBeVisible();
+  await expect(page.getByText(/Ano ang eksaktong oras ng pagtanggap/i)).toBeVisible();
+  await expect(page.getByText(/Uri ng datos:/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Ihanda ang mensahe' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText(/300 kg na kamatis/i);
+  await expect(dialog).toContainText(/kasalukuyang presyo, kapasidad/i);
+});
+
+
+test('missing demo contact details never become invented real-world contacts', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await page.getByRole('button', { name: 'No recorded contact' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText(/No phone or email is recorded for this entry/i);
+  await expect(dialog).toContainText(/does not substitute invented contact details/i);
+  await expect(dialog).not.toContainText('Verified public contact');
+});
+
+
+test('outlet dialogs focus safely and return the farmer to the triggering action', async ({ page }) => {
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  const prepare = page.getByRole('button', { name: 'Prepare message' });
+  await prepare.focus();
+  await prepare.click();
+
+  const dialog = page.getByRole('dialog', { name: 'Prepare Inquiry Message' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('button[aria-label="Close"]')).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(prepare).toBeFocused();
+});
+
+
+test('prepared inquiry reports clipboard failure instead of claiming a copy succeeded', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new DOMException('Clipboard blocked', 'NotAllowedError');
+        },
+      },
+    });
+  });
+
+  await page.goto(
+    '/places/demo-processor?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await page.getByRole('button', { name: 'Prepare message' }).click();
+  await page.getByRole('button', { name: 'Copy message' }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Prepare Inquiry Message' });
+  await expect(dialog.getByRole('status')).toContainText(/could not be copied/i);
+  await expect(dialog.getByText('Copied to clipboard!')).toHaveCount(0);
+});
+
+
+test('outlet detail never turns unknown capacity into a full-harvest claim', async ({ page }) => {
+  await page.goto(
+    '/places/demo-msme-confirm?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await expect(page.getByText('Contact to confirm').first()).toBeVisible();
+  await expect(page.getByText('Confirm first').first()).toBeVisible();
+  await expect(page.getByText('Remaining harvest is not known yet')).toBeVisible();
+  await expect(page.getByText('Full harvest match')).toHaveCount(0);
+  await expect(page.getByText('Recorded Transport Estimate', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Demo-record estimate, not an actual hauling quote/i)).toBeVisible();
+  await expect(page.getByText(/not profit or guaranteed income/i)).toBeVisible();
+});
+
+test('Filipino decision summary uses localized crop and uncertainty language', async ({ page }) => {
+  await page.goto(
+    '/places/demo-msme-confirm?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=fil'
+  );
+
+  await expect(page.getByText('300 kg Kamatis')).toBeVisible();
+  await expect(page.getByText('Kamatis', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Hindi pa alam ang matitirang ani')).toBeVisible();
+  await expect(page.getByText('Nakatalaang Tantiya sa Biyahe')).toBeVisible();
+  await expect(page.getByText(/Tantiya sa demo record, hindi aktuwal na quote sa biyahe/i)).toBeVisible();
+});
+
+
+test('no-match outlet detail prioritizes other selling options over outreach', async ({ page }) => {
+  await page.goto(
+    '/places/demo-organic-shop?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await expect(page.getByText('Does not match').first()).toBeVisible();
+  const alternatives = page.getByRole('link', { name: 'Check other selling options' });
+  await expect(alternatives).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Prepare message' })).toHaveCount(0);
+  await expect(alternatives).toHaveAttribute('href', /crop=tomato/);
+  await expect(alternatives).toHaveAttribute('href', /kg=300/);
+});
+
+
+test('comparison distinguishes recorded transport estimates from farmer-edited amounts', async ({ page }) => {
+  await page.goto(comparisonPath(['demo-processor', 'demo-market']));
+
+  const ledger = page.getByRole('table', { name: /comparison ledger/i });
+  const transport = metricRow(ledger, 'Transport amount used');
+  const after = metricRow(ledger, 'After transport amount');
+
+  await expect(transport).toContainText(/Recorded transport estimate/i);
+  await expect(page.getByText(/prefilled demo transport estimate/i)).toBeVisible();
+  await expect(after).toContainText(/Not profit or guaranteed income/i);
+
+  const processorTransport = page.getByLabel(/Transport for Demo Processor/i);
+  await processorTransport.fill('750');
+  await expect(transport).toContainText(/Your edited transport amount/i);
+});
+
+
+test('mobile comparison cards keep transport editing and decision facts usable', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(comparisonPath(['demo-processor', 'demo-market']));
+
+  await expect(page.getByRole('heading', { name: 'Compare at a glance' })).toBeVisible();
+  const processorTransport = page.locator('#mobile-transport-demo-processor');
+  await expect(processorTransport).toBeVisible();
+
+  await processorTransport.fill('750');
+  const processorCard = page.getByRole('article').filter({
+    has: page.getByRole('heading', { name: 'Demo Processor' }),
+  });
+  await expect(processorCard).toContainText(/Your edited transport amount/i);
+  await expect(processorCard).toContainText(/After transport/i);
+  await expect(processorCard.getByRole('link', { name: 'Review this place' })).toBeVisible();
 });

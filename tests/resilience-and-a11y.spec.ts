@@ -33,12 +33,12 @@ for (const viewport of viewports) {
     }
 
     if (viewport.width <= 390) {
-      const matrixScroller = page.getByRole('table', { name: /comparison ledger/i }).locator('..');
-      const dimensions = await matrixScroller.evaluate((element) => ({
-        clientWidth: element.clientWidth,
-        scrollWidth: element.scrollWidth,
-      }));
-      expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+      await expect(page.getByRole('heading', { name: /compare at a glance/i })).toBeVisible();
+      await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeHidden();
+      await expect(page.locator('#transport-demo-processor')).toBeHidden();
+      await expect(page.locator('#mobile-transport-demo-processor')).toBeVisible();
+    } else {
+      await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeVisible();
     }
   });
 }
@@ -77,6 +77,15 @@ type AuditTarget = {
 
 const auditTargets: AuditTarget[] = [
   { name: 'home', path: '/' },
+  {
+    name: 'Ani local help',
+    path: '/',
+    prepare: async (page) => {
+      await page.getByRole('button', { name: 'Ask Ani' }).click();
+      await expect(page.getByRole('dialog', { name: 'Ani' })).toBeVisible();
+    },
+  },
+
   { name: 'discovery list', path: discoverPath },
   { name: 'discovery map', path: `${discoverPath}&view=map` },
   { name: 'outlet detail', path: `/places/demo-cooperative?${new URL(discoverPath, 'http://aniwhere.local').searchParams}` },

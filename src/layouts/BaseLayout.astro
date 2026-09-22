@@ -32,6 +32,20 @@ const languageHref = (targetLang: 'en' | 'fil') => {
   target.searchParams.set('lang', targetLang);
   return `${target.pathname}${target.search}${target.hash}`;
 };
+
+const harvestContextKeys = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging'] as const;
+const hasHarvestContext = ['crop', 'kg', 'origin'].every((key) => Astro.url.searchParams.has(key));
+const farmerContextHref = (path: string) => {
+  const target = new URL(path, Astro.url.origin);
+  if ((path === '/discover' || path === '/saved') && hasHarvestContext) {
+    for (const key of harvestContextKeys) {
+      const value = Astro.url.searchParams.get(key);
+      if (value) target.searchParams.set(key, value);
+    }
+  }
+  if (lang === 'fil') target.searchParams.set('lang', 'fil');
+  return `${target.pathname}${target.search}`;
+};
 ---
 
 <!doctype html>
@@ -40,6 +54,8 @@ const languageHref = (targetLang: 'en' | 'fil') => {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#597928" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -69,7 +85,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         <nav class="hidden items-center gap-1 md:flex" data-aria-en="Main navigation" data-aria-fil="Pangunahing nabigasyon" aria-label={isFil ? 'Pangunahing nabigasyon' : 'Main navigation'}>
           {farmerNav.map((item) => (
             <a
-              href={`${item.href}${lang === 'fil' ? '?lang=fil' : ''}`}
+              href={farmerContextHref(item.href)}
               data-route-href={item.href}
               data-i18n-en={item.href === '/discover' ? 'Discover' : 'Saved'}
               data-i18n-fil={item.href === '/discover' ? 'Maghanap' : 'Nai-save'}
@@ -131,7 +147,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
           { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', icon: 'saved' },
         ].map((item) => (
           <a
-            href={`${item.href}${lang === 'fil' ? '?lang=fil' : ''}`}
+            href={farmerContextHref(item.href)}
             data-route-href={item.href}
             class={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-2 text-[11px] font-semibold transition-colors ${
               isActive(item.href) ? 'bg-[#FCECD8] text-[#6E3511]' : 'text-[#4A5245]'
@@ -155,6 +171,16 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         <p class="max-w-xl" data-i18n-en="AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity." data-i18n-fil="Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.' : 'AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity.'}</p>
       </div>
     </footer>
+
+    <script is:inline>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {
+            // Offline support is optional; the core app must remain usable if registration fails.
+          });
+        }, { once: true });
+      }
+    </script>
 
     <script is:inline>
       (() => {
@@ -194,10 +220,21 @@ const languageHref = (targetLang: 'en' | 'fil') => {
           window.dispatchEvent(new CustomEvent('aniwhere:open-ani'));
         });
 
+        const harvestContextKeys = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging'];
+        const hasHarvestContext = ['crop', 'kg', 'origin'].every((key) => params.has(key));
+
         document.querySelectorAll('a[data-route-href]').forEach((element) => {
           const route = element.getAttribute('data-route-href');
           if (!route) return;
           const url = new URL(route, window.location.origin);
+
+          if ((route === '/discover' || route === '/saved') && hasHarvestContext) {
+            for (const key of harvestContextKeys) {
+              const value = params.get(key);
+              if (value) url.searchParams.set(key, value);
+            }
+          }
+
           if (activeLang === 'fil') url.searchParams.set('lang', 'fil');
           element.setAttribute('href', url.pathname + url.search);
         });

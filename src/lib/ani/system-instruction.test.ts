@@ -14,6 +14,14 @@ describe('Ani system instruction', () => {
     expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Never call proceeds-after-transport profit/i);
   });
 
+
+  it('binds travel answers to AniWhere routing evidence and origin precision', () => {
+    expect(ANI_SYSTEM_INSTRUCTION).toMatch(/use AniWhere's route tool/i);
+    expect(ANI_SYSTEM_INSTRUCTION).toMatch(/straight-line distance/i);
+    expect(ANI_SYSTEM_INSTRUCTION).toMatch(/municipality centroid/i);
+    expect(ANI_SYSTEM_INSTRUCTION).toMatch(/exact farm/i);
+  });
+
   it('forbids transaction and reservation claims', () => {
     expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Do not perform external transactions/i);
     expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Do not imply that capacity is reserved/i);

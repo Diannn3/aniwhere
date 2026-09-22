@@ -52,10 +52,29 @@ export class AniActionExecutor {
     }
 
     if (request.name === 'navigate_to') {
-      const path = (result.data as { path?: string } | undefined)?.path;
+      const navigation = result.data as {
+        path?: string;
+        view?: 'list' | 'map';
+        selectedOutletId?: string | null;
+      } | undefined;
+      const path = navigation?.path;
       if (!path) return;
-      const hasHarvest = path === '/discover' || path === '/compare' || path.startsWith('/places/');
-      const query = hasHarvest ? serializeDiscoverQuery(currentHarvest, 'list', undefined, lang) : (lang === 'fil' ? 'lang=fil' : '');
+
+      if (path === '/discover') {
+        const query = serializeDiscoverQuery(
+          currentHarvest,
+          navigation?.view ?? 'list',
+          navigation?.selectedOutletId ?? undefined,
+          lang
+        );
+        window.location.assign(`/discover?${query}`);
+        return;
+      }
+
+      const hasHarvest = path === '/compare' || path.startsWith('/places/');
+      const query = hasHarvest
+        ? serializeDiscoverQuery(currentHarvest, 'list', undefined, lang)
+        : (lang === 'fil' ? 'lang=fil' : '');
       window.location.assign(query ? `${path}?${query}` : path);
     }
   }

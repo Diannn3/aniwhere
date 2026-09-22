@@ -1,9 +1,11 @@
 import { CURRENT_DATA_MODE, CURRENT_OUTLETS } from '../data/current-market';
 import { evaluateFit } from '../domain/match';
+import { calculateStraightLineDistanceKm } from '../domain/distance';
 import { isValidIsoDate } from '../domain/validation';
 import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
 import type { HarvestQuery, Outlet } from '../domain/types';
-import type { AniFitFacts, AniOutletFacts, AniToolRequest, AniToolResult } from './types';
+import { getOutletRouteEstimate } from '../routing/routing-matrix';
+import type { AniFitFacts, AniOutletFacts, AniRouteFacts, AniToolRequest, AniToolResult } from './types';
 
 const ROUTE_ALLOWLIST = new Set(['/', '/discover', '/saved', '/compare']);
 
@@ -43,21 +45,50 @@ function error(request: AniToolRequest, code: NonNullable<AniToolResult['error']
   return { requestId: request.id, tool: request.name, ok: false, dataMode: CURRENT_DATA_MODE, error: { code, message } };
 }
 
+const HARVEST_DETAIL_FIELDS = new Set(['variety', 'grade', 'packaging']);
+
+function parseHarvestDetails(value: unknown): HarvestQuery['details'] | null | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+
+  const raw = value as Record<string, unknown>;
+  if (Object.keys(raw).some((key) => !HARVEST_DETAIL_FIELDS.has(key))) return null;
+
+  const details: NonNullable<HarvestQuery['details']> = {};
+  for (const key of HARVEST_DETAIL_FIELDS) {
+    const field = raw[key];
+    if (field === undefined || field === '') continue;
+    if (typeof field !== 'string') return null;
+
+    const normalized = field.trim();
+    if (!normalized) continue;
+    if (normalized.length > 80) return null;
+    details[key as 'variety' | 'grade' | 'packaging'] = normalized;
+  }
+
+  return Object.keys(details).length ? details : undefined;
+}
+
 function parseHarvest(value: unknown): HarvestQuery | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const v = value as Record<string, unknown>;
+  const details = parseHarvestDetails(v.details);
+  if (details === null) return null;
+
   if (
     typeof v.crop !== 'string' || !v.crop.trim() ||
+    v.crop.trim().length > 80 ||
     typeof v.quantityKg !== 'number' || !Number.isFinite(v.quantityKg) || v.quantityKg <= 0 || v.quantityKg > 100000 ||
     typeof v.originMunicipality !== 'string' || !LAGUNA_MUNICIPALITIES.some((item) => item.id === v.originMunicipality) ||
     typeof v.readyDate !== 'string' || !isValidIsoDate(v.readyDate)
   ) return null;
+
   return {
     crop: v.crop.trim(),
     quantityKg: v.quantityKg,
     originMunicipality: v.originMunicipality,
     readyDate: v.readyDate,
-    ...(v.details && typeof v.details === 'object' ? { details: v.details as HarvestQuery['details'] } : {}),
+    ...(details ? { details } : {}),
   };
 }
 
@@ -107,12 +138,75 @@ export class AniToolDispatcher {
           const fit = evaluateFit(outlet, currentHarvest, amount);
           return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: fitFactsFromResult(fit) };
         }
+        case 'get_route_estimate': {
+          const outlet = findOutlet(request.args.outletId);
+          if (!outlet) return error(request, 'not_found', 'Outlet was not found.');
+          const origin = LAGUNA_MUNICIPALITIES.find((item) => item.id === currentHarvest.originMunicipality);
+          if (!origin) return error(request, 'invalid_arguments', 'The current harvest origin is not a known Laguna municipality.');
+
+          const straightLineDistanceKm = calculateStraightLineDistanceKm(
+            origin.lat,
+            origin.lng,
+            outlet.lat,
+            outlet.lng
+          );
+          const route = getOutletRouteEstimate(currentHarvest.originMunicipality, outlet.id, straightLineDistanceKm);
+          const facts: AniRouteFacts = {
+            outletId: outlet.id,
+            outletName: outlet.name,
+            originMunicipality: currentHarvest.originMunicipality,
+            originName: origin.name,
+            originBasis: 'municipality_centroid',
+            source: route.source,
+            straightLineDistanceKm: route.straightLineDistanceKm,
+            roadDistanceKm: route.roadDistanceKm,
+            roadDurationMinutes: route.roadDurationMinutes,
+            provider: route.provider,
+            profile: route.profile,
+            generatedAt: route.generatedAt,
+            geometryAvailable: Boolean(route.geometry?.coordinates?.length),
+          };
+
+          return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: facts };
+        }
         case 'navigate_to': {
           const path = request.args.path;
+          const view = request.args.view;
+          const outletId = request.args.outletId;
           if (typeof path !== 'string') return error(request, 'invalid_arguments', 'A route is required.');
+          if (view !== undefined && view !== 'list' && view !== 'map') {
+            return error(request, 'invalid_arguments', 'Discovery view must be list or map.');
+          }
+          if (outletId !== undefined && typeof outletId !== 'string') {
+            return error(request, 'invalid_arguments', 'Outlet selection must use a known outlet ID.');
+          }
+
           const allowedPlace = /^\/places\/[a-z0-9-]+$/.test(path) && CURRENT_OUTLETS.some((outlet) => path === `/places/${outlet.slug}`);
           if (!ROUTE_ALLOWLIST.has(path) && !allowedPlace) return error(request, 'not_allowed', 'That route is not available to Ani.');
-          return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: { path, requiresUiNavigation: true } };
+
+          if ((view !== undefined || outletId !== undefined) && path !== '/discover') {
+            return error(request, 'not_allowed', 'View and outlet selection are only available on discovery.');
+          }
+
+          const selectedOutlet = outletId === undefined ? undefined : findOutlet(outletId);
+          if (outletId !== undefined && !selectedOutlet) {
+            return error(request, 'not_found', 'The requested discovery outlet was not found.');
+          }
+
+          return {
+            requestId: request.id,
+            tool: request.name,
+            ok: true,
+            dataMode: CURRENT_DATA_MODE,
+            data: {
+              path,
+              ...(path === '/discover' ? {
+                view: view ?? 'list',
+                selectedOutletId: selectedOutlet?.id ?? null,
+              } : {}),
+              requiresUiNavigation: true,
+            },
+          };
         }
         case 'save_outlet': {
           const outlet = findOutlet(request.args.outletId);

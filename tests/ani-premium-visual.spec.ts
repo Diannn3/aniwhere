@@ -51,10 +51,24 @@ test('Ani shell is keyboard closable and restores focus', async ({ page }) => {
 
 
 
-test('Ani text mode uses deterministic tools through the explicit mock provider', async ({ page }) => {
+test('Ani shows the live home harvest draft before the farmer submits discovery', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#harvest-quantity').fill('450');
+  await page.locator('#harvest-origin').selectOption('santa-cruz');
+
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Ani' });
+  await expect(dialog.getByText('Current harvest')).toBeVisible();
+  await expect(dialog.getByText(/450 kg .*Santa Cruz/i)).toBeVisible();
+});
+
+test('Ani keeps deterministic market tools behind an explicit online switch', async ({ page }) => {
   await page.goto(discovery);
   await page.getByRole('button', { name: 'Ask Ani' }).click();
-  await expect(page.getByText(/Preview mode\. This is not live market AI\./i)).toBeVisible();
+  await expect(page.getByText(/Local help is ready/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Use online Ani' }).click();
+  await expect(page.getByText(/Preview mode\. This simulates online Ani/i)).toBeVisible();
 
   const input = page.getByLabel('Message Ani');
   await input.fill('What outlets fit this harvest?');
@@ -62,34 +76,114 @@ test('Ani text mode uses deterministic tools through the explicit mock provider'
 
   await expect(page.getByText('What outlets fit this harvest?')).toBeVisible();
   await expect(page.getByText(/Preview only — this is demo data\./i)).toBeVisible();
-  await expect(page.getByRole('dialog', { name: 'Ani' }).getByText(/full match/i)).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Ani' }).getByText(/match the harvest/i)).toBeVisible();
 });
 
-test('Ani follows Filipino URL language in the static build', async ({ page }) => {
+test('Ani local help follows Filipino URL language without connecting online', async ({ page }) => {
   await page.goto('/?lang=fil');
   const trigger = page.getByRole('button', { name: 'Tanungin si Ani' });
   await expect(trigger).toBeVisible();
   await trigger.click();
 
   const input = page.getByLabel('Mensahe kay Ani');
-  await input.fill('Saan puwedeng dalhin ang ani ko?');
+  await input.fill('Ano ang AniWhere?');
   await page.getByRole('button', { name: 'Ipadala' }).click();
 
-  await expect(page.getByText(/Preview lang — demo data ito\./i)).toBeVisible();
+  await expect(page.getByText(/Tinutulungan ka ng AniWhere/i)).toBeVisible();
+  await expect(page.getByText(/Local na preloaded na sagot/i)).toBeVisible();
+  await expect(page.getByText(/Preview mode/i)).toHaveCount(0);
 });
 
-test('Ani microphone denial keeps text fallback visible', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'mediaDevices', {
-      configurable: true,
-      value: { getUserMedia: async () => { throw new DOMException('Denied', 'NotAllowedError'); } },
-    });
-  });
+test('Ani keeps local help text-only and voice opt-in to online mode', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Ask Ani' }).click();
+
   await page.getByRole('button', { name: 'Use microphone' }).click();
-  await expect(page.getByText(/Microphone access is unavailable/i)).toBeVisible();
+  await expect(page.getByText(/Local help is text-only/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Use online Ani' }).click();
+  await expect(page.getByText(/Preview mode\. This simulates online Ani/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Use microphone' }).click();
+  await expect(page.getByText(/Voice is unavailable here/i)).toBeVisible();
   await expect(page.getByLabel('Message Ani')).toBeVisible();
+});
+
+test('Ani local FAQ still answers after the loaded page loses signal', async ({ page, context }) => {
+  await page.goto(discovery);
+  await context.setOffline(true);
+
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+  const input = page.getByLabel('Message Ani');
+  await input.fill('What does Matches your harvest mean?');
+  await page.getByRole('button', { name: 'Send' }).click();
+
+  await expect(page.getByText(/not a sale, reservation, or promise/i)).toBeVisible();
+  await expect(page.getByText(/Preloaded local answer/i)).toBeVisible();
+  await context.setOffline(false);
+});
+
+test('Ani local FAQ remains usable while an invalid home harvest blocks market tools', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#harvest-quantity').fill('0');
+
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+  await expect(page.getByText(/Local FAQ still works/i)).toBeVisible();
+
+  const input = page.getByLabel('Message Ani');
+  await input.fill('What is AniWhere?');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText(/AniWhere helps you find possible places/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Use online Ani' }).click();
+  await input.fill('What outlets fit this harvest?');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText(/Complete the required harvest fields before Ani checks market fit/i)).toBeVisible();
+});
+
+test('Ani can move from local help to online tools and back without keeping the provider active', async ({ page }) => {
+  await page.goto(discovery);
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+
+  await expect(page.getByRole('button', { name: 'Use online Ani' })).toBeVisible();
+  await page.getByRole('button', { name: 'Use online Ani' }).click();
+  await expect(page.getByText(/Preview mode\. This simulates online Ani/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Local help' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Local help' }).click();
+  await expect(page.getByText(/Back to local help/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Use online Ani' })).toBeVisible();
+
+  const input = page.getByLabel('Message Ani');
+  await input.fill('Is the price live?');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText(/Not necessarily\. AniWhere distinguishes demo or reference prices/i)).toBeVisible();
+});
+
+test('Ani local FAQ does not guess when no bundled answer matches', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+
+  const input = page.getByLabel('Message Ani');
+  await input.fill('kumusta ang panahon bukas');
+  await page.getByRole('button', { name: 'Send' }).click();
+
+  await expect(page.getByText(/I do not have a local answer for that yet/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Use online Ani' })).toBeVisible();
+});
+
+test('Ani FAQ action links preserve current harvest context', async ({ page }) => {
+  await page.goto(discovery);
+  await page.getByRole('button', { name: 'Ask Ani' }).click();
+
+  const input = page.getByLabel('Message Ani');
+  await input.fill('How do I change my harvest details?');
+  await page.getByRole('button', { name: 'Send' }).click();
+
+  const action = page.getByRole('link', { name: /Edit harvest/i });
+  await expect(action).toHaveAttribute('href', /crop=tomato/);
+  await expect(action).toHaveAttribute('href', /kg=300/);
+  await expect(action).toHaveAttribute('href', /origin=los-banos/);
+  await expect(action).toHaveAttribute('href', /ready=2026-09-22/);
 });
 
 test('Ani shell and discovery do not introduce narrow-screen overflow', async ({ page }) => {
@@ -175,5 +269,5 @@ test('Ani transport state updates the real comparison ledger', async ({ page }) 
   });
 
   await expect(transport).toHaveValue('750');
-  await expect(page.getByText(/Your edited transport amount/i).first()).toBeVisible();
+  await expect(page.getByRole('table', { name: /comparison ledger/i }).getByText(/Your edited transport amount/i)).toBeVisible();
 });

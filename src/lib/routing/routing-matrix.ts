@@ -84,6 +84,34 @@ export function getOutletRouteEstimate(
   };
 }
 
+export type RouteDistanceBasis = 'road' | 'straight_line';
+
+export function sharedDistanceBasis(routes: OutletRouteEstimate[]): RouteDistanceBasis {
+  if (
+    routes.length > 0 &&
+    routes.every((route) => route.source === 'road' && route.roadDistanceKm !== null)
+  ) {
+    return 'road';
+  }
+
+  return 'straight_line';
+}
+
+export function distanceForBasis(
+  route: OutletRouteEstimate,
+  basis: RouteDistanceBasis
+): number {
+  if (basis === 'road' && route.roadDistanceKm !== null) {
+    return route.roadDistanceKm;
+  }
+
+  return route.straightLineDistanceKm;
+}
+
+/**
+ * Prefer sharedDistanceBasis + distanceForBasis when ordering multiple outlets.
+ * This one-route helper remains for display/single-route callers only.
+ */
 export function distanceForSorting(route: OutletRouteEstimate): number {
   return route.roadDistanceKm ?? route.straightLineDistanceKm;
 }

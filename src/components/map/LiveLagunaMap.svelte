@@ -37,6 +37,7 @@
   let mapContainer: HTMLDivElement;
   let liveReady = $state(false);
   let liveFailed = $state(false);
+  let slowLoading = $state(false);
   let map: any;
   let maplibre: any;
   let originMarker: any;
@@ -96,7 +97,10 @@
     const originElement = document.createElement('div');
     originElement.className = 'aniwhere-origin-marker';
     originElement.textContent = 'A';
-    originElement.setAttribute('aria-label', `${lang === 'fil' ? 'Pinagmulan' : 'Origin'}: ${origin.name}`);
+    originElement.setAttribute(
+      'aria-label',
+      `${lang === 'fil' ? 'Batayang lokasyon' : 'Reference point'}: ${origin.name}${lang === 'fil' ? ', sentro ng munisipyo' : ' municipality center'}`
+    );
     originMarker = new maplibre.Marker({ element: originElement, anchor: 'center' })
       .setLngLat([origin.lng, origin.lat])
       .addTo(map);
@@ -104,12 +108,12 @@
     items.forEach((item, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'aniwhere-outlet-marker';
+      button.className = `aniwhere-outlet-marker status-${item.fit.status}`;
       if (item.outlet.id === selectedId) button.classList.add('is-selected');
       button.textContent = String(index + 1);
       button.setAttribute(
         'aria-label',
-        `${item.outlet.name}, ${item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na distansya' : 'straight-line distance'}`
+        `${item.outlet.name}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
       );
       button.setAttribute('aria-pressed', item.outlet.id === selectedId ? 'true' : 'false');
       button.addEventListener('click', () => onSelect(item.outlet.id));
@@ -185,9 +189,12 @@
 
   onMount(() => {
     let destroyed = false;
+    const slowTimer = window.setTimeout(() => {
+      if (!liveReady && !destroyed) slowLoading = true;
+    }, 2500);
     const timeout = window.setTimeout(() => {
-      if (!liveReady) liveFailed = true;
-    }, 9000);
+      if (!liveReady && !destroyed) liveFailed = true;
+    }, 7000);
 
     (async () => {
       try {
@@ -213,7 +220,9 @@
 
         map.on('load', () => {
           if (destroyed) return;
+          window.clearTimeout(slowTimer);
           window.clearTimeout(timeout);
+          slowLoading = false;
           liveReady = true;
           syncMap();
         });
@@ -230,6 +239,7 @@
 
     return () => {
       destroyed = true;
+      window.clearTimeout(slowTimer);
       window.clearTimeout(timeout);
       clearMarkers();
       map?.remove?.();
@@ -241,7 +251,7 @@
   <div class="map-fallback-shell">
     <div class="map-fallback-note" role="status">
       <strong>{lang === 'fil' ? 'Offline na mapa' : 'Offline map'}</strong>
-      <span>{lang === 'fil' ? 'Hindi nag-load ang live map. Gamit ang ligtas na guhit-mapa.' : 'The live map did not load. Using the resilient map instead.'}</span>
+      <span>{lang === 'fil' ? 'Hindi nag-load ang interaktibong mapa. Gamit muna ang ligtas na guhit-mapa.' : 'The interactive map did not load. Using the resilient map instead.'}</span>
     </div>
     <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {onSelect} />
   </div>
@@ -256,8 +266,14 @@
 
     <div class="map-status-bar">
       <div>
-        <strong>{lang === 'fil' ? 'Live na mapa' : 'Live map'}</strong>
-        <span>{liveReady ? (lang === 'fil' ? 'Pumili ng lugar upang makita ang ruta.' : 'Select an outlet to inspect the route.') : (lang === 'fil' ? 'Naglo-load…' : 'Loading…')}</span>
+        <strong>{lang === 'fil' ? 'Interaktibong mapa' : 'Interactive map'}</strong>
+        <span>
+          {liveReady
+            ? (lang === 'fil' ? 'Pumili ng lugar upang makita ang ruta.' : 'Select an outlet to inspect the route.')
+            : slowLoading
+              ? (lang === 'fil' ? 'Medyo matagal ang mapa. Maaari mong gamitin ang listahan habang naghihintay.' : 'The map is taking longer. You can keep using the list while it loads.')
+              : (lang === 'fil' ? 'Naglo-load…' : 'Loading…')}
+        </span>
       </div>
       <span class="map-source">{MAP_ATTRIBUTION}</span>
     </div>
@@ -267,6 +283,23 @@
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
+          <span class="route-origin">
+            {lang === 'fil'
+              ? `Batayang lokasyon: sentro ng ${origin.name}`
+              : `Reference point: ${origin.name} municipality center`}
+          </span>
+        </div>
+        <div class={`route-card__fit fit-${selectedItem.fit.status}`}>
+          <strong>{lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}</strong>
+          {#if selectedItem.fit.acceptedKg !== null && selectedItem.fit.remainingKg !== null}
+            <span>
+              {lang === 'fil'
+                ? `Kayang tanggapin ${selectedItem.fit.acceptedKg.toLocaleString('en-PH')} kg · Matitira ${selectedItem.fit.remainingKg.toLocaleString('en-PH')} kg`
+                : `Can accept ${selectedItem.fit.acceptedKg.toLocaleString('en-PH')} kg · ${selectedItem.fit.remainingKg.toLocaleString('en-PH')} kg remaining`}
+            </span>
+          {:else}
+            <span>{lang === 'fil' ? 'Hindi pa alam ang kapasidad — kumpirmahin muna.' : 'Capacity is still unknown — confirm first.'}</span>
+          {/if}
         </div>
         {#if selectedRoute.source === 'road'}
           <dl>
@@ -279,7 +312,7 @@
               <dd>~{selectedRoute.roadDurationMinutes} min</dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService lamang. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate only. Confirm the receiving schedule before travel.'}</p>
+          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate from the municipality reference point, not the exact farm. Confirm the receiving schedule before travel.'}</p>
         {:else}
           <dl>
             <div>
@@ -291,7 +324,7 @@
               <dd>{lang === 'fil' ? 'Hindi available' : 'Unavailable'}</dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'The dashed line is geographic context only, not road directions.'}</p>
+          <p>{lang === 'fil' ? 'Mula ito sa reference point ng munisipyo. Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'This starts from the municipality reference point. The dashed line is geographic context only, not road directions.'}</p>
         {/if}
       </aside>
     {/if}
@@ -394,6 +427,30 @@
     font-size: 0.92rem;
   }
 
+  .route-card__title .route-origin {
+    margin-top: 0.18rem;
+    color: #596052;
+    font-size: 0.62rem;
+    font-weight: 600;
+  }
+
+  .route-card__fit {
+    display: grid;
+    gap: 0.08rem;
+    margin: 0 0 0.55rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid rgb(32 37 30 / 0.12);
+    border-radius: 0.75rem;
+    background: #fffdf8;
+  }
+
+  .route-card__fit strong { font-size: 0.72rem; }
+  .route-card__fit span { color: #596052; font-size: 0.64rem; line-height: 1.35; }
+  .route-card__fit.fit-match { border-color: rgb(89 121 40 / 0.3); background: rgb(234 243 222 / 0.8); }
+  .route-card__fit.fit-partial { border-color: rgb(184 106 43 / 0.28); background: rgb(252 236 216 / 0.8); }
+  .route-card__fit.fit-confirm { border-color: rgb(78 115 128 / 0.28); background: rgb(235 242 245 / 0.86); }
+  .route-card__fit.fit-no_match { border-color: rgb(107 113 103 / 0.25); background: rgb(240 242 238 / 0.9); }
+
   .route-card dl {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -459,16 +516,19 @@
 
   :global(.aniwhere-outlet-marker) {
     cursor: pointer;
-    background: #597928;
     color: #fffdf8;
   }
+
+  :global(.aniwhere-outlet-marker.status-match) { background: #597928; }
+  :global(.aniwhere-outlet-marker.status-partial) { background: #B86A2B; }
+  :global(.aniwhere-outlet-marker.status-confirm) { background: #4E7380; }
+  :global(.aniwhere-outlet-marker.status-no_match) { background: #6B7167; }
 
   :global(.aniwhere-outlet-marker:hover),
   :global(.aniwhere-outlet-marker:focus-visible),
   :global(.aniwhere-outlet-marker.is-selected) {
     outline: 3px solid #fcecd8;
     outline-offset: 2px;
-    background: #6e3511;
     transform: scale(1.08);
   }
 

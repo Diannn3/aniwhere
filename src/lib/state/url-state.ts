@@ -22,10 +22,22 @@ export function todayInManila(now: Date = new Date()): string {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function boundedTextParam(search: URLSearchParams, key: string, maxLength = 80): string | undefined {
+  const value = search.get(key)?.trim();
+  if (!value || value.length > maxLength) return undefined;
+  return value;
+}
+
+function validOutletId(value: string | null | undefined): string | undefined {
+  const normalized = value?.trim();
+  if (!normalized || normalized.length > 80 || !/^[a-z0-9-]+$/.test(normalized)) return undefined;
+  return normalized;
+}
+
 export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDiscoverQuery {
   const search = typeof params === 'string' ? new URLSearchParams(params) : params;
 
-  const rawCrop = search.get('crop') || 'tomato';
+  const rawCrop = boundedTextParam(search, 'crop') || (search.has('crop') ? 'other' : 'tomato');
   const { key: cropKey } = normalizeCrop(rawCrop);
   const finalCrop = cropKey !== 'other' ? cropKey : rawCrop;
 
@@ -43,14 +55,14 @@ export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDisc
   const rawView = search.get('view');
   const finalView: 'list' | 'map' = rawView === 'map' ? 'map' : 'list';
 
-  const rawPlace = search.get('place') || undefined;
+  const rawPlace = validOutletId(search.get('place'));
 
   const rawLang = search.get('lang');
   const finalLang: 'en' | 'fil' = rawLang === 'fil' ? 'fil' : 'en';
 
-  const variety = search.get('variety')?.trim() || undefined;
-  const grade = search.get('grade')?.trim() || undefined;
-  const packaging = search.get('packaging')?.trim() || undefined;
+  const variety = boundedTextParam(search, 'variety');
+  const grade = boundedTextParam(search, 'grade');
+  const packaging = boundedTextParam(search, 'packaging');
   const details =
     variety || grade || packaging
       ? {
@@ -113,14 +125,15 @@ export function parseCompareQuery(params: URLSearchParams | string): {
   const rawPlaces = search.get('places') || '';
   const placeIds = rawPlaces
     .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
+    .map((value) => validOutletId(value))
+    .filter((value): value is string => Boolean(value))
+    .filter((value, index, values) => values.indexOf(value) === index)
     .slice(0, 3);
 
   const discover = parseDiscoverQuery(search);
 
   return {
-    placeIds: placeIds.length > 0 ? placeIds : ['demo-cooperative', 'demo-processor', 'demo-market'],
+    placeIds,
     harvest: discover.harvest,
     lang: discover.lang,
   };

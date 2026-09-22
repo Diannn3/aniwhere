@@ -27,6 +27,16 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.lang).toBe('en');
   });
 
+  it('drops oversized URL text instead of letting it become harvest state', () => {
+    const oversized = 'x'.repeat(81);
+    const parsed = parseDiscoverQuery(
+      `crop=${oversized}&kg=300&origin=los-banos&variety=${oversized}&grade=Grade+A&packaging=${oversized}`
+    );
+
+    expect(parsed.harvest.crop).toBe('other');
+    expect(parsed.harvest.details).toEqual({ grade: 'Grade A' });
+  });
+
   it('uses Manila local date instead of a hard-coded prototype date', () => {
     expect(todayInManila(new Date('2026-09-17T16:30:00Z'))).toBe('2026-09-18');
   });
@@ -59,6 +69,24 @@ describe('URL State Serialization and Parsing', () => {
     expect(parsed.view).toBe('map');
     expect(parsed.selectedPlaceId).toBe('demo-market');
     expect(parsed.lang).toBe('fil');
+  });
+
+  it('rejects malformed selected-place and comparison ids from URLs', () => {
+    const discover = parseDiscoverQuery(
+      'crop=tomato&kg=300&origin=los-banos&place=%3Cscript%3Ealert(1)%3C%2Fscript%3E'
+    );
+    expect(discover.selectedPlaceId).toBeUndefined();
+
+    const compare = parseCompareQuery(
+      'places=demo-market,demo-market,%3Cscript%3E,demo-processor,UPPER_CASE&crop=tomato&kg=300&origin=los-banos'
+    );
+    expect(compare.placeIds).toEqual(['demo-market', 'demo-processor']);
+  });
+
+  it('does not invent comparison selections when places are absent', () => {
+    const parsed = parseCompareQuery('crop=tomato&kg=300&origin=los-banos');
+
+    expect(parsed.placeIds).toEqual([]);
   });
 
   it('clamps compare query to max 3 outlets', () => {
