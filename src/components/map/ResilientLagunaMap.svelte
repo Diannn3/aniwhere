@@ -272,7 +272,7 @@
             fill={color}
             stroke="#FFFDF8"
             stroke-width="2"
-            class="cursor-pointer shadow-sm transition-transform duration-150 hover:scale-105"
+            class="cursor-pointer shadow-sm"
             tabindex="0"
             role="button"
             aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
