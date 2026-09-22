@@ -66,7 +66,7 @@
   }
 
   const compareAllUrl = $derived(
-    `/compare?places=${savedIds.slice(0, 3).map(encodeURIComponent).join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
+    `/compare?places=${savedOutlets.slice(0, 3).map((outlet) => encodeURIComponent(outlet.id)).join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
   );
 </script>
 
