@@ -192,17 +192,38 @@
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
+  function syncDiscoveryUrl() {
+    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
+    window.history.replaceState({}, '', `/discover?${newQuery}`);
+  }
+
+  function scrollSelectedIntoView(id: string) {
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`outlet-card-${id}`);
+      el?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    });
+  }
+
+  function setView(view: 'list' | 'map') {
+    activeMobileView = view;
+    syncDiscoveryUrl();
+    if (view === 'list' && selectedOutletId) {
+      scrollSelectedIntoView(selectedOutletId);
+    }
+  }
+
   function handleSelectPin(id: string) {
     selectedOutletId = id;
-    if (activeMobileView === 'map') {
-      activeMobileView = 'list';
+    syncDiscoveryUrl();
+
+    // On phones, keep the map visible so the farmer can read the route card.
+    // Desktop already shows map and list together, so reveal the selected card there too.
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      scrollSelectedIntoView(id);
     }
-    setTimeout(() => {
-      const el = document.getElementById(`outlet-card-${id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 50);
   }
 
   function formatCurrency(val: number | null | undefined): string {
@@ -329,7 +350,7 @@
       >
         <button
           type="button"
-          onclick={() => activeMobileView = 'list'}
+          onclick={() => setView('list')}
           aria-pressed={activeMobileView === 'list'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'list'
@@ -345,7 +366,7 @@
 
         <button
           type="button"
-          onclick={() => activeMobileView = 'map'}
+          onclick={() => setView('map')}
           aria-pressed={activeMobileView === 'map'}
           class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'map'
@@ -705,9 +726,18 @@
         </h4>
         <p class="leading-relaxed">
           {lang === 'fil'
-            ? 'Pumili ng pin sa mapa upang makita ang ruta mula sa iyong munisipalidad. Palaging tawagan ang mamimili bago umalis upang kumpirmahin ang iskedyul ng pagtanggap.'
-            : 'Select any pin to highlight the destination from your municipality. Always contact the receiving facility to confirm operating hours before loading cargo.'}
+            ? 'Pumili ng pin upang makita ang layo at ruta mula sa batayang lokasyon ng munisipyo. Kumpirmahin muna ang pagtanggap bago bumiyahe.'
+            : 'Select a pin to see distance and route context from the municipality reference point. Confirm receiving terms before travel.'}
         </p>
+        {#if selectedOutletId}
+          <button
+            type="button"
+            onclick={() => setView('list')}
+            class="premium-control mt-2 inline-flex min-h-11 items-center rounded-xl border border-[#597928]/30 px-3 py-2 font-bold text-[#486320] hover:bg-[#FCECD8]/45 lg:hidden"
+          >
+            {lang === 'fil' ? 'Tingnan ang napiling lugar sa listahan' : 'View selected place in the list'}
+          </button>
+        {/if}
       </div>
     </div>
 
