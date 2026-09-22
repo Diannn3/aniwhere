@@ -200,6 +200,19 @@ test('keeps price arithmetic available without overwhelming the primary result c
   await expect(processor.getByText(/not profit or guaranteed income/i)).toBeVisible();
 });
 
+test('comparison ignores malformed, duplicate, and unknown outlet selections', async ({ page }) => {
+  await page.goto(
+    '/compare?places=demo-market,demo-market,%3Cscript%3E,missing-outlet,demo-processor&crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&lang=en'
+  );
+
+  const ledger = page.getByRole('table', { name: /comparison ledger/i });
+  await expect(ledger).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Demo Public Market/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Demo Processor/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader')).toHaveCount(3);
+  await expect(page.getByText('<script>')).toHaveCount(0);
+});
+
 test('comparison never preselects outlets and preserves harvest context when empty', async ({ page }) => {
   await page.goto('/compare?crop=tomato&kg=450&origin=calamba&ready=2026-09-25&view=list&lang=fil');
 
