@@ -177,4 +177,8 @@ test('saves an outlet locally and makes it available on the saved route', async 
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Saved' }).click();
   await expect(page).toHaveURL(/\/saved/);
   await expect(page.getByRole('heading', { name: 'Demo Cooperative' })).toBeVisible();
+  await expect(page.getByText(/Saving does not reserve capacity or contact the buyer/i)).toBeVisible();
+  await expect(page.getByText('Can accept').first()).toBeVisible();
+  await expect(page.getByText('Harvest remaining').first()).toBeVisible();
+  await expect(page.getByText(/straight-line from Los Baños municipality center/i).first()).toBeVisible();
 });
