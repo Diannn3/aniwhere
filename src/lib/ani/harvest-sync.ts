@@ -13,3 +13,18 @@ export function subscribeHarvestContext(listener: (harvest: HarvestQuery) => voi
   window.addEventListener(HARVEST_CONTEXT_EVENT, handler);
   return () => window.removeEventListener(HARVEST_CONTEXT_EVENT, handler);
 }
+
+
+export const HARVEST_DRAFT_VALIDITY_EVENT = 'aniwhere:harvest-draft-validity';
+
+export function publishHarvestDraftValidity(isValid: boolean) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent<boolean>(HARVEST_DRAFT_VALIDITY_EVENT, { detail: isValid }));
+}
+
+export function subscribeHarvestDraftValidity(listener: (isValid: boolean) => void) {
+  if (typeof window === 'undefined') return () => {};
+  const handler = (event: Event) => listener(Boolean((event as CustomEvent<boolean>).detail));
+  window.addEventListener(HARVEST_DRAFT_VALIDITY_EVENT, handler);
+  return () => window.removeEventListener(HARVEST_DRAFT_VALIDITY_EVENT, handler);
+}
