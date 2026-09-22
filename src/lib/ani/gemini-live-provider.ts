@@ -165,6 +165,7 @@ export class GeminiLiveAniProvider implements AniProvider {
     this.suppressAudio = false;
     this.micStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
     this.micContext = new AudioContext({ sampleRate: 16_000 });
+    const captureRate = this.micContext.sampleRate;
     await this.micContext.audioWorklet.addModule('/ani/pcm-capture-worklet.js');
     const source = this.micContext.createMediaStreamSource(this.micStream);
     this.micNode = new AudioWorkletNode(this.micContext, 'ani-pcm-capture', { numberOfInputs: 1, numberOfOutputs: 0 });
@@ -172,7 +173,7 @@ export class GeminiLiveAniProvider implements AniProvider {
       if (this.socket?.readyState !== WebSocket.OPEN) return;
       const pcm = floatToPcm16(new Float32Array(event.data));
       this.socket.send(JSON.stringify({
-        realtimeInput: { audio: { data: bytesToBase64(new Uint8Array(pcm.buffer)), mimeType: 'audio/pcm;rate=16000' } },
+        realtimeInput: { audio: { data: bytesToBase64(new Uint8Array(pcm.buffer)), mimeType: `audio/pcm;rate=${captureRate}` } },
       }));
     };
     source.connect(this.micNode);
