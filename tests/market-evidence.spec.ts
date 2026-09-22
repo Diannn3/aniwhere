@@ -120,3 +120,30 @@ test('prepared inquiry reports clipboard failure instead of claiming a copy succ
   await expect(dialog.getByRole('status')).toContainText(/could not be copied/i);
   await expect(dialog.getByText('Copied to clipboard!')).toHaveCount(0);
 });
+
+
+test('outlet detail never turns unknown capacity into a full-harvest claim', async ({ page }) => {
+  await page.goto(
+    '/places/demo-msme-confirm?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  await expect(page.getByText('Contact to confirm').first()).toBeVisible();
+  await expect(page.getByText('Confirm first').first()).toBeVisible();
+  await expect(page.getByText('Remaining harvest is not known yet')).toBeVisible();
+  await expect(page.getByText('Full harvest match')).toHaveCount(0);
+  await expect(page.getByText('Recorded Transport Estimate')).toBeVisible();
+  await expect(page.getByText(/Demo-record estimate, not an actual hauling quote/i)).toBeVisible();
+  await expect(page.getByText(/not profit or guaranteed income/i)).toBeVisible();
+});
+
+test('Filipino decision summary uses localized crop and uncertainty language', async ({ page }) => {
+  await page.goto(
+    '/places/demo-msme-confirm?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=fil'
+  );
+
+  await expect(page.getByText('300 kg Kamatis')).toBeVisible();
+  await expect(page.getByText('Kamatis', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Hindi pa alam ang matitirang ani')).toBeVisible();
+  await expect(page.getByText('Nakatalaang Tantiya sa Biyahe')).toBeVisible();
+  await expect(page.getByText(/Tantiya sa demo record, hindi aktuwal na quote sa biyahe/i)).toBeVisible();
+});
