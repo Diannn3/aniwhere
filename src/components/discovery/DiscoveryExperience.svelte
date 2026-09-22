@@ -853,12 +853,19 @@
       class="fixed bottom-14 md:bottom-6 left-4 right-4 max-w-lg mx-auto z-40 bg-[#20251E] text-[#FFFDF8] rounded-2xl p-3.5 px-4 shadow-xl border border-[#FFFDF8]/20 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
       aria-label="Comparison dock"
     >
-      <div class="flex items-center gap-2 text-xs">
-        <span class="w-6 h-6 rounded-full bg-[#486320] font-bold flex items-center justify-center text-xs font-tabular">
+      <div class="min-w-0 flex items-start gap-2 text-xs">
+        <span class="mt-0.5 w-6 h-6 shrink-0 rounded-full bg-[#486320] font-bold flex items-center justify-center text-xs font-tabular">
           {comparedIds.length}
         </span>
-        <span class="font-medium">
-          {lang === 'fil' ? `${comparedIds.length} ng 3 lugar ang napili` : `${comparedIds.length} of 3 places selected`}
+        <span class="min-w-0">
+          <span class="block font-medium">
+            {lang === 'fil' ? `${comparedIds.length} ng 3 lugar ang napili` : `${comparedIds.length} of 3 places selected`}
+          </span>
+          {#if comparedIds.length >= 3}
+            <span class="mt-0.5 block text-[10px] leading-4 text-[#FFFDF8]/70">
+              {lang === 'fil' ? 'Hanggang 3 lang. Alisin muna ang isa para pumili ng iba.' : 'Maximum of 3. Remove one before choosing another.'}
+            </span>
+          {/if}
         </span>
       </div>
 
