@@ -1,9 +1,11 @@
 import { CURRENT_DATA_MODE, CURRENT_OUTLETS } from '../data/current-market';
 import { evaluateFit } from '../domain/match';
+import { calculateStraightLineDistanceKm } from '../domain/distance';
 import { isValidIsoDate } from '../domain/validation';
 import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
 import type { HarvestQuery, Outlet } from '../domain/types';
-import type { AniFitFacts, AniOutletFacts, AniToolRequest, AniToolResult } from './types';
+import { getOutletRouteEstimate } from '../routing/routing-matrix';
+import type { AniFitFacts, AniOutletFacts, AniRouteFacts, AniToolRequest, AniToolResult } from './types';
 
 const ROUTE_ALLOWLIST = new Set(['/', '/discover', '/saved', '/compare']);
 
@@ -106,6 +108,37 @@ export class AniToolDispatcher {
           if (!outlet || typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0) return error(request, 'invalid_arguments', 'A known outlet and non-negative transport amount are required.');
           const fit = evaluateFit(outlet, currentHarvest, amount);
           return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: fitFactsFromResult(fit) };
+        }
+        case 'get_route_estimate': {
+          const outlet = findOutlet(request.args.outletId);
+          if (!outlet) return error(request, 'not_found', 'Outlet was not found.');
+          const origin = LAGUNA_MUNICIPALITIES.find((item) => item.id === currentHarvest.originMunicipality);
+          if (!origin) return error(request, 'invalid_arguments', 'The current harvest origin is not a known Laguna municipality.');
+
+          const straightLineDistanceKm = calculateStraightLineDistanceKm(
+            origin.lat,
+            origin.lng,
+            outlet.lat,
+            outlet.lng
+          );
+          const route = getOutletRouteEstimate(currentHarvest.originMunicipality, outlet.id, straightLineDistanceKm);
+          const facts: AniRouteFacts = {
+            outletId: outlet.id,
+            outletName: outlet.name,
+            originMunicipality: currentHarvest.originMunicipality,
+            originName: origin.name,
+            originBasis: 'municipality_centroid',
+            source: route.source,
+            straightLineDistanceKm: route.straightLineDistanceKm,
+            roadDistanceKm: route.roadDistanceKm,
+            roadDurationMinutes: route.roadDurationMinutes,
+            provider: route.provider,
+            profile: route.profile,
+            generatedAt: route.generatedAt,
+            geometryAvailable: Boolean(route.geometry?.coordinates?.length),
+          };
+
+          return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: facts };
         }
         case 'navigate_to': {
           const path = request.args.path;
