@@ -692,47 +692,52 @@
               {/if}
             </div>
 
-            <!-- Honest Math Transparency Box -->
+            <!-- Price evidence stays visible; arithmetic is progressively disclosed. -->
             {#if item.fit.samplePricePerKg !== null}
-              <div class="bg-[#F9FBF7] border border-[#20251E]/10 rounded-xl p-3 sm:p-3.5 space-y-2">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                  <div>
+              <details class="group rounded-xl border border-[#20251E]/10 bg-[#F9FBF7]">
+                <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 sm:px-3.5">
+                  <span>
                     <span class="block text-[11px] text-[#596052]">{priceLabelFor(item.fit)}</span>
-                    <span class="font-bold text-[#20251E] font-tabular">₱{item.fit.samplePricePerKg} / kg</span>
-                    <span class="block text-[10px] text-[#596052]">({item.fit.acceptedKg?.toLocaleString()} kg)</span>
-                  </div>
-                  <div>
-                    <span class="block text-[11px] text-[#596052]">{lang === 'fil' ? 'Kabuuang Halaga' : 'Gross Subtotal'}</span>
-                    <span class="font-bold text-[#20251E] font-tabular">{formatCurrency(item.fit.grossPay)}</span>
-                    <span class="block text-[10px] text-[#596052]">{item.fit.acceptedKg}kg &times; ₱{item.fit.samplePricePerKg}</span>
-                  </div>
-                  <div>
-                    <span class="block text-[11px] text-[#596052]">{t('enteredTransport', lang)}</span>
-                    <span class="font-bold text-[#6E3511] font-tabular">
-                      {item.fit.enteredTransport !== null ? `-${formatCurrency(item.fit.enteredTransport)}` : '—'}
-                    </span>
-                    <span class="block text-[10px] text-[#6E3511]">{lang === 'fil' ? 'bawas sa biyahe' : 'hauling cost'}</span>
-                  </div>
-                  <div>
-                    <span class="block text-[11px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
-                    <span class="font-bold text-base text-[#486320] font-tabular">
-                      {formatCurrency(item.fit.afterTransportPay)}
-                    </span>
-                    <span class="block text-[10px] text-[#486320] font-medium">{lang === 'fil' ? 'bago gastos sa bukid' : 'before farm costs'}</span>
-                  </div>
-                </div>
+                    <span class="font-tabular text-sm font-bold text-[#20251E]">₱{item.fit.samplePricePerKg} / kg</span>
+                  </span>
+                  <span class="flex items-center gap-1.5 text-[11px] font-bold text-[#486320]">
+                    {lang === 'fil' ? 'Tingnan ang kalkulasyon' : 'See calculation'}
+                    <svg class="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </summary>
 
-                <!-- Anti-Profit Claim Strict Disclaimer -->
-                <p class="text-[10px] text-[#596052] border-t border-[#20251E]/8 pt-1.5 leading-tight">
-                  {t('afterTransportNote', lang)}
-                </p>
-              </div>
+                <div class="border-t border-[#20251E]/8 px-3 py-3 sm:px-3.5">
+                  <div class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+                    <div>
+                      <span class="block text-[11px] text-[#596052]">{lang === 'fil' ? 'Kabuuang halaga' : 'Gross amount'}</span>
+                      <span class="font-bold text-[#20251E] font-tabular">{formatCurrency(item.fit.grossPay)}</span>
+                      <span class="block text-[10px] text-[#596052]">{item.fit.acceptedKg?.toLocaleString() ?? '—'} kg &times; ₱{item.fit.samplePricePerKg}</span>
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-[#596052]">{t('enteredTransport', lang)}</span>
+                      <span class="font-bold text-[#6E3511] font-tabular">
+                        {item.fit.enteredTransport !== null ? `-${formatCurrency(item.fit.enteredTransport)}` : (lang === 'fil' ? 'Hindi inilagay' : 'Not entered')}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
+                      <span class="font-bold text-base text-[#486320] font-tabular">
+                        {item.fit.afterTransportPay !== null ? formatCurrency(item.fit.afterTransportPay) : (lang === 'fil' ? 'Hindi makalkula' : 'Not calculated')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p class="mt-2 border-t border-[#20251E]/8 pt-2 text-[10px] leading-relaxed text-[#596052]">
+                    {t('afterTransportNote', lang)}
+                  </p>
+                </div>
+              </details>
             {/if}
 
             <!-- Card Actions Footer -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
               <!-- Add to compare checkbox -->
-              <label class="flex items-center gap-2 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
+              <label class="flex min-h-11 items-center gap-2 rounded-lg px-1 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={item.isCompared}
