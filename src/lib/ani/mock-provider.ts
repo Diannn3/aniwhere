@@ -33,9 +33,10 @@ export class MockAniProvider implements AniProvider {
     const matches = outlets.filter((item) => item.fit.status === 'match').length;
     const partial = outlets.filter((item) => item.fit.status === 'partial').length;
     const confirm = outlets.filter((item) => item.fit.status === 'confirm').length;
+    const modeCopy = result.dataMode === 'demo' ? (isFil ? 'demo data ito' : 'this is demo data') : (isFil ? 'pilot data mode ito' : 'this is pilot data mode');
     const text = isFil
-      ? `Preview lang — demo data ito. Nakakita ang AniWhere ng ${matches} full match, ${partial} partial, at ${confirm} kailangang kumpirmahin. Buksan ang Discovery para makita ang eksaktong dami at ebidensya.`
-      : `Preview only — this is demo data. AniWhere found ${matches} full match, ${partial} partial, and ${confirm} needing confirmation. Open Discovery for the exact quantities and evidence.`;
+      ? `Preview lang — ${modeCopy}. Nakakita ang AniWhere ng ${matches} full match, ${partial} partial, at ${confirm} kailangang kumpirmahin. Buksan ang Discovery para makita ang eksaktong dami at ebidensya.`
+      : `Preview only — ${modeCopy}. AniWhere found ${matches} full match, ${partial} partial, and ${confirm} needing confirmation. Open Discovery for the exact quantities and evidence.`;
     this.emit({ type: 'message', message: this.message(text) });
     this.emit({ type: 'status', status: 'ready' });
   }
