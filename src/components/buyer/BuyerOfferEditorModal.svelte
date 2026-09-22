@@ -275,7 +275,7 @@
                 class="sr-only"
               />
               <span class="text-xs font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
-              <span class="text-[10px] opacity-75">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
+              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
             </label>
 
             <!-- In Review -->
@@ -294,7 +294,7 @@
                 class="sr-only"
               />
               <span class="text-xs font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
-              <span class="text-[10px] opacity-75">{isFil ? 'Sample workflow' : 'Sample workflow'}</span>
+              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Sample workflow' : 'Sample workflow'}</span>
             </label>
 
             <!-- Draft -->
@@ -313,7 +313,7 @@
                 class="sr-only"
               />
               <span class="text-xs font-bold">{isFil ? 'Burador' : 'Draft'}</span>
-              <span class="text-[10px] opacity-75">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
+              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
             </label>
           </div>
         </div>
