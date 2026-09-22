@@ -11,7 +11,6 @@
   import { parseCompareQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
-  import { t } from '../../content/translations';
 
   interface Props {
     initialLang?: 'en' | 'fil';
