@@ -84,6 +84,29 @@ test('edits the discovery harvest and updates the address without discarding lan
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/450 kg tomatoes.*calamba/i);
 });
 
+
+test('makes all four fit filters understandable and exposes selected state', async ({ page }) => {
+  await page.goto(discoverPath);
+
+  const filters = page.getByRole('group', { name: /filter by fit status/i });
+  const all = filters.getByRole('button', { name: /all \(\d+\)/i });
+  const match = filters.getByRole('button', { name: /full match \(\d+\)/i });
+  const partial = filters.getByRole('button', { name: /partial \(\d+\)/i });
+  const confirm = filters.getByRole('button', { name: /confirm \(\d+\)/i });
+  const noMatch = filters.getByRole('button', { name: /doesn't match \(\d+\)/i });
+
+  await expect(all).toHaveAttribute('aria-pressed', 'true');
+  await expect(match).toHaveAttribute('aria-pressed', 'false');
+  await expect(partial).toBeVisible();
+  await expect(confirm).toBeVisible();
+  await expect(noMatch).toBeVisible();
+
+  await match.click();
+  await expect(match).toHaveAttribute('aria-pressed', 'true');
+  await expect(all).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(/showing .* of/i);
+});
+
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
