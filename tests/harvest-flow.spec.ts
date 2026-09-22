@@ -133,9 +133,9 @@ test('makes all four fit filters understandable and exposes selected state', asy
 
   const filters = page.getByRole('group', { name: /filter by fit status/i });
   const all = filters.getByRole('button', { name: /all \(\d+\)/i });
-  const match = filters.getByRole('button', { name: /full match \(\d+\)/i });
-  const partial = filters.getByRole('button', { name: /partial \(\d+\)/i });
-  const confirm = filters.getByRole('button', { name: /confirm \(\d+\)/i });
+  const match = filters.getByRole('button', { name: /matches harvest \(\d+\)/i });
+  const partial = filters.getByRole('button', { name: /accepts part \(\d+\)/i });
+  const confirm = filters.getByRole('button', { name: /confirm first \(\d+\)/i });
   const noMatch = filters.getByRole('button', { name: /doesn't match \(\d+\)/i });
 
   await expect(all).toHaveAttribute('aria-pressed', 'true');
