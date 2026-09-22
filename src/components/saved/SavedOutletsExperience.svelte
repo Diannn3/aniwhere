@@ -222,8 +222,8 @@
               </div>
               <p class="mt-1 text-[11px] text-[#596052]">
                 {isFil
-                  ? `${dist.toFixed(1)} km tuwid mula sa sentro ng ${originMun.name}`
-                  : `${dist.toFixed(1)} km straight-line from ${originMun.name} municipality center`}
+                  ? `${dist.toFixed(1)} km tuwid mula sa sentro ng ${originMun.name.split(',')[0]}`
+                  : `${dist.toFixed(1)} km straight-line from ${originMun.name.split(',')[0]} municipality center`}
               </p>
             </div>
 
