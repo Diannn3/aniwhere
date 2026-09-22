@@ -304,6 +304,13 @@
     return parsed.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
+  function fitReasonBorder(status: FitResult['status']): string {
+    if (status === 'match') return 'border-[#597928]';
+    if (status === 'partial') return 'border-[#B86A2B]';
+    if (status === 'confirm') return 'border-[#4E7380]';
+    return 'border-[#8C9388]';
+  }
+
   function priceLabelFor(fit: FitResult): string {
     if (fit.evidenceKind === 'demo') {
       return lang === 'fil' ? 'Halimbawang presyo' : 'Sample price';
@@ -709,7 +716,7 @@
             {/if}
 
             <!-- Fit Reason Explanation -->
-            <p class="text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 border-[#597928] pl-2.5 py-1">
+            <p class={`text-xs text-[#20251E] bg-[#FFFDF8] border-l-2 ${fitReasonBorder(item.fit.status)} pl-2.5 py-1`}>
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
 
