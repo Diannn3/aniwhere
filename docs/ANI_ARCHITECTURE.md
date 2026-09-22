@@ -14,14 +14,18 @@ farmer voice/text -> Ani UI -> AniProvider -> typed function request
 
 The verified September 2026 model is `gemini-3.8-live`. It supports Live API audio and function calling. Direct browser connections should use short-lived constrained ephemeral tokens minted by a trusted backend; a long-lived API key must never ship in browser JavaScript.
 
-## Current blocker
+## Current production boundary
 
-Current Astro config is `output: 'static'`. There is no trusted token endpoint in this branch. Production Gemini activation is therefore blocked by backend/secret provisioning. Do not silently convert the app to SSR.
+Current Astro config remains `output: 'static'`; AniWhere was not converted to SSR. This branch now includes a trusted-token endpoint implementation at `supabase/functions/ani-session/`, but there is no AniWhere Supabase project connected in the available workspace and the function is therefore **not deployed**. Production Gemini activation remains blocked on creating/choosing the intended backend project, deploying that function, configuring its allowlisted production origin and server-only Gemini secret, and setting `PUBLIC_ANI_SESSION_ENDPOINT` in the frontend deployment.
+
+The browser never receives `GEMINI_API_KEY`. It receives only a short-lived, one-use Gemini ephemeral token. The endpoint rejects non-allowlisted browser origins and applies a small issuance limit, but its current in-memory rate bucket is defense-in-depth rather than a globally durable production quota. Before public launch, pair token issuance with authenticated/anonymous Supabase identity plus durable rate limiting or an equivalent edge abuse-control layer. Do not describe the scaffold as production-hardened until that deployment work is complete.
 
 Environment contract:
 - `PUBLIC_ANI_ENABLED` — public feature gate
+- `PUBLIC_ANI_SESSION_ENDPOINT` — public URL of the deployed token-minting endpoint; contains no secret
 - `ANI_MODEL=gemini-3.8-live` — server configuration
 - `GEMINI_API_KEY` — server only, never `PUBLIC_`
+- `ANI_ALLOWED_ORIGINS` — server-side comma-separated origin allowlist
 
 A future serverless or Supabase Edge endpoint should authenticate/rate-limit callers and mint one-use, short-lived, model-constrained tokens.
 
