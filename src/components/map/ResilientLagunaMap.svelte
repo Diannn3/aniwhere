@@ -127,7 +127,9 @@
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="group"
-      aria-label="Laguna market map with farmer origin and buyer outlets"
+      aria-label={lang === 'fil'
+        ? 'Guhit-mapa ng mga outlet sa Laguna at batayang lokasyon ng munisipyo'
+        : 'Illustrative Laguna outlet map with municipality reference point'}
     >
       <!-- Base terrain contours -->
       <defs>
@@ -254,7 +256,7 @@
           class="cursor-pointer transition-transform duration-150 {isSelected ? 'scale-110' : 'hover:scale-105'}"
           tabindex="0"
           role="button"
-          aria-label={`${item.outlet.name}: ${item.fit.statusLabel}, ${item.distanceKm} km`}
+          aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name : 'straight-line from ' + originMun.name + ' municipality center'}`}
           onclick={(e) => {
             e.stopPropagation();
             onSelect(item.outlet.id);
@@ -319,7 +321,9 @@
       <g
         transform={`translate(${originPos.x}, ${originPos.y})`}
         role="region"
-        aria-label={`Your location: ${originMun.name}`}
+        aria-label={lang === 'fil'
+          ? `Batayang lokasyon: ${originMun.name}, sentro ng munisipyo`
+          : `Reference point: ${originMun.name} municipality center`}
       >
         <circle cx="0" cy="0" r="14" fill="#6E3511" fill-opacity="0.2" />
         <circle cx="0" cy="0" r="8" fill="#6E3511" stroke="#FFFDF8" stroke-width="2" />
@@ -343,7 +347,7 @@
             fill="#FFFDF8"
             text-anchor="middle"
           >
-            {lang === 'fil' ? 'Iyong Lokasyon' : 'Your Origin'}
+            {lang === 'fil' ? 'Sentro ng bayan' : 'Municipality center'}
           </text>
         </g>
       </g>
@@ -369,7 +373,9 @@
                 {lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}
               </span>
               <span class="text-[11px] text-[#596052] font-medium">
-                {selectedItem.distanceKm} km {lang === 'fil' ? 'mula' : 'from'} {originMun.name.split(',')[0]}
+                {lang === 'fil'
+                  ? `${selectedItem.distanceKm} km tuwid · mula sa sentro ng ${originMun.name.split(',')[0]}`
+                  : `${selectedItem.distanceKm} km straight-line · from ${originMun.name.split(',')[0]} municipality center`}
               </span>
             </div>
 
