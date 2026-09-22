@@ -159,7 +159,7 @@
 
       <div class="pt-2">
         <a
-          href="/discover"
+          href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
           class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#486320] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
