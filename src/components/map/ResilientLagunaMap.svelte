@@ -93,9 +93,9 @@
     }
   }
 
-  function formatCurrency(val: number | null | undefined): string {
-    if (val === null || val === undefined) return '—';
-    return `₱${val.toLocaleString('en-PH', { maximumFractionDigits: 0 })}`;
+  function formatKg(val: number | null | undefined): string {
+    if (val === null || val === undefined) return lang === 'fil' ? 'Kumpirmahin' : 'Confirm';
+    return `${val.toLocaleString('en-PH')} kg`;
   }
 </script>
 
@@ -400,19 +400,23 @@
           </button>
         </div>
 
-        <!-- Quick Financial Metric Preview -->
-        <div class="flex items-center justify-between bg-[#F9FBF7] rounded-xl p-2.5 px-3 border border-[#20251E]/8 text-xs">
+        <!-- Decision-first quantity preview -->
+        <div class="grid grid-cols-2 gap-2 bg-[#F9FBF7] rounded-xl p-2.5 px-3 border border-[#20251E]/8 text-xs">
           <div>
-            <span class="block text-[10px] text-[#596052]">{t('samplePrice', lang)}</span>
+            <span class="block text-[10px] text-[#596052]">
+              {lang === 'fil' ? 'Kayang tanggapin' : 'Can accept'}
+            </span>
             <span class="font-bold text-[#20251E] font-tabular">
-              {selectedItem.fit.samplePricePerKg ? `₱${selectedItem.fit.samplePricePerKg}/kg` : '—'}
+              {formatKg(selectedItem.fit.acceptedKg)}
             </span>
           </div>
 
           <div class="text-right">
-            <span class="block text-[10px] text-[#486320] font-bold">{t('afterTransport', lang)}</span>
-            <span class="font-bold text-base text-[#486320] font-tabular">
-              {formatCurrency(selectedItem.fit.afterTransportPay)}
+            <span class="block text-[10px] text-[#596052]">
+              {lang === 'fil' ? 'Matitirang ani' : 'Harvest remaining'}
+            </span>
+            <span class="font-bold text-[#20251E] font-tabular">
+              {formatKg(selectedItem.fit.remainingKg)}
             </span>
           </div>
         </div>
