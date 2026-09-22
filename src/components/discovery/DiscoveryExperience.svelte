@@ -319,10 +319,15 @@
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
       <!-- Mobile Segmented Toggle -->
-      <div class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs" role="group" aria-label="View toggle">
+      <div
+        class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
+        role="group"
+        aria-label={lang === 'fil' ? 'Piliin ang listahan o mapa' : 'Choose list or map view'}
+      >
         <button
           type="button"
           onclick={() => activeMobileView = 'list'}
+          aria-pressed={activeMobileView === 'list'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'list'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
@@ -338,6 +343,7 @@
         <button
           type="button"
           onclick={() => activeMobileView = 'map'}
+          aria-pressed={activeMobileView === 'map'}
           class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'map'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
@@ -354,10 +360,15 @@
       <div class="h-4 w-px bg-[#20251E]/15 hidden sm:block shrink-0"></div>
 
       <!-- Filter Pills (Horizontally scrollable on mobile) -->
-      <div class="flex items-center gap-1.5 shrink-0" role="group" aria-label="Status filter">
+      <div
+        class="flex items-center gap-1.5 shrink-0"
+        role="group"
+        aria-label={lang === 'fil' ? 'I-filter ayon sa pagkakatugma' : 'Filter by fit status'}
+      >
         <button
           type="button"
           onclick={() => statusFilter = 'all'}
+          aria-pressed={statusFilter === 'all'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'all'
               ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
@@ -370,6 +381,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'match'}
+          aria-pressed={statusFilter === 'match'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'match'
               ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
@@ -382,6 +394,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'partial'}
+          aria-pressed={statusFilter === 'partial'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'partial'
               ? 'border-[#6E3511] bg-[#6E3511] text-[#FFFDF8]'
@@ -394,6 +407,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'confirm'}
+          aria-pressed={statusFilter === 'confirm'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             statusFilter === 'confirm'
               ? 'border-[#4E7380] bg-[#4E7380] text-[#FFFDF8]'
@@ -406,6 +420,7 @@
         <button
           type="button"
           onclick={() => statusFilter = 'no_match'}
+          aria-pressed={statusFilter === 'no_match'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${statusFilter === 'no_match'
             ? 'border-[#20251E] bg-[#20251E] text-[#FFFDF8]'
             : 'border-[#20251E]/20 bg-[#FFFDF8] text-[#4A5245] hover:border-[#20251E]/45'}`}
