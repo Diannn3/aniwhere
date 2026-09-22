@@ -47,6 +47,27 @@ describe('AniToolDispatcher', () => {
     expect(fit.remainingKg).toBeNull();
   });
 
+
+  it('returns route context from the same fail-closed routing layer', async () => {
+    const result = await dispatcher.dispatch(req('get_route_estimate', { outletId: 'demo-market' }), harvest);
+    expect(result.ok).toBe(true);
+    const route = result.data as any;
+    expect(route.originMunicipality).toBe('los-banos');
+    expect(route.originBasis).toBe('municipality_centroid');
+    expect(route.source).toBe('straight_line');
+    expect(route.straightLineDistanceKm).toBeTypeOf('number');
+    expect(route.roadDistanceKm).toBeNull();
+    expect(route.roadDurationMinutes).toBeNull();
+    expect(route.provider).toBeNull();
+    expect(route.geometryAvailable).toBe(false);
+  });
+
+  it('rejects route estimates for unknown outlets', async () => {
+    const result = await dispatcher.dispatch(req('get_route_estimate', { outletId: 'not-a-real-outlet' }), harvest);
+    expect(result.ok).toBe(false);
+    expect(result.error?.code).toBe('not_found');
+  });
+
   it('rejects arbitrary navigation', async () => {
     const result = await dispatcher.dispatch(req('navigate_to', { path: 'https://example.com' }), harvest);
     expect(result.ok).toBe(false);
