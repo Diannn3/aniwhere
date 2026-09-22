@@ -12,14 +12,12 @@
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { t } from '../../content/translations';
 
-  const DEFAULT_COMPARE_IDS = ['demo-processor', 'demo-cooperative', 'demo-market'];
-
   interface Props {
     initialLang?: 'en' | 'fil';
     initialPlaceIds?: string[];
   }
 
-  const { initialLang = 'en', initialPlaceIds = DEFAULT_COMPARE_IDS } = $props();
+  const { initialLang = 'en', initialPlaceIds = [] } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let selectedIds = $state<string[]>(initialPlaceIds.slice(0, 3));
@@ -37,7 +35,7 @@
       return;
     }
     const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
-    selectedIds = stored.length ? stored.slice(0, 3) : DEFAULT_COMPARE_IDS;
+    selectedIds = stored.slice(0, 3);
   });
 
   onMount(() => subscribeHarvestContext((next) => {
