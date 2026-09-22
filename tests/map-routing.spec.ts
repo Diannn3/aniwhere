@@ -32,3 +32,24 @@ test('outlet detail labels municipality reference distance without implying exac
   await expect(page.getByText(/Los Baños municipality center/).first()).toBeVisible();
   await expect(page.getByText('Road route unavailable.').first()).toBeVisible();
 });
+
+
+test('mobile map selection stays on the map until the farmer asks for the list', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('https://unpkg.com/**', (route) => route.abort());
+  await page.goto(
+    '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=map&lang=en'
+  );
+
+  await expect(page.getByText('Offline map')).toBeVisible();
+  const processorPin = page.getByRole('button', { name: /Demo Processor:.*km/i });
+  await processorPin.click();
+
+  await expect(page.getByText('Offline map')).toBeVisible();
+  await expect(page).toHaveURL(/view=map/);
+  await expect(page).toHaveURL(/place=demo-processor/);
+
+  await page.getByRole('button', { name: /View selected place in the list/i }).click();
+  await expect(page).toHaveURL(/view=list/);
+  await expect(page.locator('#outlet-card-demo-processor')).toBeVisible();
+});
