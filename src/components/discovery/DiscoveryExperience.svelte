@@ -31,9 +31,7 @@
 
   // Filters
   let statusFilter = $state<'all' | 'match' | 'partial' | 'confirm' | 'no_match'>('all');
-  let categoryFilter = $state<string>('all');
-  let sortBy = $state<'fit' | 'distance' | 'payout' | 'price' | 'transport'>('fit');
-  let searchQuery = $state<string>('');
+  let sortBy = $state<'fit' | 'distance'>('fit');
 
   // Local state
   let savedIds = $state<string[]>([]);
@@ -130,31 +128,11 @@
         if (statusFilter !== 'all' && item.fit.status !== statusFilter) {
           return false;
         }
-        // Category filter
-        if (categoryFilter !== 'all' && item.outlet.category !== categoryFilter) {
-          return false;
-        }
-        // Search text
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchName = item.outlet.name.toLowerCase().includes(q);
-          const matchMun = item.outlet.municipality.toLowerCase().includes(q);
-          if (!matchName && !matchMun) return false;
-        }
         return true;
       })
       .sort((a, b) => {
         if (sortBy === 'distance') {
           return distanceForBasis(a.route, distanceBasis) - distanceForBasis(b.route, distanceBasis);
-        }
-        if (sortBy === 'price') {
-          return (b.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY) - (a.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY);
-        }
-        if (sortBy === 'payout') {
-          return (b.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY) - (a.fit.afterTransportPay ?? Number.NEGATIVE_INFINITY);
-        }
-        if (sortBy === 'transport') {
-          return (a.fit.enteredTransport ?? Number.POSITIVE_INFINITY) - (b.fit.enteredTransport ?? Number.POSITIVE_INFINITY);
         }
         // Default: 'fit'
         const rank = { match: 1, partial: 2, confirm: 3, no_match: 4 };
@@ -428,23 +406,20 @@
           bind:value={sortBy}
           class="min-h-11 bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl px-2.5 py-1 text-xs font-semibold text-[#20251E] outline-none cursor-pointer"
         >
-          <option value="fit">{lang === 'fil' ? 'Status ng Pagkakatugma' : 'Fit status'}</option>
-          <option value="distance">{lang === 'fil' ? 'Pinakamalapit' : 'Nearest'}</option>
-          <option value="payout">{lang === 'fil' ? 'Halaga Matapos ang Biyahe' : 'Amount after transport'}</option>
-          <option value="price">{lang === 'fil' ? 'Presyo / kg' : 'Price / kg'}</option>
-          <option value="transport">{lang === 'fil' ? 'Mababang Biyahe' : 'Lowest Transport'}</option>
+          <option value="fit">{lang === 'fil' ? 'Tugma muna' : 'Match first'}</option>
+          <option value="distance">
+            {distanceBasis === 'road'
+              ? (lang === 'fil' ? 'Pinakamalapit sa kalsada' : 'Nearest by road')
+              : (lang === 'fil' ? 'Pinakamalapit (tuwid na layo)' : 'Nearest (straight-line)')}
+          </option>
         </select>
       </div>
 
-      {#if statusFilter !== 'all' || categoryFilter !== 'all' || searchQuery}
+      {#if statusFilter !== 'all'}
         <button
           type="button"
-          onclick={() => {
-            statusFilter = 'all';
-            categoryFilter = 'all';
-            searchQuery = '';
-          }}
-          class="text-xs text-[#6E3511] font-bold hover:underline cursor-pointer"
+          onclick={() => statusFilter = 'all'}
+          class="min-h-11 px-2 text-xs text-[#6E3511] font-bold hover:underline cursor-pointer"
         >
           {t('clearFilters', lang)}
         </button>
@@ -476,11 +451,7 @@
           </p>
           <button
             type="button"
-            onclick={() => {
-              statusFilter = 'all';
-              categoryFilter = 'all';
-              searchQuery = '';
-            }}
+            onclick={() => statusFilter = 'all'}
             class="px-4 py-2 bg-[#486320] text-[#FFFDF8] rounded-xl text-xs font-bold hover:bg-[#3A5219] transition-colors cursor-pointer"
           >
             {t('clearFilters', lang)}
