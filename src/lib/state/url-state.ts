@@ -22,10 +22,16 @@ export function todayInManila(now: Date = new Date()): string {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function boundedTextParam(search: URLSearchParams, key: string, maxLength = 80): string | undefined {
+  const value = search.get(key)?.trim();
+  if (!value || value.length > maxLength) return undefined;
+  return value;
+}
+
 export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDiscoverQuery {
   const search = typeof params === 'string' ? new URLSearchParams(params) : params;
 
-  const rawCrop = search.get('crop') || 'tomato';
+  const rawCrop = boundedTextParam(search, 'crop') || (search.has('crop') ? 'other' : 'tomato');
   const { key: cropKey } = normalizeCrop(rawCrop);
   const finalCrop = cropKey !== 'other' ? cropKey : rawCrop;
 
@@ -48,9 +54,9 @@ export function parseDiscoverQuery(params: URLSearchParams | string): ParsedDisc
   const rawLang = search.get('lang');
   const finalLang: 'en' | 'fil' = rawLang === 'fil' ? 'fil' : 'en';
 
-  const variety = search.get('variety')?.trim() || undefined;
-  const grade = search.get('grade')?.trim() || undefined;
-  const packaging = search.get('packaging')?.trim() || undefined;
+  const variety = boundedTextParam(search, 'variety');
+  const grade = boundedTextParam(search, 'grade');
+  const packaging = boundedTextParam(search, 'packaging');
   const details =
     variety || grade || packaging
       ? {
