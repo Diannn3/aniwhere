@@ -9,7 +9,8 @@
   import { serializeDiscoverQuery, parseDiscoverQuery, type ParsedDiscoverQuery } from '../../lib/state/url-state';
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
-  import ResilientLagunaMap from '../map/ResilientLagunaMap.svelte';
+  import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
+  import { distanceForSorting, getOutletRouteEstimate, type OutletRouteEstimate } from '../../lib/routing/routing-matrix';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
@@ -87,6 +88,7 @@
     outlet: Outlet;
     fit: FitResult;
     distanceKm: number;
+    route: OutletRouteEstimate;
     isSaved: boolean;
     isCompared: boolean;
   }
@@ -101,10 +103,12 @@
         outlet.lat,
         outlet.lng
       );
+      const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distanceKm);
       return {
         outlet,
         fit,
         distanceKm,
+        route,
         isSaved: savedIds.includes(outlet.id),
         isCompared: comparedIds.includes(outlet.id),
       };
@@ -134,7 +138,7 @@
       })
       .sort((a, b) => {
         if (sortBy === 'distance') {
-          return a.distanceKm - b.distanceKm;
+          return distanceForSorting(a.route) - distanceForSorting(b.route);
         }
         if (sortBy === 'price') {
           return (b.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY) - (a.fit.samplePricePerKg ?? Number.NEGATIVE_INFINITY);
@@ -149,7 +153,7 @@
         const rank = { match: 1, partial: 2, confirm: 3, no_match: 4 };
         const diff = rank[a.fit.status] - rank[b.fit.status];
         if (diff !== 0) return diff;
-        return a.distanceKm - b.distanceKm;
+        return distanceForSorting(a.route) - distanceForSorting(b.route);
       })
   );
 
@@ -525,7 +529,11 @@
                   <path d="M12 21s-8-7.5-8-12a8 8 0 1116 0c0 4.5-8 12-8 12z" />
                   <circle cx="12" cy="9" r="2.5" />
                 </svg>
-                <span>{item.distanceKm} km {lang === 'fil' ? 'mula rito' : 'away'}</span>
+                <span>
+                  {item.route.source === 'road'
+                    ? `${item.route.roadDistanceKm?.toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
+                    : `${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na distansya' : 'straight-line'}`}
+                </span>
               </span>
             </div>
 
@@ -665,7 +673,7 @@
 
     <!-- Right Column: Interactive Resilient Map Panel (5 cols on desktop, sticky) -->
     <div class={`lg:col-span-5 lg:sticky lg:top-24 space-y-4 ${activeMobileView === 'list' ? 'hidden lg:block' : 'block'}`}>
-      <ResilientLagunaMap
+      <LiveLagunaMap
         items={filteredOutlets}
         {harvest}
         selectedId={selectedOutletId}
