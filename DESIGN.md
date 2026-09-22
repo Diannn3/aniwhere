@@ -120,7 +120,7 @@ The central visual anchor is the **Harvest Route**: transforming entered harvest
 3. **NO Winner / AI Recommendation Badges**: Never crown an outlet as "Best Choice", "Optimal", or "AI Pick". Present options on equal visual footing; the farmer decides.
 4. **NO "Profit" Labeling**: Transparent arithmetic only (`gross - entered transport = after entered transport`). Include notice: *"After entered transport only — not profit or guaranteed income."*
 5. **Visible Demo Notices**: Prominently display `Demo — sample data` on all screens rendering fictional buyers, prices, or capacities.
-6. **Illustrative Map**: Label all map views as `Illustrative map`. Never claim live GPS navigation or real-time traffic accuracy.
+6. **Map Truth**: The online MapLibre surface is an **interactive map**, while `ResilientLagunaMap` is an **illustrative/offline fallback**. Neither one implies live buyer demand, precise farm GPS, real-time traffic, or guaranteed travel time. Road distance/time may be shown only when a reviewed routing artifact provides it; otherwise label the Haversine value as straight-line distance.
 7. **Zero Prompt Leakage**: Zero mention of `agent`, `prompt`, `seed`, `mock`, `anti-hallucination`, or internal architecture names in user-facing UI.
 8. **Accessible Touch Targets**: Minimum 44x44px clickable bounds on mobile. Real `<button>` and `<a>` elements only; zero `<div onClick>`.
 
