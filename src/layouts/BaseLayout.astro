@@ -40,6 +40,7 @@ const languageHref = (targetLang: 'en' | 'fil') => {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -155,6 +156,12 @@ const languageHref = (targetLang: 'en' | 'fil') => {
         <p class="max-w-xl" data-i18n-en="AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity." data-i18n-fil="Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.' : 'AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity.'}</p>
       </div>
     </footer>
+
+    <script is:inline>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+      }
+    </script>
 
     <script is:inline>
       (() => {

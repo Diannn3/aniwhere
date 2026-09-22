@@ -7,6 +7,7 @@
   import { AniActionExecutor } from '../../lib/ani/action-executor';
   import { parseDiscoverQuery } from '../../lib/state/url-state';
   import { CURRENT_DATA_MODE } from '../../lib/data/current-market';
+  import { faqsForRoute, matchAniFaq, type AniFaq } from '../../lib/ani/faq';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
   let lang = $state<'en' | 'fil'>(initialLang);
@@ -20,6 +21,11 @@
   let inputEl: HTMLInputElement | null = $state(null);
   let unsubscribe: (() => void) | undefined;
   let provider: AniProvider | undefined;
+  let localMode = $state(true);
+  let pathname = $state('/');
+  let choices = $state<AniFaq[]>([]);
+  let activeFaq = $state<AniFaq | null>(null);
+  let selectedTopic = $state<'all' | AniFaq['topic']>('all');
   const dispatcher = new AniToolDispatcher();
   const actionExecutor = new AniActionExecutor();
 
@@ -28,6 +34,7 @@
 
   onMount(() => {
     lang = parseDiscoverQuery(window.location.search).lang;
+    pathname = window.location.pathname;
     const handleWindowKeydown = (event: KeyboardEvent) => {
       if (open && event.key === 'Escape') {
         event.preventDefault();
@@ -82,10 +89,20 @@
     document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'true');
     document.documentElement.style.overflow = 'hidden';
     setBackgroundInert(true);
-    status = 'connecting';
-    notice = isFil() ? 'Binubuksan si Ani.' : 'Opening Ani.';
+    localMode = true;
+    status = 'idle';
+    choices = [];
+    activeFaq = null;
+    notice = isFil() ? 'Handa ang local help. Walang internet na kailangan.' : 'Local help is ready. No internet is needed.';
     await tick();
     inputEl?.focus();
+  }
+
+  async function connectOnline() {
+    if (!open || !localMode) return;
+    localMode = false;
+    status = 'connecting';
+    notice = isFil() ? 'Kumokonekta sa online Ani.' : 'Connecting to online Ani.';
     const useMock = import.meta.env.DEV || import.meta.env.PUBLIC_ANI_PROVIDER === 'mock';
     if (useMock) {
       provider = new MockAniProvider();
@@ -118,6 +135,9 @@
     document.documentElement.style.overflow = '';
     setBackgroundInert(false);
     notice = '';
+    localMode = true;
+    choices = [];
+    activeFaq = null;
     void provider?.close();
     unsubscribe?.();
     provider = undefined;
@@ -131,9 +151,28 @@
 
   async function submit() {
     const text = input.trim();
-    if (!text || !provider || status === 'offline' || status === 'error') return;
+    if (!text) return;
     messages = [...messages, { id: `farmer-${Date.now()}`, role: 'farmer', text, createdAt: Date.now() }];
     input = '';
+    if (localMode) {
+      const result = matchAniFaq(text);
+      if (result.kind === 'answer') {
+        choices = [];
+        activeFaq = result.faq;
+        messages = [...messages, { id: `faq-${result.faq.id}-${Date.now()}`, role: 'ani', text: result.faq.answer[lang], createdAt: Date.now() }];
+        notice = isFil() ? 'Local na sagot mula sa AniWhere.' : 'Local answer from AniWhere.';
+      } else if (result.kind === 'choices') {
+        choices = result.faqs;
+        activeFaq = null;
+        notice = isFil() ? 'Piliin ang pinakamalapit na tanong.' : 'Choose the closest question.';
+      } else {
+        choices = [];
+        activeFaq = null;
+        notice = isFil() ? 'Wala akong local na sagot para diyan. Pumili ng topic o gamitin ang online Ani.' : 'I do not have a local answer for that yet. Choose a topic or use online Ani.';
+      }
+      return;
+    }
+    if (!provider || status === 'offline' || status === 'error') return;
     try { await provider.sendText(text); }
     catch {
       status = 'offline';
@@ -142,6 +181,10 @@
   }
 
   async function requestMic() {
+    if (localMode) {
+      notice = isFil() ? 'Para sa voice, piliin muna ang online Ani.' : 'Choose online Ani first to use voice.';
+      return;
+    }
     notice = isFil() ? 'Humihingi ng pahintulot sa mikropono.' : 'Requesting microphone permission.';
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -158,6 +201,25 @@
       inputEl?.focus();
     }
   }
+
+  function chooseFaq(faq: AniFaq) {
+    choices = [];
+    activeFaq = faq;
+    messages = [...messages, { id: `faq-${faq.id}-${Date.now()}`, role: 'ani', text: faq.answer[lang], createdAt: Date.now() }];
+    notice = isFil() ? 'Local na sagot mula sa AniWhere.' : 'Local answer from AniWhere.';
+  }
+
+  const topicLabels: Record<'all' | AniFaq['topic'], { en: string; fil: string }> = {
+    all: { en: 'All help', fil: 'Lahat ng tulong' },
+    using: { en: 'Using AniWhere', fil: 'Paggamit ng AniWhere' },
+    match: { en: 'Match labels', fil: 'Mga label ng tugma' },
+    money: { en: 'Price & transport', fil: 'Presyo at transport' },
+    outlets: { en: 'Outlets & maps', fil: 'Outlet at mapa' },
+    saved: { en: 'Saved & Compare', fil: 'Nai-save at Compare' },
+    offline: { en: 'Offline & data', fil: 'Offline at data' },
+  };
+  const topicOrder: AniFaq['topic'][] = ['using', 'match', 'money', 'outlets', 'saved', 'offline'];
+  const visibleFaqs = () => (selectedTopic === 'all' ? faqsForRoute(pathname) : faqsForRoute(pathname).filter((faq) => faq.topic === selectedTopic));
 
   async function stopListening() {
     await provider?.stopListening?.();
@@ -199,7 +261,7 @@
       <div class="ani-transcript" aria-label={isFil() ? 'Usapan kay Ani' : 'Conversation with Ani'}>
         {#if messages.length === 0}
           <div class="ani-welcome">
-            <p>{isFil() ? 'Matutulungan kitang ilagay ang ani, intindihin ang fit, at pumunta sa tamang bahagi ng AniWhere.' : 'I can help you enter a harvest, understand fit, and move through AniWhere.'}</p>
+            <p>{isFil() ? 'Magtanong tungkol sa AniWhere. Local ang mga sagot at puwedeng gamitin offline pagkatapos ma-cache.' : 'Ask about AniWhere. These answers are local and can work offline after the app is cached.'}</p>
             <p class="trust-note">{isFil() ? 'Ang market fit ay kinukuwenta ng AniWhere, hindi ni Ani.' : 'Market fit is calculated by AniWhere, not by Ani.'}</p>
           </div>
         {:else}
@@ -210,11 +272,39 @@
             </article>
           {/each}
         {/if}
+        {#if choices.length > 0}
+          <div class="faq-choices" aria-label={isFil() ? 'Mga posibleng tanong' : 'Possible questions'}>
+            {#each choices as faq (faq.id)}
+              <button type="button" class="faq-choice" onclick={() => chooseFaq(faq)}>{faq.question[lang]}</button>
+            {/each}
+          </div>
+        {/if}
+        {#if activeFaq?.action && localMode}
+          <a class="faq-action" href={actionHref(activeFaq.action.route)} onclick={closeAni}>{activeFaq.action.label[lang]} <span aria-hidden="true">→</span></a>
+        {/if}
+        {#if localMode}
+          <div class="faq-topics">
+            <div class="faq-topics__head"><strong>{isFil() ? 'Pumili ng topic' : 'Browse by topic'}</strong><button type="button" class="online-link" onclick={() => void connectOnline()}>Talk to Ani online</button></div>
+            <div class="topic-list" role="list">
+              <button type="button" class:active={selectedTopic === 'all'} onclick={() => selectedTopic = 'all'}>{topicLabels.all[lang]}</button>
+              {#each topicOrder as topic}
+                <button type="button" class:active={selectedTopic === topic} onclick={() => selectedTopic = topic}>{topicLabels[topic][lang]}</button>
+              {/each}
+            </div>
+            <div class="faq-list">
+              {#each visibleFaqs().slice(0, 6) as faq (faq.id)}
+                <button type="button" class="faq-suggestion" onclick={() => chooseFaq(faq)}>{faq.question[lang]}<span aria-hidden="true">›</span></button>
+              {/each}
+            </div>
+          </div>
+        {:else}
+          <div class="online-mode"><span>{isFil() ? 'Online Ani: puwedeng magtanong gamit ang text o voice.' : 'Online Ani: ask with text or voice.'}</span><button type="button" class="online-link" onclick={() => { localMode = true; status = 'idle'; void provider?.close(); provider = undefined; notice = isFil() ? 'Bumalik sa local help.' : 'Back to local help.'; }}>Local help</button></div>
+        {/if}
       </div>
 
       <form class="ani-composer" onsubmit={(e) => { e.preventDefault(); void submit(); }}>
         <label class="sr-only" for="ani-input">{isFil() ? 'Mensahe kay Ani' : 'Message Ani'}</label>
-        <input bind:this={inputEl} id="ani-input" bind:value={input} type="text" autocomplete="off" placeholder={isFil() ? 'hal. May 300 kg akong kamatis…' : 'e.g. I have 300 kg of tomatoes…'} disabled={status === 'offline'} />
+        <input bind:this={inputEl} id="ani-input" bind:value={input} type="text" autocomplete="off" placeholder={isFil() ? 'hal. Ano ang Partial match?' : 'e.g. What does Partial match mean?'} />
         <button type="button" class:listening={status === 'listening'} class="mic-button" aria-pressed={status === 'listening'} aria-label={status === 'listening' ? (isFil() ? 'Huminto sa pakikinig' : 'Stop listening') : (isFil() ? 'Gamitin ang mikropono' : 'Use microphone')} onclick={() => status === 'listening' ? void stopListening() : void requestMic()}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         </button>
@@ -242,8 +332,21 @@
   .stop-audio { min-height:2.75rem; padding:0 .35rem; flex:0 0 auto; border:0; border-radius:.6rem; background:transparent; color:#5f3215; font-size:.72rem; font-weight:800; text-decoration:underline; text-underline-offset:3px; }
   .ani-transcript { flex:1; min-height:12rem; overflow:auto; padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
   .ani-welcome { margin:auto 0; padding:1rem; border-left:2px solid #91AC67; color:#343b31; line-height:1.55; } .ani-welcome p{margin:0}.ani-welcome .trust-note{margin-top:.7rem;font-size:.78rem;color:#687064}
-  .message { max-width:88%; align-self:flex-start; padding:.72rem .82rem; border:1px solid rgba(32,37,30,.1); border-radius:1rem 1rem 1rem .3rem; background:#fff; } .message.farmer { align-self:flex-end; border-radius:1rem 1rem .3rem 1rem; background:#eef3e7; border-color:rgba(89,121,40,.16); } .message-role{display:block;margin-bottom:.2rem;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#687064}.message p{margin:0;font-size:.9rem;line-height:1.45}
-  .ani-composer { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:.45rem; padding:.8rem; border-top:1px solid rgba(32,37,30,.1); background:#fff; } input { min-width:0; min-height:2.75rem; border:1px solid rgba(32,37,30,.14); border-radius:.85rem; background:#FFFDF8; padding:0 .8rem; color:#20251E; font-size:.9rem; } input::placeholder{color:#72796e}.mic-button svg,.send-button svg{width:1.15rem;height:1.15rem}.mic-button.listening{background:#FCECD8;border-color:#6E3511;color:#6E3511}.send-button{background:#597928;color:#FFFDF8;border-color:#597928}.send-button:disabled{opacity:.42}
+  .message { max-width:88%; align-self:flex-start; padding:.72rem .82rem; border:1px solid rgba(32,37,30,.1); border-radius:1rem 1rem 1rem .3rem; background:#fff; } .message.farmer { align-self:flex-end; border-radius:1rem 1rem .3rem 1rem; background:#eef3e7; border-color:rgba(89,121,40,.16); } .message-role{display:block;margin-bottom:.2rem;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#687064}.message p{margin:0;font-size:1rem;line-height:1.48}
+  .faq-topics,.online-mode { border-top:1px solid rgba(32,37,30,.1); padding-top:.8rem; }
+  .faq-topics__head { display:flex; align-items:center; justify-content:space-between; gap:.5rem; font-size:.9rem; }
+  .online-link { min-height:2.75rem; border:0; background:transparent; color:#486320; font-weight:800; text-decoration:underline; text-underline-offset:3px; padding:.25rem .35rem; }
+  .topic-list { display:flex; gap:.35rem; overflow-x:auto; padding:.55rem 0 .2rem; scrollbar-width:none; }
+  .topic-list button { flex:0 0 auto; min-height:2.75rem; border:1px solid rgba(32,37,30,.13); border-radius:999px; padding:.25rem .7rem; background:#fff; color:#4A5245; font-size:.82rem; font-weight:700; }
+  .topic-list button.active { background:#486320; color:#FFFDF8; border-color:#486320; }
+  .faq-list,.faq-choices { display:grid; gap:.45rem; }
+  .faq-suggestion,.faq-choice { min-height:2.9rem; display:flex; align-items:center; justify-content:space-between; gap:.75rem; width:100%; text-align:left; border:1px solid rgba(89,121,40,.2); border-radius:.85rem; padding:.6rem .75rem; background:#f8fbf4; color:#20251E; font-size:.95rem; line-height:1.25; }
+  .faq-suggestion span { flex:0 0 auto; color:#597928; font-size:1.4rem; }
+  .faq-choice { background:#fff; }
+  .faq-action { min-height:2.75rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem; border-radius:.8rem; padding:.55rem .75rem; background:#597928; color:#FFFDF8; font-size:.95rem; font-weight:800; text-decoration:none; }
+  .faq-suggestion:hover,.faq-suggestion:focus-visible,.faq-choice:hover,.faq-choice:focus-visible { border-color:#597928; background:#eef3e7; }
+  .online-mode { display:flex; align-items:center; justify-content:space-between; gap:.5rem; color:#596052; font-size:.82rem; line-height:1.35; }
+  .ani-composer { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:.45rem; padding:.8rem; border-top:1px solid rgba(32,37,30,.1); background:#fff; } input { min-width:0; min-height:2.75rem; border:1px solid rgba(32,37,30,.14); border-radius:.85rem; background:#FFFDF8; padding:0 .8rem; color:#20251E; font-size:1rem; } input::placeholder{color:#72796e}.mic-button svg,.send-button svg{width:1.15rem;height:1.15rem}.mic-button.listening{background:#FCECD8;border-color:#6E3511;color:#6E3511}.send-button{background:#597928;color:#FFFDF8;border-color:#597928}.send-button:disabled{opacity:.42}
   .ani-footnote { margin:0; padding:0 .9rem .85rem; font-size:.68rem; line-height:1.4; color:#6a7165; background:#fff; }
   .ani-scrim { position:fixed; z-index:1; inset:0; border:0; background:rgba(32,37,30,.12); backdrop-filter:blur(2px); animation:fade-in 220ms ease both; }
   @keyframes panel-in { from{opacity:0;transform:translateY(16px) scale(.985)} to{opacity:1;transform:none} } @keyframes fade-in{from{opacity:0}to{opacity:1}}
