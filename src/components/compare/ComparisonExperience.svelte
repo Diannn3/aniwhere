@@ -314,7 +314,6 @@
             </article>
           {/each}
         </div>
-        <p class="sr-only" aria-live="polite">{transportAnnouncement}</p>
       </section>
 
       <section class="hidden sm:block" aria-labelledby="ledger-title">
@@ -365,8 +364,8 @@
             </tbody>
           </table>
         </div>
-        <p class="sr-only" aria-live="polite">{transportAnnouncement}</p>
       </section>
+      <p class="sr-only" aria-live="polite">{transportAnnouncement}</p>
       <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-[#20251E]/15 pt-5"><a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-[44px] items-center rounded-lg border border-[#20251E]/20 px-4 py-2 text-sm font-semibold text-[#20251E] transition-colors hover:bg-[#FCECD8]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Back to discovery', 'Bumalik sa paghahanap')}</a>{#if comparedOutlets.length < 3}<a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-[44px] items-center rounded-lg bg-[#486320] px-4 py-2 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#3A5219] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Add an outlet', 'Magdagdag ng outlet')}</a>{/if}</footer>
     {/if}
   </div>
