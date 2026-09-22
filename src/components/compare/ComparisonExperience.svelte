@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import { subscribeTransportUpdate } from '../../lib/ani/ui-sync';
   import { CURRENT_OUTLETS } from '../../lib/data/current-market';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
@@ -40,6 +41,17 @@
 
   onMount(() => subscribeHarvestContext((next) => {
     harvest = next;
+  }));
+
+  onMount(() => subscribeTransportUpdate(({ outletId, amount }) => {
+    if (!selectedIds.includes(outletId)) return;
+    transportDrafts = { ...transportDrafts, [outletId]: String(amount) };
+    const outlet = CURRENT_OUTLETS.find((item) => item.id === outletId || item.slug === outletId);
+    if (!outlet) return;
+    const fit = evaluateFit(outlet, harvest, amount);
+    transportAnnouncement = fit.afterTransportPay === null
+      ? copy(`Transport updated for ${outlet.name}; after transport cannot be calculated without a recorded price.`, `Na-update ang gastos sa biyahe para sa ${outlet.name}; hindi makalkula ang matapos ang biyahe nang walang nakatalang presyo.`)
+      : copy(`After transport updated to ${formatPeso(fit.afterTransportPay)} for ${outlet.name}.`, `Na-update sa ${formatPeso(fit.afterTransportPay)} ang matapos ang biyahe para sa ${outlet.name}.`);
   }));
 
   const isFil = $derived(lang === 'fil');
