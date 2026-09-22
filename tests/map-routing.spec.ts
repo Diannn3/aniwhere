@@ -17,8 +17,8 @@ test('default build never invents road distance or drive time', async ({ page })
     '/compare?places=demo-processor,demo-market,demo-msme-confirm&crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en'
   );
 
-  await expect(page.getByText(/Straight-line from Los Baños municipality center; road route unavailable\./).first()).toBeVisible();
-  await expect(page.getByText(/Road estimate/)).toHaveCount(0);
+  await expect(page.getByText(/Straight-line from Los Baños municipality center; used consistently across all selected places\./).first()).toBeVisible();
+  await expect(page.getByText(/All selected places have road estimates/)).toHaveCount(0);
   await expect(page.getByText(/min drive/)).toHaveCount(0);
 });
 
