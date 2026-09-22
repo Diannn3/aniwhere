@@ -266,6 +266,22 @@ test('selects outlets in discovery and compares them in a semantic decision ledg
   await expect(page.locator('[aria-live="polite"]')).toContainText(/after transport updated/i);
 });
 
+test('removing a compared outlet updates the URL so refresh does not restore it', async ({ page }) => {
+  await page.goto(
+    '/compare?places=demo-processor,demo-market&crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&lang=en'
+  );
+
+  const ledger = page.getByRole('table', { name: /comparison ledger/i });
+  await ledger.getByRole('button', { name: /Remove Demo Market from comparison/i }).click();
+
+  await expect(page).toHaveURL(/places=demo-processor/);
+  await expect(page).not.toHaveURL(/demo-market/);
+  await page.reload();
+
+  await expect(page.getByRole('columnheader', { name: 'Demo Processor' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Demo Market' })).toHaveCount(0);
+});
+
 test('saves an outlet locally and makes it available on the saved route', async ({ page }) => {
   await page.goto(discoverPath);
   const cooperative = outletCard(page, 'Demo Cooperative');
