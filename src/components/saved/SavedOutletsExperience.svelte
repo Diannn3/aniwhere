@@ -136,82 +136,66 @@
       </a>
     </section>
   {:else}
-    <!-- Saved Outlets Grid -->
-    <div class="grid grid-cols-1 gap-3">
-      {#each savedOutlets as outlet (outlet.id)}
-        {@const fit = evaluateFit(outlet, harvest)}
-        {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-        {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
-        {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
+    <section class="mt-8" aria-labelledby="saved-ledger-title">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <h2 id="saved-ledger-title" class="font-serif text-2xl font-bold text-[#20251E]">
+          {isFil ? 'Talaan ng mga nai-save' : 'Your shortlist'}
+        </h2>
+        <p class="text-sm font-semibold text-[#4A5245] font-tabular">
+          {savedOutlets.length} {isFil ? 'lugar · hanggang 3 ang maihahambing' : 'places · compare up to 3'}
+        </p>
+      </div>
 
-        <article class="almanac-entry flex flex-col justify-between gap-6 p-5 transition-colors hover:border-[#597928]/50 md:grid md:grid-cols-[1fr_auto]">
-          <div class="space-y-4">
-            <!-- Card Top Bar: Fit Badge & Remove Button -->
-            <div class="flex items-start justify-between gap-3">
-              <span
-                class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                  fit.status === 'match'
-                    ? 'bg-[#486320]/10 text-[#486320]'
-                    : fit.status === 'partial'
-                    ? 'bg-[#FCECD8] text-[#6E3511]'
-                    : fit.status === 'confirm'
-                    ? 'bg-[#4E7380]/10 text-[#4E7380]'
-                    : 'bg-red-50 text-red-700'
-                }`}
-              >
-                <span>{isFil ? fit.statusLabelFil : fit.statusLabel}</span>
+      <ol class="border-t border-[#20251E]/30">
+        {#each savedOutlets as outlet, index (outlet.id)}
+          {@const fit = evaluateFit(outlet, harvest)}
+          {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
+          {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
+          {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
+
+          <li class="border-b border-[#20251E]/25">
+            <article class="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 py-5 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-5 sm:py-7">
+              <span aria-hidden="true" class="almanac-index border-r border-[#20251E]/20 pt-0.5 text-lg text-[#6E3511] font-tabular">
+                {String(index + 1).padStart(2, '0')}
               </span>
+              <div class="min-w-0">
+                <div class="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:gap-8">
+                  <div class="min-w-0">
+                    <h3 class="font-serif text-xl font-bold leading-tight text-[#20251E] sm:text-2xl">
+                      <a href={detailHref} class="inline-flex min-h-11 items-center hover:text-[#486320]">{outlet.name}</a>
+                    </h3>
+                    <p class="mt-1 text-sm text-[#4A5245]">
+                      {outlet.municipality}, Laguna · <span class="capitalize">{outlet.category}</span>
+                    </p>
+                    <p class="mt-3 text-sm font-bold text-[#20251E]">
+                      {isFil ? fit.statusLabelFil : fit.statusLabel}
+                    </p>
+                    <p class="mt-1 max-w-2xl text-sm leading-relaxed text-[#4A5245]">
+                      {isFil ? fit.reasonFil : fit.reason}
+                    </p>
+                    <p class="mt-3 text-sm text-[#4A5245] font-tabular">
+                      <strong class="text-[#20251E]">{dist.toFixed(1)} km</strong>
+                      {isFil
+                        ? ` tuwid na layo mula sa sentro ng ${originMun.name.split(',')[0]}`
+                        : ` straight-line from ${originMun.name.split(',')[0]} municipality center`}
+                    </p>
+                  </div>
 
-              <button
-                type="button"
-                onclick={() => handleRemove(outlet.id)}
-                class="h-11 min-h-11 min-w-11 rounded-full flex items-center justify-center text-[#596052] hover:text-red-700 hover:bg-red-50 transition-colors"
-                aria-label={isFil ? 'Alisin sa nai-save' : 'Remove from saved'}
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Title & Municipality -->
-            <div>
-              <h2 class="text-xl font-serif font-bold text-[#20251E]">
-                <a href={detailHref} class="hover:text-[#486320] transition-colors">
-                  {outlet.name}
-                </a>
-              </h2>
-              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#4A5245] mt-1">
-                <span class="font-medium text-[#6E3511]">{outlet.municipality}, Laguna</span>
-                <span aria-hidden="true">&bull;</span>
-                <span class="capitalize">{outlet.category}</span>
-              </div>
-              <p class="mt-1 text-[11px] text-[#596052]">
-                {isFil
-                  ? `${dist.toFixed(1)} km tuwid mula sa sentro ng ${originMun.name.split(',')[0]}`
-                  : `${dist.toFixed(1)} km straight-line from ${originMun.name.split(',')[0]} municipality center`}
-              </p>
-            </div>
-
-            <!-- Decision-first shortlist facts -->
-            <div class="rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 p-3.5 grid grid-cols-2 gap-3">
-              <div>
-                <div class="text-[10px] font-semibold text-[#596052]">{isFil ? 'Kayang tanggapin' : 'Can accept'}</div>
-                <div class="mt-0.5 text-base font-bold text-[#20251E] font-tabular">
-                  {fit.acceptedKg !== null
-                    ? `${fit.acceptedKg.toLocaleString('en-PH')} kg`
-                    : (isFil ? 'Kumpirmahin' : 'Confirm')}
+                  <dl class="grid grid-cols-2 border-y border-[#20251E]/20 font-tabular lg:self-start">
+                    <div class="min-w-0 py-3 pr-3">
+                      <dt class="text-sm font-semibold text-[#4A5245]">{isFil ? 'Kayang tanggapin' : 'Can accept'}</dt>
+                      <dd class="mt-1 text-lg font-bold leading-tight text-[#20251E] sm:text-xl">
+                        {fit.acceptedKg !== null ? `${fit.acceptedKg.toLocaleString('en-PH')} kg` : (isFil ? 'Hindi pa alam' : 'Unknown')}
+                      </dd>
+                    </div>
+                    <div class="min-w-0 border-l border-[#20251E]/15 py-3 pl-3">
+                      <dt class="text-sm font-semibold text-[#4A5245]">{isFil ? 'Matitirang ani' : 'Harvest remaining'}</dt>
+                      <dd class="mt-1 text-lg font-bold leading-tight text-[#20251E] sm:text-xl">
+                        {fit.remainingKg !== null ? `${fit.remainingKg.toLocaleString('en-PH')} kg` : (isFil ? 'Hindi pa alam' : 'Unknown')}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-              </div>
-              <div>
-                <div class="text-[10px] font-semibold text-[#596052]">{isFil ? 'Matitirang ani' : 'Harvest remaining'}</div>
-                <div class="mt-0.5 text-base font-bold text-[#20251E] font-tabular">
-                  {fit.remainingKg !== null
-                    ? `${fit.remainingKg.toLocaleString('en-PH')} kg`
-                    : (isFil ? 'Kumpirmahin' : 'Confirm')}
-                </div>
-              </div>
-            </div>
 
             <div class="rounded-lg bg-[#FAF7EE] px-3 py-2 text-[11px] leading-relaxed text-[#596052]">
               <strong class="text-[#20251E]">{fit.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</strong>
@@ -246,8 +230,11 @@
               <span>{isFil ? 'Ihambing' : 'Compare'}</span>
             </a>
           </div>
-        </article>
-      {/each}
-    </div>
+              </div>
+            </article>
+          </li>
+        {/each}
+      </ol>
+    </section>
   {/if}
 </div>
