@@ -32,7 +32,7 @@
   let sharedHarvest = $state<HarvestQuery | null>(null);
   let harvestDraftValid = $state(true);
   let onHome = $state(false);
-  let provider: AniProvider | undefined;
+  let provider = $state<AniProvider | undefined>(undefined);
   let localMode = $state(true);
   let pathname = $state('/');
   let choices = $state<AniFaq[]>([]);
