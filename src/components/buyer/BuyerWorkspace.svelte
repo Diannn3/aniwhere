@@ -332,7 +332,7 @@
                     {#if offer.status === 'published'}
                       <span>Offer &middot; 17 Sep 2026</span>
                     {:else if offer.status === 'in_review'}
-                      <span>Needs review before publication</span>
+                      <span>Offer in review</span>
                     {:else}
                       <span>&mdash;</span>
                     {/if}
@@ -406,7 +406,7 @@
                     {#if offer.status === 'published'}
                       {isFil ? 'Alok · 17 Sep 2026' : 'Offer · 17 Sep 2026'}
                     {:else if offer.status === 'in_review'}
-                      {isFil ? 'Kailangang suriin bago ilathala' : 'Needs review before publication'}
+                      {isFil ? 'Alok na sinusuri' : 'Offer in review'}
                     {:else}
                       {isFil ? 'Panloob na burador' : 'Internal draft'}
                     {/if}
