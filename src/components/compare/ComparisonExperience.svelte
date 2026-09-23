@@ -192,24 +192,21 @@
       </section>
     {:else}
       <section class="sm:hidden" aria-labelledby="mobile-comparison-title">
-        <div class="mb-3">
+        <div class="mb-5 border-b border-[#20251E]/20 pb-4">
           <h2 id="mobile-comparison-title" class="font-serif text-2xl font-bold tracking-[-0.02em] text-[#20251E]">
-            {copy('Compare at a glance', 'Mabilisang paghahambing')}
+            {copy('Decision ledger', 'Talaan ng desisyon')}
           </h2>
           <p class="mt-1 text-sm leading-5 text-[#4A5245]">
-            {copy(
-              'Review the essentials for each place without a sideways table.',
-              'Tingnan ang mahahalagang detalye ng bawat lugar nang hindi nag-i-scroll nang pahalang.',
-            )}
+            {copy('Read each place in the same order, then confirm its terms before travel.', 'Basahin ang bawat lugar sa parehong ayos, saka kumpirmahin ang mga kondisyon bago bumiyahe.')}
           </p>
-          <p class="mt-2 text-xs leading-5 text-[#596052]">
+          <p class="mt-2 text-sm leading-5 text-[#596052]">
             {comparisonDistanceBasis === 'road'
-              ? copy('Distance uses road estimates for every selected place.', 'Layo sa kalsada ang gamit sa lahat ng napiling lugar.')
-              : copy('Distance uses straight-line values for every selected place, not exact travel distance.', 'Tuwid na layo ang gamit sa lahat ng napiling lugar, hindi eksaktong haba ng biyahe.')}
+              ? copy('All selected places use road-distance estimates.', 'Tantiya ng layo sa kalsada ang gamit sa lahat ng napiling lugar.')
+              : copy('All selected places use straight-line distance from the municipality center, not exact travel distance.', 'Tuwid na layo mula sa sentro ng munisipyo ang gamit sa lahat ng napiling lugar, hindi eksaktong haba ng biyahe.')}
           </p>
         </div>
 
-        <div class="grid gap-4">
+        <div class="grid gap-6">
           {#each comparedOutlets as outlet (outlet.id)}
             {@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}
             {@const transport = parsedTransport(outlet, recordedTransport)}
@@ -217,11 +214,12 @@
             {@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
             {@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}
             {@const unknowns = isFil ? fit.unknownsFil : fit.unknowns}
-            <article class="rounded-2xl border border-[#20251E]/15 bg-white p-4 shadow-[0_1px_3px_rgba(32,37,30,0.05)]">
+            {@const questions = isFil ? fit.conditionsToConfirmFil : fit.conditionsToConfirm}
+            <article class="min-w-0 border-t-2 border-[#20251E] bg-white px-4 pb-5 pt-4">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <h3 class="font-serif text-xl font-bold leading-tight text-[#20251E]">{outlet.name}</h3>
-                  <p class="mt-1 text-xs text-[#4A5245]">{outlet.municipality}, Laguna · {outlet.category}</p>
+                  <p class="mt-1 text-sm text-[#4A5245]">{outlet.municipality}, Laguna · {outlet.category}</p>
                 </div>
                 <button
                   type="button"
@@ -233,27 +231,32 @@
                 </button>
               </div>
 
-              <div class={`mt-3 rounded-xl border px-3 py-2.5 ${fitTone(fit.status)}`}>
+              <div class={`mt-4 border-y px-0 py-3 ${fitTone(fit.status)}`}>
                 <p class="font-semibold">{isFil ? fit.statusLabelFil : fit.statusLabel}</p>
-                <p class="mt-1 text-xs leading-5 text-[#4A5245]">{isFil ? fit.reasonFil : fit.reason}</p>
+                <p class="mt-1 text-sm leading-5 text-[#4A5245]">{isFil ? fit.reasonFil : fit.reason}</p>
               </div>
 
-              <dl class="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[#20251E]/10 bg-[#20251E]/10">
-                <div class="bg-[#FFFDF8] p-3">
-                  <dt class="text-[11px] font-semibold text-[#596052]">{copy('Can accept', 'Kayang tanggapin')}</dt>
-                  <dd class="mt-0.5 font-bold tabular-nums text-[#20251E]">{formatKg(fit.acceptedKg)}</dd>
+              <dl class="divide-y divide-[#20251E]/10">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
+                  <dt class="text-sm text-[#4A5245]">{copy('Can accept', 'Kayang tanggapin')}</dt>
+                  <dd class="font-semibold tabular-nums text-[#20251E]">{formatKg(fit.acceptedKg)}</dd>
                 </div>
-                <div class="bg-[#FFFDF8] p-3">
-                  <dt class="text-[11px] font-semibold text-[#596052]">{copy('Harvest remaining', 'Natitirang ani')}</dt>
-                  <dd class="mt-0.5 font-bold tabular-nums text-[#20251E]">{formatKg(fit.remainingKg)}</dd>
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
+                  <dt class="text-sm text-[#4A5245]">{copy('Harvest remaining', 'Natitirang ani')}</dt>
+                  <dd class="font-semibold tabular-nums text-[#20251E]">{formatKg(fit.remainingKg)}</dd>
                 </div>
-                <div class="bg-[#FFFDF8] p-3">
-                  <dt class="text-[11px] font-semibold text-[#596052]">{copy('Price evidence', 'Ebidensya ng presyo')}</dt>
-                  <dd class="mt-0.5 text-xs font-bold leading-5 text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg)}</dd>
+                <div class="py-3">
+                  <dt class="text-sm text-[#4A5245]">{copy('Price evidence', 'Ebidensya ng presyo')}</dt>
+                  <dd class="mt-1 font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg)}</dd>
+                  <dd class="text-sm text-[#4A5245]">{evidenceKindLabel(fit.evidenceKind)}</dd>
                 </div>
-                <div class="bg-[#FFFDF8] p-3">
-                  <dt class="text-[11px] font-semibold text-[#596052]">{copy('Distance', 'Layo')}</dt>
-                  <dd class="mt-0.5 text-xs font-bold leading-5 text-[#20251E]">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
+                  <dt class="text-sm text-[#4A5245]">{copy('Gross amount', 'Kabuuang halaga')}</dt>
+                  <dd class="font-semibold tabular-nums text-[#20251E]">{formatPeso(fit.grossPay)}</dd>
+                </div>
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
+                  <dt class="text-sm text-[#4A5245]">{copy('Distance', 'Layo')}</dt>
+                  <dd class="font-semibold tabular-nums text-[#20251E]">
                     {comparisonDistanceBasis === 'road'
                       ? `${distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km ${copy('by road', 'sa kalsada')}`
                       : `${distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km ${copy('straight-line', 'tuwid na layo')}`}
@@ -261,8 +264,8 @@
                 </div>
               </dl>
 
-              <div class="mt-3 rounded-xl border border-[#20251E]/10 bg-[#FFFDF8] p-3">
-                <label class="text-xs font-semibold text-[#20251E]" for={`mobile-transport-${outlet.id}`}>
+              <div class="border-t border-[#20251E]/20 py-4">
+                <label class="text-sm font-semibold text-[#20251E]" for={`mobile-transport-${outlet.id}`}>
                   {copy('Transport amount used', 'Halagang biyahe na gagamitin')}
                   <span class="sr-only">{copy(` for ${outlet.name}`, ` para sa ${outlet.name}`)}</span>
                 </label>
@@ -277,24 +280,32 @@
                     value={transportValue(outlet, recordedTransport)}
                     placeholder={copy('Enter amount', 'Maglagay ng halaga')}
                     oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)}
-                    class={`min-h-11 w-full rounded-lg border bg-white py-2 pl-7 pr-3 font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/20'}`}
+                    class={`min-h-11 w-full rounded-lg border bg-[#FFFDF8] py-2 pl-7 pr-3 text-base font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/35'}`}
                   />
                 </div>
-                <p class="mt-1.5 text-xs leading-4 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p>
-                <div class="mt-2 flex items-baseline justify-between gap-3 border-t border-[#20251E]/8 pt-2">
-                  <span class="text-xs font-semibold text-[#596052]">{copy('After transport', 'Matapos ang biyahe')}</span>
-                  <strong class="font-tabular text-[#20251E]">
+                <p class="mt-2 text-sm leading-5 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p>
+                <div class="mt-4 flex flex-wrap items-baseline justify-between gap-2 border-t border-[#20251E]/10 pt-3">
+                  <span class="text-sm font-semibold text-[#20251E]">{copy('After transport', 'Matapos ang biyahe')}</span>
+                  <strong class="text-lg tabular-nums text-[#20251E]">
                     {transport === null ? copy('Not calculated', 'Hindi nakalkula') : formatPeso(fit.afterTransportPay)}
                   </strong>
                 </div>
               </div>
 
-              <div class="mt-3 rounded-xl bg-[#FAF7EE] px-3 py-2.5 text-xs leading-5 text-[#4A5245]">
-                <p><strong class="text-[#20251E]">{fit.sourceLabel || copy('Source unknown', 'Hindi alam ang pinagmulan')}</strong></p>
+              <div class="bg-[#FCECD8] px-4 py-4 text-sm leading-5 text-[#20251E]">
+                <p class="font-semibold">{fit.sourceLabel || copy('Source unknown', 'Hindi alam ang pinagmulan')}</p>
+                <dl class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[#4A5245]">
+                  <div><dt class="inline">{copy('Updated', 'Na-update')}: </dt><dd class="inline tabular-nums">{formatEvidenceDate(fit.dataUpdatedAt)}</dd></div>
+                  <div><dt class="inline">{copy('Valid until', 'May bisa hanggang')}: </dt><dd class="inline tabular-nums">{formatEvidenceDate(fit.dataValidUntil)}</dd></div>
+                </dl>
                 {#if unknowns.length > 0}
-                  <p class="mt-1"><strong>{copy('Confirm first:', 'Kumpirmahin muna:')}</strong> {unknowns.join(', ')}</p>
+                  <p class="mt-3"><strong>{copy('Still unknown:', 'Hindi pa alam:')}</strong> {unknowns.join(', ')}</p>
+                {/if}
+                {#if questions.length > 0}
+                  <p class="mt-3 font-semibold">{copy('Confirm before travel', 'Kumpirmahin bago bumiyahe')}</p>
+                  <ul class="mt-1 list-disc space-y-1 pl-5">{#each questions as question}<li>{question}</li>{/each}</ul>
                 {:else}
-                  <p class="mt-1">{copy('Confirm current terms before travel.', 'Kumpirmahin pa rin ang kasalukuyang kondisyon bago bumiyahe.')}</p>
+                  <p class="mt-3">{copy('Confirm current terms before travel.', 'Kumpirmahin pa rin ang kasalukuyang kondisyon bago bumiyahe.')}</p>
                 {/if}
               </div>
 
