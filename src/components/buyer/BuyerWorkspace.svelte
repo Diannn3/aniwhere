@@ -6,10 +6,8 @@
     saveBuyerOffer,
     deleteBuyerOffer,
     resetBuyerOffers,
-    getBuyerOfferCounts,
   } from '../../lib/state/buyer-demo';
   import BuyerOfferEditorModal from './BuyerOfferEditorModal.svelte';
-  import { t } from '../../content/translations';
 
   interface Props {
     initialLang?: 'en' | 'fil';
@@ -40,8 +38,11 @@
   }
 
   const isFil = $derived(lang === 'fil');
-
-  const counts = $derived(getBuyerOfferCounts());
+  const counts = $derived({
+    published: offers.filter((o) => o.status === 'published').length,
+    inReview: offers.filter((o) => o.status === 'in_review').length,
+    draft: offers.filter((o) => o.status === 'draft').length,
+  });
 
   const filteredOffers = $derived(
     offers.filter((o) => {
@@ -110,12 +111,12 @@
 
 <div class="almanac-page min-h-screen bg-[#FFFDF8] text-[#20251E]">
   <!-- Buyer field ledger -->
-  <section class="relative border-b border-[#20251E]/20 bg-[#FCECD8]/35 px-4 pb-10 pt-8 sm:px-6 lg:px-8">
+  <section class="border-b border-[#20251E]/15 bg-[#FFFDF8] px-4 pb-8 pt-8 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <!-- Direct H1 & Subhead -->
         <div class="max-w-2xl">
-          <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#20251E]">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#20251E]">
             {isFil ? 'Mga alok sa pagbili' : 'Your buying offers'}
           </h1>
           <p class="mt-3 text-base sm:text-lg text-[#4A5245] leading-relaxed">
@@ -125,26 +126,25 @@
           </p>
         </div>
 
-        <!-- Prominent Demo Badge Card -->
-        <div class="almanac-entry max-w-sm flex items-start gap-3.5 p-4 sm:p-5">
-          <div class="w-9 h-9 rounded-xl bg-[#597928]/15 flex items-center justify-center text-[#486320] shrink-0 mt-0.5">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <div class="text-xs font-bold uppercase tracking-wider text-[#486320]">
-              {isFil ? 'Demo — Halimbawang Datos' : 'Demo — sample data'}
-            </div>
-            <p class="text-xs text-[#4A5245] mt-1 leading-normal">
-              {isFil
-                ? 'Ito ay isang demonstration workspace. Ang mga alok ay naka-save sa device na ito lamang at hindi naglalathala ng totoong transaksyon.'
-                : 'This is a demonstration workspace. Offers are saved on this device only and do not publish real buyer demand.'}
-            </p>
-          </div>
-        </div>
+        <aside class="max-w-sm border-t border-[#597928]/40 pt-3 md:border-t-0 md:border-l md:py-1 md:pl-5" aria-label={isFil ? 'Paalala tungkol sa demo' : 'Demo notice'}>
+          <strong class="text-sm font-bold text-[#486320]">
+            {isFil ? 'Demo — Halimbawang Datos' : 'Demo — sample data'}
+          </strong>
+          <p class="mt-1 text-sm leading-snug text-[#4A5245]">
+            {isFil
+              ? 'Ito ay isang demonstration workspace. Ang mga alok ay naka-save sa device na ito lamang at hindi naglalathala ng totoong transaksyon.'
+              : 'This is a demonstration workspace. Offers are saved on this device only and do not publish real buyer demand.'}
+          </p>
+        </aside>
       </div>
 
+      <!-- The action leads; status counts double as quick filters. -->
+      <div class="mt-8 grid gap-4 lg:grid-cols-[minmax(260px,1.1fr)_2fr] lg:items-stretch">
+        <button
+          type="button"
+          onclick={openCreateModal}
+          class="flex min-h-16 items-center justify-center gap-3 rounded-xl bg-[#597928] px-6 py-4 text-base font-bold text-white transition-colors hover:bg-[#486320] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928] lg:min-h-24"
+        >
           <span class="text-2xl font-normal leading-none" aria-hidden="true">+</span>
           {isFil ? 'Gumawa ng alok' : 'Create offer'}
         </button>
@@ -175,101 +175,6 @@
 
   <!-- Main Offers Workspace Content -->
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-    <!-- Toast Notification Banner -->
-      <!-- Desktop View (>= lg) -->
-      <div class="hidden lg:grid mt-8 grid-cols-4 gap-4">
-        <!-- Published Card -->
-        <button
-          type="button"
-          onclick={() => { activeFilter = 'published'; }}
-          class={`text-left bg-white border rounded-2xl p-5 shadow-xs transition-all flex items-center gap-4 ${
-            activeFilter === 'published' ? 'border-[#597928] ring-2 ring-[#597928]/30' : 'border-[#20251E]/10 hover:border-[#597928]/40'
-          }`}
-        >
-          <div class="w-12 h-12 rounded-xl bg-[#EBF3DF] text-[#47661E] flex items-center justify-center shrink-0">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-[#596052] uppercase tracking-wider">
-              {isFil ? 'Nailathala' : 'Published offers'}
-            </div>
-            <div class="text-2xl font-bold font-serif text-[#20251E] mt-0.5">
-              {counts.published}
-            </div>
-          </div>
-        </button>
-
-        <!-- In Review Card -->
-        <button
-          type="button"
-          onclick={() => { activeFilter = 'in_review'; }}
-          class={`text-left bg-white border rounded-2xl p-5 shadow-xs transition-all flex items-center gap-4 ${
-            activeFilter === 'in_review' ? 'border-[#6E3511] ring-2 ring-[#6E3511]/30' : 'border-[#20251E]/10 hover:border-[#6E3511]/40'
-          }`}
-        >
-          <div class="w-12 h-12 rounded-xl bg-[#FCECD8] text-[#6E3511] flex items-center justify-center shrink-0">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-[#596052] uppercase tracking-wider">
-              {isFil ? 'Nasa pagsusuri' : 'In review'}
-            </div>
-            <div class="text-2xl font-bold font-serif text-[#20251E] mt-0.5">
-              {counts.inReview}
-            </div>
-            <div class="text-[10px] text-[#6E3511] font-medium mt-0.5">
-              Sample workflow state
-            </div>
-          </div>
-        </button>
-
-        <!-- Draft Offers Card -->
-        <button
-          type="button"
-          onclick={() => { activeFilter = 'draft'; }}
-          class={`text-left bg-white border rounded-2xl p-5 shadow-xs transition-all flex items-center gap-4 ${
-            activeFilter === 'draft' ? 'border-[#4B5563] ring-2 ring-[#4B5563]/30' : 'border-[#20251E]/10 hover:border-[#4B5563]/40'
-          }`}
-        >
-          <div class="w-12 h-12 rounded-xl bg-[#F3F4F6] text-[#4B5563] flex items-center justify-center shrink-0">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-[#596052] uppercase tracking-wider">
-              {isFil ? 'Burador' : 'Draft offers'}
-            </div>
-            <div class="text-2xl font-bold font-serif text-[#20251E] mt-0.5">
-              {counts.draft}
-            </div>
-          </div>
-        </button>
-
-        <!-- Primary CTA: Create Offer Desktop -->
-        <div class="flex items-center">
-          <button
-            type="button"
-            onclick={openCreateModal}
-            class="w-full h-full min-h-[56px] py-4 px-6 rounded-2xl bg-[#597928] text-white hover:bg-[#47661E] font-bold text-base shadow-sm transition-all flex items-center justify-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>{isFil ? 'Gumawa ng alok' : 'Create offer'}</span>
-          </button>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Main Offers Workspace Content -->
-  <div class="max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     <!-- Toast Notification Banner -->
     {#if toastMessage}
       <div
