@@ -200,97 +200,52 @@
       </div>
     {/if}
 
-    <!-- Table / List Container Card -->
-    <div class="overflow-hidden border border-[#20251E]/20 bg-[#FFFDF8]">
-      <!-- Toolbar: Title, Filter Tabs, and Search Bar -->
-      <div class="p-5 sm:p-6 border-b border-[#20251E]/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div>
+      <div class="flex flex-col gap-4 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg bg-[#597928]/10 text-[#486320] flex items-center justify-center">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-            </div>
-            <h2 class="font-serif text-xl font-bold text-[#20251E]">
-              {isFil ? 'Talaan ng mga Alok' : 'Offer listings'}
-            </h2>
-
-          </div>
-          <p class="text-xs text-[#596052] mt-1">
+          <h2 class="text-2xl font-bold tracking-tight text-[#20251E]">
+            {isFil ? 'Talaan ng mga Alok' : 'Offer listings'}
+          </h2>
+          <p class="mt-1 text-sm text-[#4A5245]">
             {isFil
               ? 'Lumikha at pamahalaan ang mga alok upang kumuha ng sariwang ani mula sa mga lokal na magsasaka.'
               : 'Create and manage your offers to source fresh produce from local farmers.'}
           </p>
         </div>
-
-        <!-- Controls: Search Input and Status Tabs -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <!-- Search Input -->
-          <div class="relative min-w-[220px]">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#596052]">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-            <input
-              type="text"
-              bind:value={searchQuery}
-              placeholder={isFil ? 'Maghanap ng pananim...' : 'Search offers by crop...'}
-              class="w-full pl-9 pr-3.5 py-2 text-xs bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
-            />
-          </div>
-
-          <!-- Status Filter Tabs -->
-          <div class="inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-xl p-1 gap-1" role="group" aria-label={isFil ? 'Salain ayon sa katayuan' : 'Filter offers by status'}>
-            <button
-              type="button"
-              onclick={() => { activeFilter = 'all'; }}
-              aria-pressed={activeFilter === 'all'}
-              class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                activeFilter === 'all' ? 'bg-[#597928] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
-              }`}
-            >
-              {isFil ? 'Lahat' : 'All'} ({offers.length})
-            </button>
-            <button
-              type="button"
-              onclick={() => { activeFilter = 'published'; }}
-              aria-pressed={activeFilter === 'published'}
-              class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                activeFilter === 'published' ? 'bg-[#597928] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
-              }`}
-            >
-              {isFil ? 'Nailathala' : 'Published'} ({counts.published})
-            </button>
-            <button
-              type="button"
-              onclick={() => { activeFilter = 'in_review'; }}
-              aria-pressed={activeFilter === 'in_review'}
-              class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                activeFilter === 'in_review' ? 'bg-[#6E3511] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
-              }`}
-            >
-              {isFil ? 'Pagsusuri' : 'In review'} ({counts.inReview})
-            </button>
-            <button
-              type="button"
-              onclick={() => { activeFilter = 'draft'; }}
-              aria-pressed={activeFilter === 'draft'}
-              class={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                activeFilter === 'draft' ? 'bg-[#4B5563] text-white shadow-xs' : 'text-[#4A5245] hover:text-[#20251E]'
-              }`}
-            >
-              {isFil ? 'Burador' : 'Draft'} ({counts.draft})
-            </button>
-          </div>
-        </div>
+        <label class="relative block sm:w-64">
+          <span class="sr-only">{isFil ? 'Maghanap ng alok' : 'Search offers'}</span>
+          <svg aria-hidden="true" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#596052]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="search" bind:value={searchQuery}
+            placeholder={isFil ? 'Maghanap ng pananim...' : 'Search offers by crop...'}
+            class="min-h-11 w-full rounded-lg border border-[#20251E]/20 bg-white pl-9 pr-3 text-sm text-[#20251E] focus-visible:outline-2 focus-visible:outline-[#597928]" />
+        </label>
+      </div>
+      <div class="flex gap-2 overflow-x-auto border-b border-[#20251E]/20" role="group" aria-label={isFil ? 'Salain ayon sa katayuan' : 'Filter offers by status'}>
+        <button type="button" onclick={() => { activeFilter = 'all'; }} aria-pressed={activeFilter === 'all'}
+          class={`min-h-11 shrink-0 border-b-2 px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[#597928] ${activeFilter === 'all' ? 'border-[#597928] text-[#20251E]' : 'border-transparent text-[#4A5245] hover:text-[#20251E]'}`}>
+          {isFil ? 'Lahat' : 'All'} ({offers.length})
+        </button>
+        <button type="button" onclick={() => { activeFilter = 'published'; }} aria-pressed={activeFilter === 'published'}
+          class={`min-h-11 shrink-0 border-b-2 px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[#597928] ${activeFilter === 'published' ? 'border-[#597928] text-[#20251E]' : 'border-transparent text-[#4A5245] hover:text-[#20251E]'}`}>
+          {isFil ? 'Nailathala' : 'Published'} ({counts.published})
+        </button>
+        <button type="button" onclick={() => { activeFilter = 'in_review'; }} aria-pressed={activeFilter === 'in_review'}
+          class={`min-h-11 shrink-0 border-b-2 px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[#597928] ${activeFilter === 'in_review' ? 'border-[#597928] text-[#20251E]' : 'border-transparent text-[#4A5245] hover:text-[#20251E]'}`}>
+          {isFil ? 'Pagsusuri' : 'In review'} ({counts.inReview})
+        </button>
+        <button type="button" onclick={() => { activeFilter = 'draft'; }} aria-pressed={activeFilter === 'draft'}
+          class={`min-h-11 shrink-0 border-b-2 px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[#597928] ${activeFilter === 'draft' ? 'border-[#597928] text-[#20251E]' : 'border-transparent text-[#4A5245] hover:text-[#20251E]'}`}>
+          {isFil ? 'Burador' : 'Draft'} ({counts.draft})
+        </button>
       </div>
 
       <!-- Desktop Table View (>= 768px) -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b border-[#20251E]/10 bg-[#FFFDF8]/80 text-[11px] font-bold text-[#596052] uppercase tracking-wider">
+            <tr class="border-b border-[#20251E]/20 text-xs font-semibold text-[#596052]">
               <th scope="col" class="py-3.5 px-6">Crop</th>
               <th scope="col" class="py-3.5 px-6">Quantity</th>
               <th scope="col" class="py-3.5 px-6">Target Price (PHP)</th>
@@ -315,34 +270,17 @@
               </tr>
             {:else}
               {#each filteredOffers as offer (offer.id)}
-                <tr class="hover:bg-[#FFFDF8]/60 transition-colors">
+                <tr class="hover:bg-[#FCECD8]/20 transition-colors">
                   <!-- Crop -->
-                  <td class="py-4 px-6">
+                  <td class="py-5 px-6">
                     <div class="flex items-center gap-3">
-                      <!-- Crop Illustration Badge -->
-                      {#if offer.cropKey === 'tomato'}
-                        <div class="w-10 h-10 rounded-xl bg-[#FDE8E8] text-[#9B1C1C] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                          🍅
-                        </div>
-                      {:else if offer.cropKey === 'eggplant'}
-                        <div class="w-10 h-10 rounded-xl bg-[#F3E8FF] text-[#6B21A8] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                          🍆
-                        </div>
-                      {:else if offer.cropKey === 'calamansi'}
-                        <div class="w-10 h-10 rounded-xl bg-[#ECFCCB] text-[#3F6212] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                          🍋
-                        </div>
-                      {:else}
-                        <div class="w-10 h-10 rounded-xl bg-[#EBF3DF] text-[#47661E] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                          🌱
-                        </div>
-                      {/if}
+                      <span aria-hidden="true" class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF3DF] text-sm font-bold text-[#47661E]">{offer.cropLabel.slice(0, 1)}</span>
                       <div>
-                        <div class="font-serif font-bold text-base text-[#20251E]">
+                        <div class="font-bold text-base text-[#20251E]">
                           {offer.cropLabel}
                         </div>
                         {#if offer.location}
-                          <div class="text-[11px] text-[#596052] flex items-center gap-1 mt-0.5">
+                          <div class="text-xs text-[#596052] flex items-center gap-1 mt-0.5">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             </svg>
@@ -388,7 +326,7 @@
                           </svg>
                           <span>{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
                         </div>
-                        <span class="text-[10px] text-[#6E3511] mt-0.5 pl-1">
+                        <span class="text-xs text-[#6E3511] mt-0.5 pl-1">
                           Sample workflow state
                         </span>
                       </div>
@@ -419,7 +357,7 @@
                       <button
                         type="button"
                         onclick={() => openEditModal(offer)}
-                        class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#4A5245] hover:text-[#20251E] hover:bg-[#FCECD8]/50 border border-[#20251E]/15 transition-colors flex items-center gap-1.5 min-h-[36px]"
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#4A5245] hover:text-[#20251E] hover:bg-[#FCECD8]/50 border border-[#20251E]/15 transition-colors flex items-center gap-1.5 min-h-11 focus-visible:outline-2 focus-visible:outline-[#597928]"
                         aria-label={`Edit offer for ${offer.cropLabel}`}
                       >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,7 +368,7 @@
                       <button
                         type="button"
                         onclick={() => confirmDelete(offer)}
-                        class="p-1.5 rounded-lg text-[#596052] hover:text-[#9B1C1C] hover:bg-[#FDE8E8] transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                        class="p-1.5 rounded-lg text-[#596052] hover:text-[#9B1C1C] hover:bg-[#FDE8E8] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#597928]"
                         aria-label={`Delete offer for ${offer.cropLabel}`}
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
