@@ -108,9 +108,9 @@
   }
 </script>
 
-<div class="min-h-screen bg-[#FFFDF8] text-[#20251E]">
-  <!-- Hero Section with subtle ambient backdrop (no kicker pill above H1) -->
-  <section class="relative bg-gradient-to-b from-[#FCECD8]/50 via-[#FFFDF8]/40 to-[#FFFDF8] border-b border-[#20251E]/10 pt-8 pb-10 px-4 sm:px-6 lg:px-8">
+<div class="almanac-page min-h-screen bg-[#FFFDF8] text-[#20251E]">
+  <!-- Buyer field ledger -->
+  <section class="relative border-b border-[#20251E]/20 bg-[#FCECD8]/35 px-4 pb-10 pt-8 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <!-- Direct H1 & Subhead -->
@@ -126,7 +126,7 @@
         </div>
 
         <!-- Prominent Demo Badge Card -->
-        <div class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-2xl p-4 sm:p-5 shadow-xs max-w-sm flex items-start gap-3.5">
+        <div class="almanac-entry max-w-sm flex items-start gap-3.5 p-4 sm:p-5">
           <div class="w-9 h-9 rounded-xl bg-[#597928]/15 flex items-center justify-center text-[#486320] shrink-0 mt-0.5">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -304,7 +304,7 @@
   </section>
 
   <!-- Main Offers Workspace Content -->
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+  <div class="max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     <!-- Toast Notification Banner -->
     {#if toastMessage}
       <div
@@ -331,7 +331,7 @@
     {/if}
 
     <!-- Table / List Container Card -->
-    <div class="bg-white border border-[#20251E]/10 rounded-2xl shadow-xs overflow-hidden">
+    <div class="overflow-hidden border border-[#20251E]/20 bg-[#FFFDF8]">
       <!-- Toolbar: Title, Filter Tabs, and Search Bar -->
       <div class="p-5 sm:p-6 border-b border-[#20251E]/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>

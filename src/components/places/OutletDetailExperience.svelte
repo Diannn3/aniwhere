@@ -193,7 +193,7 @@
   );
 </script>
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
+<div class="almanac-page max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
   <!-- Back Link & Breadcrumbs -->
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
@@ -243,7 +243,7 @@
   </div>
 
   <!-- Hero Facility Card (Anti-Vibecode: Direct H1, No Kicker) -->
-  <header class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+  <header class="almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
       <div class="space-y-3 max-w-2xl">
         <!-- Direct H1 Header (No eyebrow pill above!) -->
@@ -340,7 +340,7 @@
   </header>
 
   <!-- Decision Summary & Transparent Math Card -->
-  <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+  <section class="almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
@@ -566,7 +566,7 @@
   </div>
 
   <!-- Contact & Next Steps Action Dock -->
-  <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+  <section class="almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
       <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

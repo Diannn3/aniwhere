@@ -149,7 +149,7 @@
   }
 </script>
 
-<div class="comparison-page mx-auto max-w-7xl min-w-0 px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+<div class="almanac-page comparison-page mx-auto max-w-[92rem] min-w-0 px-4 py-8 sm:px-6 md:py-12 lg:px-8">
   <div class="space-y-7">
     <header class="grid gap-5 border-b border-[#20251E]/15 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <div class="max-w-3xl">
@@ -172,7 +172,7 @@
       <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Ready date', 'Petsa ng ani')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.readyDate}</p></div>
     </section>
 
-    <aside class="grid gap-3 rounded-xl border border-[#6E3511]/20 bg-[#FCECD8] p-4 text-sm text-[#4A5245] sm:grid-cols-[auto_1fr] sm:items-start" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
+    <aside class="grid gap-3 border-y border-[#6E3511]/25 bg-[#FCECD8]/55 p-4 text-sm text-[#4A5245] sm:grid-cols-[auto_1fr] sm:items-start" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
       <svg class="mt-0.5 h-5 w-5 text-[#6E3511]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
         <p class="font-semibold text-[#20251E]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p>

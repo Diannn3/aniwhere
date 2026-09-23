@@ -70,7 +70,7 @@
   );
 </script>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+<div class="almanac-page max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
   <!-- Page Header (Anti-Vibecode: Direct H1, No Kicker) -->
   <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#20251E]/10 pb-6">
     <div class="space-y-2">
@@ -126,7 +126,7 @@
   </header>
 
   <!-- Notice: Device-Only Storage -->
-  <div class="rounded-xl p-4 bg-[#FAF7EE] border border-[#20251E]/10 flex items-start gap-3 text-xs text-[#4A5245]">
+  <div class="border-y border-[#20251E]/15 bg-[#FCECD8]/35 p-4 flex items-start gap-3 text-xs text-[#4A5245]">
     <svg class="w-5 h-5 text-[#486320] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
@@ -141,7 +141,7 @@
   <!-- Content States -->
   {#if savedOutlets.length === 0}
     <!-- Empty State -->
-    <div class="bg-white rounded-2xl border border-[#20251E]/12 p-8 sm:p-12 text-center space-y-5 shadow-sm">
+    <div class="almanac-entry p-8 sm:p-12 text-center space-y-5">
       <div class="w-16 h-16 rounded-full bg-[#486320]/10 text-[#486320] mx-auto flex items-center justify-center">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -171,14 +171,14 @@
     </div>
   {:else}
     <!-- Saved Outlets Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-3">
       {#each savedOutlets as outlet (outlet.id)}
         {@const fit = evaluateFit(outlet, harvest)}
         {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
         {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
         {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
 
-        <article class="bg-white rounded-2xl border border-[#20251E]/12 p-6 shadow-sm hover:border-[#597928]/40 transition-all flex flex-col justify-between gap-6">
+        <article class="almanac-entry flex flex-col justify-between gap-6 p-5 transition-colors hover:border-[#597928]/50 md:grid md:grid-cols-[1fr_auto]">
           <div class="space-y-4">
             <!-- Card Top Bar: Fit Badge & Remove Button -->
             <div class="flex items-start justify-between gap-3">

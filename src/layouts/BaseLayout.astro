@@ -22,6 +22,7 @@ const showAni = import.meta.env.PUBLIC_ANI_ENABLED !== 'false' && !currentPath.s
 const farmerNav = [
   { href: '/discover', label: isFil ? 'Maghanap' : 'Discover' },
   { href: '/saved', label: isFil ? 'Nai-save' : 'Saved' },
+  { href: '/compare', label: isFil ? 'Ihambing' : 'Compare' },
 ];
 
 const isActive = (path: string) =>
@@ -37,7 +38,7 @@ const harvestContextKeys = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade',
 const hasHarvestContext = ['crop', 'kg', 'origin'].every((key) => Astro.url.searchParams.has(key));
 const farmerContextHref = (path: string) => {
   const target = new URL(path, Astro.url.origin);
-  if ((path === '/discover' || path === '/saved') && hasHarvestContext) {
+  if ((path === '/discover' || path === '/saved' || path === '/compare') && hasHarvestContext) {
     for (const key of harvestContextKeys) {
       const value = Astro.url.searchParams.get(key);
       if (value) target.searchParams.set(key, value);
@@ -69,15 +70,9 @@ const farmerContextHref = (path: string) => {
       <span data-i18n-en="Skip to main content" data-i18n-fil="Lumaktaw sa nilalaman">{isFil ? 'Lumaktaw sa nilalaman' : 'Skip to main content'}</span>
     </a>
 
-    <div data-ani-background class="border-b border-[#20251E]/10 bg-[#FCECD8]/80 px-4 py-2 text-xs text-[#6E3511] sm:px-6">
-      <div class="mx-auto flex max-w-7xl items-center gap-2">
-        <strong class="font-semibold" data-i18n-en="Demo — sample data." data-i18n-fil="Demo — halimbawang datos.">{isFil ? 'Demo — halimbawang datos.' : 'Demo — sample data.'}</strong>
-        <span data-i18n-en="Confirm price, capacity, and receiving terms before travelling." data-i18n-fil="Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.">{isFil ? 'Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.'}</span>
-      </div>
-    </div>
 
-    <header data-ani-background class="sticky top-0 z-30 border-b border-[#20251E]/10 bg-[#FFFDF8]/92 px-4 backdrop-blur-md sm:px-6">
-      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4">
+    <header data-ani-background class="sticky top-0 z-30 border-b border-[#20251E]/25 bg-[#FFFDF8] px-4 sm:px-6">
+      <div class="mx-auto flex h-16 max-w-[92rem] items-center justify-between gap-4">
         <a href={lang === 'fil' ? '/?lang=fil' : '/'} data-route-href="/" data-aria-en="AniWhere home" data-aria-fil="AniWhere tahanan" class="flex items-center rounded-lg transition-opacity hover:opacity-80" aria-label={isFil ? 'AniWhere tahanan' : 'AniWhere home'}>
           <BrandMark size="md" />
         </a>
@@ -87,12 +82,12 @@ const farmerContextHref = (path: string) => {
             <a
               href={farmerContextHref(item.href)}
               data-route-href={item.href}
-              data-i18n-en={item.href === '/discover' ? 'Discover' : 'Saved'}
-              data-i18n-fil={item.href === '/discover' ? 'Maghanap' : 'Nai-save'}
-              class={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+              data-i18n-en={item.href === '/discover' ? 'Discover' : item.href === '/saved' ? 'Saved' : 'Compare'}
+              data-i18n-fil={item.href === '/discover' ? 'Maghanap' : item.href === '/saved' ? 'Nai-save' : 'Ihambing'}
+              class={`almanac-button border-b-2 px-3 py-2 text-sm transition-colors ${
                 isActive(item.href)
-                  ? 'bg-[#486320] text-[#FFFDF8]'
-                  : 'text-[#4A5245] hover:bg-[#FCECD8]/60 hover:text-[#20251E]'
+                  ? 'border-[#597928] text-[#20251E]'
+                  : 'border-transparent text-[#4A5245] hover:border-[#91AC67] hover:text-[#20251E]'
               }`}
               aria-current={isActive(item.href) ? 'page' : undefined}
             >
@@ -115,6 +110,7 @@ const farmerContextHref = (path: string) => {
             >
               <img src="/ani/ani-avatar.webp" alt="" aria-hidden="true" class="h-8 w-8 rounded-full object-cover" />
             </button>}
+          <p class="hidden border-r border-[#20251E]/20 pr-3 text-xs text-[#6E3511] lg:block" data-i18n-en="Demo — sample data" data-i18n-fil="Demo — halimbawang datos">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'}</p>
           <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" data-aria-en="Select language" data-aria-fil="Piliin ang wika" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
             <a href={languageHref('en')} data-language-target="en" class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
             <a href={languageHref('fil')} data-language-target="fil" class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
@@ -140,11 +136,12 @@ const farmerContextHref = (path: string) => {
     </main>
 
     <nav data-ani-background class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" data-aria-en="Mobile navigation" data-aria-fil="Nabigasyon sa mobile" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
-      <div class="mx-auto grid max-w-sm grid-cols-3 gap-1">
+      <div class="mx-auto grid max-w-md grid-cols-4 gap-1">
         {[
           { href: '/', label: isFil ? 'Ani ko' : 'Harvest', icon: 'home' },
           { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', icon: 'search' },
           { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', icon: 'saved' },
+          { href: '/compare', label: isFil ? 'Ihambing' : 'Compare', icon: 'compare' },
         ].map((item) => (
           <a
             href={farmerContextHref(item.href)}
@@ -157,7 +154,8 @@ const farmerContextHref = (path: string) => {
             {item.icon === 'home' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>}
             {item.icon === 'search' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>}
             {item.icon === 'saved' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>}
-            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : 'Saved'} data-i18n-fil={item.href === '/' ? 'Ani ko' : item.href === '/discover' ? 'Maghanap' : 'Nai-save'}>{item.label}</span>
+            {item.icon === 'compare' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v18M17 3v18M3 7h8M13 17h8"/><path d="m8 4 3 3-3 3M16 14l-3 3 3 3"/></svg>}
+            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : item.href === '/saved' ? 'Saved' : 'Compare'} data-i18n-fil={item.href === '/' ? 'Ani ko' : item.href === '/discover' ? 'Maghanap' : item.href === '/saved' ? 'Nai-save' : 'Ihambing'}>{item.label}</span>
           </a>
         ))}
       </div>
@@ -165,10 +163,10 @@ const farmerContextHref = (path: string) => {
 
     {showAni && <AniAssistant client:load initialLang={lang} />}
 
-    <footer data-ani-background class="border-t border-[#20251E]/10 bg-[#FFFDF8]/75 px-4 py-8 sm:px-6">
-      <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
-        <div class="flex items-center gap-3"><BrandMark size="sm" /><span>&copy; 2026 AniWhere · NextGen Agri Hackathon Laguna</span></div>
-        <p class="max-w-xl" data-i18n-en="AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity." data-i18n-fil="Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon sa pagbebenta. Hindi ito garantiya ng bentahan o reserbasyon.' : 'AniWhere helps prepare a selling decision. It does not guarantee a sale or reserve capacity.'}</p>
+    <footer data-ani-background class="border-t border-[#20251E]/25 bg-[#FFFDF8] px-4 py-6 sm:px-6">
+      <div class="mx-auto flex max-w-[92rem] flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
+        <div class="flex items-center gap-3"><BrandMark size="sm" /><span>Field Almanac · Laguna, Philippines</span></div>
+        <p class="max-w-xl" data-i18n-en="Prepare the trip. Confirm price, capacity, and receiving terms before travelling." data-i18n-fil="Ihanda ang biyahe. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.">{isFil ? 'Ihanda ang biyahe. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Prepare the trip. Confirm price, capacity, and receiving terms before travelling.'}</p>
       </div>
     </footer>
 
@@ -243,7 +241,7 @@ const farmerContextHref = (path: string) => {
           if (!route) return;
           const url = new URL(route, window.location.origin);
 
-          if ((route === '/discover' || route === '/saved') && hasHarvestContext) {
+          if ((route === '/discover' || route === '/saved' || route === '/compare') && hasHarvestContext) {
             for (const key of harvestContextKeys) {
               const value = params.get(key);
               if (value) url.searchParams.set(key, value);
