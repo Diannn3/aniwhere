@@ -193,7 +193,7 @@
   );
 </script>
 
-<div class="almanac-page max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
+<div class="almanac-page outlet-detail relative w-full max-w-none px-3 py-3 sm:px-5 sm:py-4">
   <!-- Back Link & Breadcrumbs -->
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
@@ -243,8 +243,8 @@
   </div>
 
   <!-- Hero Facility Card (Anti-Vibecode: Direct H1, No Kicker) -->
-  <header class="almanac-entry p-6 sm:p-8 space-y-6">
-    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+  <header class="outlet-intro almanac-entry p-6 sm:p-8 space-y-6">
+    <div class="flex flex-col gap-6">
       <div class="space-y-3 max-w-2xl">
         <!-- Direct H1 Header (No eyebrow pill above!) -->
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#20251E] tracking-tight">
@@ -338,9 +338,59 @@
       </div>
     </div>
   </header>
+    <!-- Right: Geographic Route Preview -->
+    <section class="outlet-route bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
+      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-[#4E7380]/12 text-[#4E7380] flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-serif font-bold text-[#20251E]">
+            {isFil ? 'Mapa at konteksto ng biyahe' : 'Map & travel context'}
+          </h2>
+        </div>
+
+        <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
+          {isFil ? 'Konteksto ng mapa' : 'Map context'}
+        </span>
+      </div>
+
+      <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">
+        <LiveLagunaMap
+          items={[{
+            outlet,
+            fit: fitResult,
+            distanceKm
+          }]}
+          harvest={harvest}
+          selectedId={outlet.id}
+          lang={lang}
+          onSelect={() => {}}
+        />
+      </div>
+
+      <div class="grid gap-2 text-xs text-[#596052] pt-1 sm:grid-cols-3 sm:items-start">
+        <span>
+          {isFil ? 'Batayang lokasyon' : 'Reference point'}:
+          <strong>{originMun.name.split(',')[0]}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
+        </span>
+        <span>
+          {routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid na layo' : 'Straight-line')}:
+          <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong>
+          {#if routeEstimate.source === 'road'}
+            <span class="block">{isFil ? '~' + routeEstimate.roadDurationMinutes + ' min biyahe' : '~' + routeEstimate.roadDurationMinutes + ' min drive'}</span>
+          {:else}
+            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
+          {/if}
+        </span>
+        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
+      </div>
+    </section>
 
   <!-- Decision Summary & Transparent Math Card -->
-  <section class="almanac-entry p-6 sm:p-8 space-y-6">
+  <section class="outlet-decision almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
@@ -462,7 +512,7 @@
   </section>
 
   <!-- Two Column Layout: Requirements to Confirm & Geographic Corridor -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div class="outlet-questions grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Left: Requirements in Question Form -->
     <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
       <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
@@ -513,60 +563,10 @@
       </ul>
     </section>
 
-    <!-- Right: Geographic Route Preview -->
-    <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
-      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-[#4E7380]/12 text-[#4E7380] flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-          </div>
-          <h2 class="text-xl font-serif font-bold text-[#20251E]">
-            {isFil ? 'Mapa at konteksto ng biyahe' : 'Map & travel context'}
-          </h2>
-        </div>
-
-        <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
-          {isFil ? 'Konteksto ng mapa' : 'Map context'}
-        </span>
-      </div>
-
-      <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">
-        <LiveLagunaMap
-          items={[{
-            outlet,
-            fit: fitResult,
-            distanceKm
-          }]}
-          harvest={harvest}
-          selectedId={outlet.id}
-          lang={lang}
-          onSelect={() => {}}
-        />
-      </div>
-
-      <div class="grid gap-2 text-xs text-[#596052] pt-1 sm:grid-cols-3 sm:items-start">
-        <span>
-          {isFil ? 'Batayang lokasyon' : 'Reference point'}:
-          <strong>{originMun.name.split(',')[0]}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
-        </span>
-        <span>
-          {routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid na layo' : 'Straight-line')}:
-          <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong>
-          {#if routeEstimate.source === 'road'}
-            <span class="block">{isFil ? '~' + routeEstimate.roadDurationMinutes + ' min biyahe' : '~' + routeEstimate.roadDurationMinutes + ' min drive'}</span>
-          {:else}
-            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
-          {/if}
-        </span>
-        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
-      </div>
-    </section>
   </div>
 
   <!-- Contact & Next Steps Action Dock -->
-  <section class="almanac-entry p-6 sm:p-8 space-y-6">
+  <section class="outlet-actions almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
       <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
