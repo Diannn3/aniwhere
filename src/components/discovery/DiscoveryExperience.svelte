@@ -329,12 +329,12 @@
     <div class="flex items-center justify-between gap-3">
       <div>
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
-          {harvest.quantityKg.toLocaleString()} kg {getCropLabel(harvest.crop, lang)}
-          <span class="text-[#4A5245] font-normal text-xs sm:text-sm block sm:inline sm:ml-2">
-            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull;
-            {statusFilter === 'all'
-              ? `${processedOutlets.length} ${lang === 'fil' ? 'lugar na natagpuan' : 'places found'}`
-              : `${lang === 'fil' ? 'ipinapakita' : 'showing'} ${filteredOutlets.length} ${lang === 'fil' ? 'sa' : 'of'} ${processedOutlets.length}`}
+          {lang === 'fil' ? 'Ruta ng iyong ani' : 'Your harvest route'}
+          <span class="mt-1 block text-xs font-normal text-[#4A5245] sm:text-sm">
+            {getCropLabel(harvest.crop, lang)} &bull; {harvest.quantityKg.toLocaleString()} kg &bull; {originCoords.name}
+          </span>
+          <span class="mt-2 block text-[11px] font-normal text-[#596052]">
+            1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &bull; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}
           </span>
         </h1>
       </div>

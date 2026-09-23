@@ -99,7 +99,7 @@
   }
 </script>
 
-<div class="relative flex min-h-[56vh] w-full select-none flex-col overflow-hidden bg-[#B3C494] lg:min-h-[68vh]">
+<div class="relative flex min-h-[56vh] w-full select-none flex-col overflow-hidden lg:min-h-[68vh]" style="background: #B3C494 url('/plates/map-plate.png') center / cover;">
   
   <!-- Map Header Bar -->
   <div class="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
