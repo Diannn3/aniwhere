@@ -197,39 +197,30 @@
                   </dl>
                 </div>
 
-            <div class="rounded-lg bg-[#FAF7EE] px-3 py-2 text-[11px] leading-relaxed text-[#596052]">
-              <strong class="text-[#20251E]">{fit.sourceLabel || (isFil ? 'Pinagmulan hindi alam' : 'Source unknown')}</strong>
-              {#if fit.unknowns.length > 0}
-                <span class="block mt-0.5">
-                  {isFil ? 'Kumpirmahin pa:' : 'Still confirm:'}
-                  {(isFil ? fit.unknownsFil : fit.unknowns).join(', ')}
-                </span>
-              {/if}
-            </div>
-          </div>
+                <div class="mt-5 bg-[#FCECD8]/50 px-4 py-3 text-sm leading-relaxed text-[#20251E]">
+                  <p>
+                    <strong>{isFil ? 'Pinagmulan:' : 'Source:'}</strong>
+                    {fit.sourceLabel || (isFil ? 'Hindi alam' : 'Unknown')}
+                    {#if fit.dataUpdatedAt}
+                      · {isFil ? 'Na-update' : 'Updated'} {formatEvidenceDate(fit.dataUpdatedAt)}
+                    {/if}
+                  </p>
+                  {#if fit.unknowns.length > 0}
+                    <p class="mt-1"><strong>{isFil ? 'Kailangang kumpirmahin:' : 'Still to confirm:'}</strong> {(isFil ? fit.unknownsFil : fit.unknowns).join(', ')}</p>
+                  {/if}
+                </div>
 
-          <!-- Bottom Action Buttons -->
-          <div class="flex items-center gap-3 pt-2 border-t border-[#20251E]/8">
-            <a
-              href={detailHref}
-              class="flex-1 min-h-[44px] px-4 py-2 rounded-full bg-[#486320] text-white font-semibold text-xs text-center flex items-center justify-center gap-1 hover:bg-[#435c1d] transition-all"
-            >
-              <span>{t('viewDetails', lang)}</span>
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
-
-            <a
-              href={compareHref}
-              class="min-h-[44px] px-4 py-2 rounded-full border border-[#20251E]/20 text-[#20251E] font-semibold text-xs hover:border-[#597928] hover:text-[#486320] transition-all flex items-center gap-1.5"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span>{isFil ? 'Ihambing' : 'Compare'}</span>
-            </a>
-          </div>
+                <div class="mt-4 flex flex-wrap items-center gap-2">
+                  <a href={detailHref} class="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#486320] px-4 py-2 text-sm font-semibold text-[#FFFDF8] hover:bg-[#3A5219]">
+                    {t('viewDetails', lang)}
+                  </a>
+                  <a href={compareHref} class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#20251E]/25 px-4 py-2 text-sm font-semibold text-[#20251E] hover:border-[#597928] hover:bg-[#FCECD8]/50">
+                    {isFil ? 'Ihambing' : 'Compare'}
+                  </a>
+                  <button type="button" onclick={() => handleRemove(outlet.id)} aria-label={`${isFil ? 'Alisin sa nai-save' : 'Remove from saved'}: ${outlet.name}`} class="min-h-11 rounded-lg px-4 py-2 text-sm font-semibold text-[#6E3511] hover:bg-[#FCECD8]/60">
+                    {isFil ? 'Alisin' : 'Remove'}
+                  </button>
+                </div>
               </div>
             </article>
           </li>
