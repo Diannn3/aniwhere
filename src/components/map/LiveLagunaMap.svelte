@@ -6,7 +6,7 @@
   import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import {
-    ANIWHERE_MAP_STYLE,
+    loadAniwhereMapStyle,
     LAGUNA_MAP_BOUNDS,
     LAGUNA_MAP_CENTER,
     MAP_ATTRIBUTION,
@@ -146,7 +146,7 @@
         source: 'aniwhere-selected-route',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
-          'line-color': '#4E7380',
+          'line-color': '#486320',
           'line-width': 4,
           'line-opacity': 0.9,
         },
@@ -199,11 +199,12 @@
     (async () => {
       try {
         maplibre = await loadMapLibre();
+        const mapStyle = await loadAniwhereMapStyle();
         if (destroyed) return;
 
         map = new maplibre.Map({
           container: mapContainer,
-          style: ANIWHERE_MAP_STYLE,
+          style: mapStyle,
           center: LAGUNA_MAP_CENTER,
           zoom: 9.2,
           maxBounds: LAGUNA_MAP_BOUNDS,

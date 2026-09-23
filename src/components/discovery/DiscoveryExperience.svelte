@@ -38,6 +38,7 @@
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
+  let filtersOpen = $state(false);
   let compareNotice = $state('');
 
   // Editable harvest draft
@@ -322,19 +323,17 @@
   }
 </script>
 
-<div class="almanac-plane discovery-page relative w-full max-w-none space-y-3 px-3 py-3 sm:px-5 sm:py-4">
+<div class="almanac-plane discovery-page relative w-full max-w-none px-3 py-3 sm:px-5 sm:py-4">
   
   <!-- 1. Harvest Context Header & Quick Editor Bar (Compact & Ergonomic) -->
   <div class="discovery-docket border border-[#20251E]/25 bg-[#FFFDF8] p-3.5 sm:p-5">
+    <div class="docket-index"><span>01&nbsp;&nbsp; FIELD DOCKET</span><span>AniWhere</span></div>
     <div class="flex items-center justify-between gap-3">
       <div>
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
           {lang === 'fil' ? 'Ruta ng iyong ani' : 'Your harvest route'}
-          <span class="mt-1 block text-xs font-normal text-[#4A5245] sm:text-sm">
+          <span class="docket-harvest">
             {getCropLabel(harvest.crop, lang)} &bull; {harvest.quantityKg.toLocaleString()} kg &bull; {originCoords.name}
-          </span>
-          <span class="mt-2 block text-[11px] font-normal text-[#596052]">
-            1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &bull; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}
           </span>
         </h1>
       </div>
@@ -352,6 +351,23 @@
         </svg>
         <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
+    <button type="button" class="docket-filter-toggle" onclick={() => filtersOpen = !filtersOpen} aria-expanded={filtersOpen} aria-controls="discovery-filters">{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</button>
+    </div>
+    <div class="docket-summary">
+      <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} <small>{String(processedOutlets.length).padStart(2, '0')}</small></h2>
+      <div class="docket-key">
+        <span><i class="key-match"></i>{lang === 'fil' ? 'Tugma sa ani' : 'Matches your harvest'} ({statusCounts.match})</span>
+        <span><i class="key-partial"></i>{lang === 'fil' ? 'Tumatanggap ng bahagi' : 'Accepts part'} ({statusCounts.partial})</span>
+        <span><i class="key-confirm"></i>{lang === 'fil' ? 'Kumpirmahin muna' : 'Contact to confirm'} ({statusCounts.confirm})</span>
+      </div>
+      <div class="docket-route">
+        <h2>{lang === 'fil' ? 'Ruta mula sa' : 'Route from'} {originCoords.name.split(',')[0]} <small>04</small></h2>
+        <p>1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &middot; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}</p>
+        <p>{lang === 'fil' ? 'Pumili ng outlet upang makita ang ruta at ebidensya sa ibaba.' : 'Select an outlet to explore route details and view evidence below.'}</p>
+      </div>
+      <a class="docket-compare" href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}>
+        {lang === 'fil' ? 'Ihambing' : 'Compare'} {comparedIds.length || ''}
+      </a>
     </div>
 
     <!-- Collapsible Quick Harvest Editor -->
@@ -422,8 +438,7 @@
     {/if}
   </div>
 
-  <!-- 2. Controls Row: view, fit and sort -->
-  <div class="discovery-filters flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center">
+  <div id="discovery-filters" class={`discovery-filters ${filtersOpen ? 'is-open' : ''} flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center`}>
     
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:flex-col lg:items-stretch lg:overflow-visible">
@@ -585,13 +600,10 @@
   <div class="discovery-workspace grid grid-cols-1 items-start">
     
     <!-- Ruled outlet evidence index -->
-    <div class={`discovery-outlets space-y-2 border-t border-[#20251E]/25 p-3 sm:p-5 ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
-      <header class="flex items-end justify-between gap-4 border-b border-[#20251E]/20 pb-3 lg:col-span-3">
-        <div>
-          <h2 class="text-2xl font-bold text-[#20251E]">{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
-          <p class="mt-1 text-xs text-[#596052]">{lang === 'fil' ? 'Piliin ang lugar upang makita ang ruta at ebidensya.' : 'Select a place to inspect its route and evidence.'}</p>
-        </div>
-        <span class="text-xs font-semibold text-[#6E3511]">{lang === 'fil' ? 'Demo — halimbawang datos' : 'Demo — sample data'}</span>
+    <div class={`discovery-outlets ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
+      <header class="ledger-heading">
+        <h2><small>05</small> {lang === 'fil' ? 'MGA POSIBLENG OUTLET' : 'POTENTIAL OUTLETS'} ({filteredOutlets.length})</h2>
+        <p>{lang === 'fil' ? 'Ebidensya mula sa mga tala at pampublikong listahan' : 'Evidence from field notes, public listings, and partner directories'}</p>
       </header>
       
       {#if filteredOutlets.length === 0}
@@ -620,14 +632,13 @@
         </div>
       {:else}
         <!-- Outlets List -->
-        {#each filteredOutlets as item (item.outlet.id)}
+        {#each filteredOutlets as item, index (item.outlet.id)}
           <article
             id={`outlet-card-${item.outlet.id}`}
             aria-current={selectedOutletId === item.outlet.id ? 'true' : undefined}
-            class={`almanac-entry space-y-3 p-4 transition-colors sm:p-5 ${
-              selectedOutletId === item.outlet.id ? 'bg-[#91AC67]/15' : 'hover:border-[#597928]/60'
-            }`}
+            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''}`}
           >
+            <button type="button" class="ledger-number" onclick={() => handleSelectPin(item.outlet.id)} aria-label={`${lang === 'fil' ? 'Piliin' : 'Select'} ${item.outlet.name} ${lang === 'fil' ? 'sa mapa' : 'on map'}`}>{index + 1}</button>
             <!-- Card Header: Fit Badge + Category + Distance -->
             <div class="flex flex-wrap items-center justify-between gap-2">
               <!-- Fit Status Badge -->
@@ -816,9 +827,9 @@
 
     <!-- Dominant synchronized map plate -->
     <div class={`almanac-map discovery-map ${activeMobileView === 'list' ? 'hidden' : 'block'}`}>
-      <div class="absolute right-4 top-4 z-20 hidden border border-[#20251E]/25 bg-[#FFFDF8] p-1 lg:inline-flex" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
-        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class="min-h-11 bg-[#486320] px-4 py-2 text-sm font-bold text-[#FFFDF8]">{lang === 'fil' ? 'Mapa' : 'Map'}</button>
-        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class="min-h-11 px-4 py-2 text-sm font-bold text-[#20251E]">{lang === 'fil' ? 'Listahan' : 'List'}</button>
+      <div class="map-view-switch" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
+        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class:active={activeMobileView === 'map'}>{lang === 'fil' ? 'Mapa' : 'Map'}</button>
+        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class:active={activeMobileView === 'list'}>{lang === 'fil' ? 'Listahan' : 'List'}</button>
       </div>
       <LiveLagunaMap
         items={filteredOutlets}
@@ -827,6 +838,17 @@
         {lang}
         onSelect={handleSelectPin}
       />
+      <aside class="map-legend" aria-label={lang === 'fil' ? 'Paliwanag ng mapa' : 'Map legend'}>
+        <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'} <small>06</small></h3>
+        <div class="map-legend__rows">
+          <span><i class="legend-road-route"></i>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</span>
+          <span><i class="legend-straight-route"></i>{lang === 'fil' ? 'Tuwid na layo' : 'Straight-line link'}</span>
+          <span><i class="legend-origin"></i>{lang === 'fil' ? 'Pinagmulan' : 'Origin'}</span>
+          <span><i class="legend-outlet"></i>{lang === 'fil' ? 'Posibleng outlet' : 'Potential outlet'}</span>
+          <span><i class="legend-water"></i>{lang === 'fil' ? 'Tubig' : 'Water'}</span>
+          <span><i class="legend-land"></i>{lang === 'fil' ? 'Lupa' : 'Land'}</span>
+        </div>
+      </aside>
 
       <!-- Map Guidance Card -->
       <div class="border-t border-[#20251E]/20 bg-[#FFFDF8]/95 p-4 text-xs text-[#4A5245] space-y-1.5">
@@ -902,3 +924,20 @@
   {/if}
 
 </div>
+
+<style>
+  .map-legend { position: absolute; z-index: 10; right: 26px; top: 110px; width: 170px; padding: 12px; border: 1px solid #747965; border-radius: 5px; background: #fffdf8; box-shadow: 0 12px 22px -16px #20251e; color: #20251e; font-size: 12px; }
+  .map-legend h3 { display: flex; justify-content: space-between; margin-bottom: 9px; padding-bottom: 6px; border-bottom: 1px solid #aab19c; font-weight: 700; }
+  .map-legend small { font-size: 10px; font-weight: 500; }
+  .map-legend__rows { display: grid; gap: 10px; }
+  .map-legend__rows span { display: flex; align-items: center; gap: 10px; }
+  .map-legend i { display: inline-block; width: 24px; flex: none; }
+  .legend-road-route { border-top: 3px solid #486320; }
+  .legend-straight-route { border-top: 3px dashed #486320; }
+  .legend-origin { width: 15px !important; height: 15px; margin-inline: 4px 5px; border: 2px solid #20251e; border-radius: 50%; background: #fffdf8; }
+  .legend-outlet { width: 15px !important; height: 15px; margin-inline: 4px 5px; border-radius: 50%; background: #597928; }
+  .legend-water { height: 12px; background: #698f9c; }
+  .legend-land { height: 12px; background: #b3c494; }
+  @media (max-width: 1199px) { .map-legend { right: 12px; top: 100px; } }
+  @media (max-width: 767px) { .map-legend { width: 155px; padding: 9px; font-size: 11px; } .map-legend__rows { gap: 6px; } }
+</style>
