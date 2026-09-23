@@ -245,6 +245,9 @@
       border-inline: 0;
       border-radius: 0;
     }
+    .discovery-map {
+      margin-inline: 0;
+    }
   }
 }
 @media (min-width: 1200px) {
