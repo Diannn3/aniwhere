@@ -1,5 +1,5 @@
-@import "@fontsource-variable/source-sans-3";
-@import "@fontsource-variable/source-serif-4";
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
 @import "tailwindcss";
 
 @layer base {
@@ -28,9 +28,9 @@
     --color-border-focus: var(--field-olive);
     --color-route-accent: var(--route-blue);
     --color-soil-accent: var(--soil-brown);
-    --shadow-float: 0 18px 45px -28px color-mix(in srgb, var(--field-ink) 48%, transparent);
-    --shadow-ticket: 0 28px 60px -38px color-mix(in srgb, var(--field-olive) 58%, transparent);
-    --shadow-low: 0 8px 24px -18px color-mix(in srgb, var(--field-ink) 48%, transparent);
+    --shadow-float: 0 16px 32px -24px color-mix(in srgb, var(--field-ink) 36%, transparent);
+    --shadow-ticket: 0 20px 42px -32px color-mix(in srgb, var(--field-ink) 42%, transparent);
+    --shadow-low: 0 8px 20px -18px color-mix(in srgb, var(--field-ink) 34%, transparent);
     --motion-instant: 80ms;
     --motion-micro: 140ms;
     --motion-ui: 220ms;
@@ -50,12 +50,9 @@
   body {
     min-height: 100vh;
     margin: 0;
-    background:
-      radial-gradient(circle at 8% -18%, color-mix(in srgb, var(--young-leaf) 30%, transparent), transparent 31rem),
-      radial-gradient(circle at 100% 14%, color-mix(in srgb, var(--rice-cream) 86%, transparent), transparent 38rem),
-      var(--warm-surface);
+    background: var(--warm-surface);
     color: var(--field-ink);
-    font-family: "Source Sans 3 Variable", "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -63,15 +60,13 @@
 
   h1,
   h2,
-  .font-serif {
-    font-family: "Source Serif 4 Variable", "Source Serif 4", Georgia, Cambria, "Times New Roman", Times, serif;
-  }
-
   h3,
   h4,
   h5,
-  h6 {
-    font-family: "Source Sans 3 Variable", "Source Sans 3", system-ui, sans-serif;
+  h6,
+  .font-serif {
+    font-family: "Outfit Variable", "Outfit", system-ui, sans-serif;
+    letter-spacing: -0.025em;
   }
 
   ::selection {
@@ -119,26 +114,23 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    background:
-      linear-gradient(138deg, color-mix(in srgb, var(--rice-cream) 84%, white) 0%, var(--warm-surface) 48%, color-mix(in srgb, var(--young-leaf) 28%, white) 100%);
+    background: var(--rice-cream);
   }
 
   .route-surface::after {
     position: absolute;
     z-index: -1;
-    inset: auto -10% -52% 28%;
-    width: 78%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--route-blue) 17%, transparent), transparent 67%);
+    inset: 0;
+    background: url("/plates/map-plate.png") center / cover;
     content: "";
+    opacity: .2;
     pointer-events: none;
   }
 
   .harvest-ticket {
-    border: 1px solid color-mix(in srgb, var(--field-ink) 14%, transparent);
-    border-radius: 1rem;
-    background: linear-gradient(150deg, color-mix(in srgb, white 96%, var(--rice-cream)) 0%, var(--warm-surface) 62%, color-mix(in srgb, var(--rice-cream) 40%, white) 100%);
+    border: 1px solid color-mix(in srgb, var(--field-ink) 22%, transparent);
+    border-radius: .75rem;
+    background: var(--warm-surface);
     box-shadow: var(--shadow-ticket);
   }
 
@@ -146,7 +138,7 @@
     color: var(--soil-brown);
     font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
@@ -171,18 +163,93 @@
   }
 
   .page-enter {
-    animation: page-enter var(--motion-gentle) var(--ease-settle) both;
+    animation: page-pass var(--motion-gentle) var(--ease-settle) both;
   }
 
   .route-line {
     stroke-dasharray: 8 8;
     animation: route-travel 10s linear infinite;
   }
+
+  .almanac-plane {
+    border-block: 1px solid var(--color-border-strong);
+    background: var(--warm-surface);
+  }
+
+  .almanac-rule {
+    border-color: var(--color-border-strong);
+  }
+
+  .almanac-index {
+    font-family: "Outfit Variable", "Outfit", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .almanac-map {
+    background: var(--young-leaf) url("/plates/map-plate.png") center / cover;
+    border: 1px solid var(--field-ink);
+    border-radius: .75rem;
+    overflow: hidden;
+  }
+
+  .almanac-entry {
+    border: 1px solid var(--color-border-subtle);
+    border-radius: .75rem;
+    background: var(--warm-surface);
+  }
+
+  .almanac-entry[aria-current="true"] {
+    border-color: var(--field-olive);
+    background: color-mix(in srgb, var(--young-leaf) 18%, var(--warm-surface));
+  }
+
+  .almanac-button {
+    border-radius: .5rem;
+    font-family: "Outfit Variable", "Outfit", system-ui, sans-serif;
+    font-weight: 650;
+  }
+
+  body :where(input, select, textarea) {
+    caret-color: var(--field-olive);
+  }
+
+  body :where(a:not([class*="no-underline"])) {
+    text-underline-offset: .2em;
+  }
+
+  .almanac-page :where(.rounded-2xl) {
+    border-radius: .75rem;
+  }
+
+  .almanac-page :where(.rounded-xl) {
+    border-radius: .5rem;
+  }
+
+  .almanac-page :where(.rounded-full):not(img) {
+    border-radius: .5rem;
+  }
+
+  .almanac-page :where(.bg-white) {
+    background-color: var(--warm-surface);
+  }
+
+  .almanac-page :where(article, section) {
+    scroll-margin-top: 5rem;
+  }
+
+  @media (max-width: 767px) {
+    .almanac-map {
+      margin-inline: -0.75rem;
+      border-inline: 0;
+      border-radius: 0;
+    }
+  }
 }
 
-@keyframes page-enter {
-  from { transform: translateY(6px); }
-  to { transform: none; }
+@keyframes page-pass {
+  from { clip-path: inset(0 2.5% 0 0); filter: blur(2px); }
+  to { clip-path: inset(0); filter: none; }
 }
 
 @keyframes route-travel {
