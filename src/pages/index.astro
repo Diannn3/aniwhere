@@ -41,7 +41,6 @@ const isFil = lang === 'fil';
   <section class="landing-entry" aria-labelledby="entry-title">
     <div class="landing-entry-copy">
       <h2 id="entry-title" data-i18n-en="Start with what you have." data-i18n-fil="Ang desisyon ay nagsisimula sa ani mo.">{isFil ? 'Ang desisyon ay nagsisimula sa ani mo.' : 'Start with what you have.'}</h2>
-      <p data-i18n-en="Complete your harvest details to explore possible outlets. Results use sample data, not a promise that an outlet will buy." data-i18n-fil="Kumpletuhin ang detalye ng ani upang makita ang mga posibleng mapagbebentahan. Ang mga resultang ito ay mula sa halimbawang datos, hindi pangako ng pagbili.">{isFil ? 'Kumpletuhin ang detalye ng ani upang makita ang mga posibleng mapagbebentahan. Ang mga resultang ito ay mula sa halimbawang datos, hindi pangako ng pagbili.' : 'Complete your harvest details to explore possible outlets. Results use sample data, not a promise that an outlet will buy.'}</p>
     </div>
     <div id="harvest-details"><HarvestForm client:load initialLang={lang} /></div>
   </section>

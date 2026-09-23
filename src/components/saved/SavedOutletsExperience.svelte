@@ -85,11 +85,6 @@
       <h1 class="font-serif text-3xl font-bold leading-tight text-[#20251E] sm:text-4xl">
         {t('savedTitle', lang)}
       </h1>
-      <p class="mt-2 max-w-2xl text-base text-[#4A5245]">
-        {isFil
-          ? 'Suriin ang tugma, ebidensya, at matitirang ani bago makipag-ugnayan o bumiyahe.'
-          : 'Review fit, evidence, and remaining harvest before contacting an outlet or travelling.'}
-      </p>
       <p class="mt-3 text-sm font-semibold text-[#4A5245] font-tabular">
         {getCropLabel(harvest.crop, lang)} · {harvest.quantityKg.toLocaleString('en-PH')} kg · {originMun.name}
         {#if harvest.readyDate} · {isFil ? 'Handa' : 'Ready'} {harvest.readyDate}{/if}

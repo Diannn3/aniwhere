@@ -154,7 +154,6 @@
     <header class="flex flex-wrap items-end justify-between gap-5 border-b border-[#20251E]/20 pb-6">
       <div class="max-w-3xl">
         <h1 class="font-serif text-3xl font-bold leading-tight tracking-[-0.025em] text-[#20251E] sm:text-4xl">{copy('Compare options for your harvest', 'Paghambingin ang mga opsyon para sa ani mo')}</h1>
-        <p class="mt-3 text-base leading-6 text-[#4A5245]">{copy('The same decision facts for each outlet. No ranking or guaranteed acceptance — choose what to confirm before traveling.', 'Parehong batayan ng desisyon para sa bawat outlet. Walang ranggo o garantisadong pagtanggap — piliin ang dapat kumpirmahin bago bumiyahe.')}</p>
       </div>
       <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#597928]/35 bg-[#FFFDF8] px-4 py-2 text-sm font-semibold text-[#486320] transition-colors hover:bg-[#FCECD8]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Edit harvest context', 'Baguhin ang konteksto ng ani')}</a>
     </header>

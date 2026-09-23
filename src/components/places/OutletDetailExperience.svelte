@@ -194,7 +194,7 @@
 </script>
 
 <div class="almanac-page outlet-detail relative w-full max-w-none px-4 py-3 sm:px-8 sm:py-4 lg:px-12 xl:px-16">
-  <!-- Back Link & Breadcrumbs -->
+  <!-- Back link -->
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
       <a
@@ -206,10 +206,6 @@
         </svg>
         <span>{isFil ? 'Bumalik sa resulta' : 'Back to discovery results'}</span>
       </a>
-      <span class="text-[#20251E]/20">/</span>
-      <span class="hidden sm:inline text-xs text-[#596052]">{originMun.name}</span>
-      <span class="hidden sm:inline text-[#20251E]/20">/</span>
-      <span class="text-xs font-medium text-[#20251E] truncate max-w-[200px]">{outlet.name}</span>
     </div>
 
     <!-- Right Controls: Save & Share -->
@@ -352,9 +348,6 @@
           </h2>
         </div>
 
-        <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
-          {isFil ? 'Konteksto ng mapa' : 'Map context'}
-        </span>
       </div>
 
       <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">

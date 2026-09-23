@@ -235,7 +235,6 @@
   <div class="flex items-start justify-between gap-4 border-b quiet-rule pb-5">
     <div class="max-w-xl">
       <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
-      <p class="mt-2 text-sm leading-relaxed text-[#4A5245] sm:text-base">{lang === 'fil' ? 'Makikita mo kung saan maaaring dalhin ang ani, kung gaano karami ang kaya nilang tanggapin, at kung ano ang kailangang kumpirmahin.' : 'See where your harvest could go, how much an outlet can take, and what you still need to confirm.'}</p>
     </div>
     <span class="hidden shrink-0 rounded-lg bg-[#FCECD8] px-3 py-2 text-xs font-semibold text-[#6E3511] sm:inline-block">{t('demoNotice', lang)}</span>
   </div>

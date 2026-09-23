@@ -353,14 +353,14 @@
     <button type="button" class="docket-filter-toggle" onclick={() => filtersOpen = !filtersOpen} aria-expanded={filtersOpen} aria-controls="discovery-filters">{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</button>
     </div>
     <div class="docket-summary">
-      <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} <small>{String(processedOutlets.length).padStart(2, '0')}</small></h2>
+      <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
       <div class="docket-key">
         <span><i class="key-match"></i>{lang === 'fil' ? 'Tugma sa ani' : 'Matches your harvest'} ({statusCounts.match})</span>
         <span><i class="key-partial"></i>{lang === 'fil' ? 'Tumatanggap ng bahagi' : 'Accepts part'} ({statusCounts.partial})</span>
         <span><i class="key-confirm"></i>{lang === 'fil' ? 'Kumpirmahin muna' : 'Contact to confirm'} ({statusCounts.confirm})</span>
       </div>
       <div class="docket-route">
-        <h2>{lang === 'fil' ? 'Ruta mula sa' : 'Route from'} {originCoords.name.split(',')[0]} <small>04</small></h2>
+        <h2>{lang === 'fil' ? 'Ruta mula sa' : 'Route from'} {originCoords.name.split(',')[0]}</h2>
         <p>1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &middot; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}</p>
         <p>{lang === 'fil' ? 'Pumili ng outlet upang makita ang ruta at ebidensya sa ibaba.' : 'Select an outlet to explore route details and view evidence below.'}</p>
       </div>
@@ -601,8 +601,7 @@
     <!-- Ruled outlet evidence index -->
     <div class={`discovery-outlets ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
       <header class="ledger-heading">
-        <h2><small>05</small> {lang === 'fil' ? 'MGA POSIBLENG OUTLET' : 'POTENTIAL OUTLETS'} ({filteredOutlets.length})</h2>
-        <p>{lang === 'fil' ? 'Ebidensya mula sa mga tala at pampublikong listahan' : 'Evidence from field notes, public listings, and partner directories'}</p>
+        <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} ({filteredOutlets.length})</h2>
       </header>
       
       {#if filteredOutlets.length === 0}
@@ -838,7 +837,7 @@
         onSelect={handleSelectPin}
       />
       <aside class="map-legend" aria-label={lang === 'fil' ? 'Paliwanag ng mapa' : 'Map legend'}>
-        <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'} <small>06</small></h3>
+        <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'}</h3>
         <div class="map-legend__rows">
           <span><i class="legend-road-route"></i>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</span>
           <span><i class="legend-straight-route"></i>{lang === 'fil' ? 'Tuwid na layo' : 'Straight-line link'}</span>
