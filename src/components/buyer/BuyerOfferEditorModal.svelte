@@ -103,10 +103,38 @@
       onClose();
     }
   }
+  // Mount outside page filters, which otherwise contain fixed positioning.
+  function mountOverlay(node: HTMLElement) {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    document.body.appendChild(node);
+    queueMicrotask(() => node.querySelector<HTMLButtonElement>('button')?.focus());
+    return {
+      destroy: () => {
+        node.remove();
+        previouslyFocused?.focus();
+      },
+    };
+  }
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       onClose();
+    }
+  }
+
+  function handleDialogKeyDown(e: KeyboardEvent) {
+    if (e.key !== 'Tab') return;
+    const dialog = e.currentTarget as HTMLElement;
+    const controls = [...dialog.querySelectorAll<HTMLElement>('button, input, textarea')]
+      .filter((control) => control.offsetParent !== null && !control.hasAttribute('disabled'));
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last?.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first?.focus();
     }
   }
 </script>
@@ -115,25 +143,29 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#20251E]/60 backdrop-blur-xs overflow-y-auto animate-fadeIn"
+    use:mountOverlay
+    class="fixed inset-0 z-50 flex items-center justify-center bg-[#20251E]/60 p-2 sm:p-6 animate-fadeIn"
     role="presentation"
     onclick={handleBackdrop}
   >
     <div
-      class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden my-8"
+      class="flex h-[calc(100dvh-1rem)] w-full min-h-0 flex-col overflow-hidden rounded-xl bg-[#FFFDF8] shadow-[0_24px_64px_-24px_rgba(32,37,30,0.45)] sm:h-auto sm:max-h-[calc(100dvh-3rem)] sm:max-w-[640px]"
       role="dialog"
+      tabindex="-1"
       aria-modal="true"
       aria-labelledby="modal-offer-title"
+      onkeydown={handleDialogKeyDown}
+      aria-describedby="modal-offer-notice"
     >
       <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-[#20251E]/10 bg-[#FFFDF8] flex items-center justify-between">
+      <div class="flex shrink-0 items-start justify-between gap-4 border-b border-[#20251E]/20 px-5 py-5 sm:px-8 sm:py-7">
         <div>
-          <h2 id="modal-offer-title" class="font-serif text-xl font-bold text-[#20251E]">
+          <h2 id="modal-offer-title" class="text-2xl font-bold leading-tight text-[#20251E] sm:text-3xl">
             {offerToEdit
               ? (isFil ? 'Baguhin ang Alok' : 'Edit Buying Offer')
               : (isFil ? 'Gumawa ng Bagong Alok' : 'Create Buying Offer')}
           </h2>
-          <p class="text-xs text-[#596052] mt-0.5">
+          <p id="modal-offer-notice" class="mt-2 max-w-md text-sm leading-5 text-[#4A5245]">
             {isFil
               ? 'Naka-save sa device na ito lamang para sa demonstrasyon.'
               : 'Saved on this device only for hackathon demonstration.'}
@@ -142,7 +174,7 @@
         <button
           type="button"
           onclick={onClose}
-          class="w-9 h-9 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[#4A5245] transition-colors hover:bg-[#FCECD8]/60 hover:text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           aria-label={isFil ? 'Isara' : 'Close dialog'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,55 +184,54 @@
       </div>
 
       <!-- Modal Body Form -->
-      <form onsubmit={handleSave} class="p-6 space-y-5">
-        <!-- Crop Selection -->
-        <div>
-          <label for="offer-crop" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
-            {isFil ? 'Uri ng Pananim' : 'Crop'} <span class="text-[#6E3511]">*</span>
-          </label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
-            {#each SUPPORTED_CROPS as crop}
-              <button
-                type="button"
-                onclick={() => { cropKey = crop.key; }}
-                class={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center flex flex-col items-center gap-1 min-h-[44px] justify-center ${
+      <form onsubmit={handleSave} class="flex min-h-0 flex-1 flex-col">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8">
+          <!-- Crop selection -->
+          <fieldset class="border-b border-[#20251E]/15 py-6 sm:py-7">
+            <legend class="mb-3 text-xs font-bold uppercase tracking-wider text-[#20251E]">
+              {isFil ? 'Uri ng Pananim' : 'Crop'} <span class="text-[#6E3511]">*</span>
+            </legend>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-describedby={errors.crop ? 'offer-crop-error' : undefined}>
+              {#each SUPPORTED_CROPS as crop}
+                <label class={`relative flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-semibold transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                   cropKey === crop.key
-                    ? 'border-[#597928] bg-[#597928]/10 text-[#486320] ring-2 ring-[#597928]'
-                    : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/50'
-                }`}
-              >
-                <span>{isFil ? crop.labelFil : crop.labelEn}</span>
-              </button>
-            {/each}
-            <button
-              type="button"
-              onclick={() => { cropKey = 'other'; }}
-              class={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center flex flex-col items-center gap-1 min-h-[44px] justify-center ${
+                    ? 'border-[#597928] bg-[#FCECD8]/60 text-[#20251E]'
+                    : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+                }`}>
+                  <input type="radio" name="offer-crop" value={crop.key} bind:group={cropKey} class="sr-only" />
+                  {isFil ? crop.labelFil : crop.labelEn}
+                </label>
+              {/each}
+              <label class={`relative flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-semibold transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 cropKey === 'other'
-                  ? 'border-[#597928] bg-[#597928]/10 text-[#486320] ring-2 ring-[#597928]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/50'
-              }`}
-            >
-              <span>{isFil ? 'Iba Pa' : 'Other Crop'}</span>
-            </button>
-          </div>
+                  ? 'border-[#597928] bg-[#FCECD8]/60 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-crop" value="other" bind:group={cropKey} class="sr-only" />
+                {isFil ? 'Iba Pa' : 'Other Crop'}
+              </label>
+            </div>
+            {#if cropKey === 'other'}
+              <label for="offer-crop-custom" class="mt-4 block text-sm font-semibold text-[#20251E]">
+                {isFil ? 'Pangalan ng pananim' : 'Crop name'}
+              </label>
+              <input
+                id="offer-crop-custom"
+                type="text"
+                bind:value={customCropLabel}
+                aria-invalid={!!errors.crop}
+                aria-describedby={errors.crop ? 'offer-crop-error' : undefined}
+                placeholder={isFil ? 'Hal. Sitaw, Luya, Mais' : 'e.g. String beans, Ginger, Corn'}
+                class="mt-2 w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
+              />
+            {/if}
+            {#if errors.crop}
+              <p id="offer-crop-error" class="mt-2 text-sm font-medium text-[#6E3511]">{errors.crop}</p>
+            {/if}
+          </fieldset>
 
-          {#if cropKey === 'other'}
-            <input
-              id="offer-crop-custom"
-              type="text"
-              bind:value={customCropLabel}
-              placeholder={isFil ? 'Hal. Sitaw, Luya, Mais' : 'e.g. String beans, Ginger, Corn'}
-              class="w-full px-3.5 py-2 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
-            />
-          {/if}
-          {#if errors.crop}
-            <p class="text-xs text-[#6E3511] font-medium mt-1">{errors.crop}</p>
-          {/if}
-        </div>
-
-        <!-- Quantity and Price Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Quantity and price -->
+          <div class="grid grid-cols-1 gap-5 border-b border-[#20251E]/15 py-6 sm:grid-cols-2 sm:gap-6 sm:py-7">
           <!-- Quantity -->
           <div>
             <label for="offer-qty" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
