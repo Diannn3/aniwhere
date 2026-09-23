@@ -139,21 +139,21 @@ const farmerContextHref = (path: string) => {
       <div class="mx-auto grid max-w-md grid-cols-5 gap-1">
         {[
           { href: '/', label: isFil ? 'Ani ko' : 'Harvest', icon: 'home' },
-          { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', icon: 'search' },
           { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', icon: 'saved' },
+          { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', icon: 'search' },
           { href: '/compare', label: isFil ? 'Ihambing' : 'Compare', icon: 'compare' },
           { href: '/buyer', label: isFil ? 'Mamimili' : 'Buyers', icon: 'buyer' },
         ].map((item) => (
           <a
             href={farmerContextHref(item.href)}
             data-route-href={item.href}
-            class={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-2 text-[11px] font-semibold transition-colors ${
-              isActive(item.href) ? 'bg-[#FCECD8] text-[#6E3511]' : 'text-[#4A5245]'
+            class={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-semibold transition-colors ${
+              item.href === '/discover' ? 'text-[#20251E]' : isActive(item.href) ? 'bg-[#FCECD8] text-[#6E3511]' : 'text-[#4A5245]'
             }`}
             aria-current={isActive(item.href) ? 'page' : undefined}
           >
             {item.icon === 'home' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>}
-            {item.icon === 'search' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>}
+            {item.icon === 'search' && <span class="grid h-12 w-12 place-items-center rounded-full bg-[#486320] text-[#FFFDF8] shadow-[0_6px_16px_-8px_rgba(32,37,30,.7)]"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg></span>}
             {item.icon === 'saved' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>}
             {item.icon === 'compare' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v18M17 3v18M3 7h8M13 17h8"/><path d="m8 4 3 3-3 3M16 14l-3 3 3 3"/></svg>}
             {item.icon === 'buyer' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
