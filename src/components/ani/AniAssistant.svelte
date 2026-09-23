@@ -457,7 +457,6 @@
               </div>
             {:else if sharedHarvest}
               <div class="harvest-context" aria-label={isFil() ? 'Kasalukuyang harvest context' : 'Current harvest context'}>
-                <span>{isFil() ? 'Kasalukuyang ani' : 'Current harvest'}</span>
                 <strong>{harvestSummary()}</strong>
               </div>
             {/if}
@@ -629,10 +628,9 @@
   .stop-audio { min-height:2.75rem; padding:0 .35rem; flex:0 0 auto; border:0; border-radius:.6rem; background:transparent; color:#5f3215; font-size:.72rem; font-weight:800; text-decoration:underline; text-underline-offset:3px; }
   .ani-transcript { flex:1; min-height:12rem; overflow:auto; padding:1.25rem; display:flex; flex-direction:column; gap:1.25rem; scrollbar-color:#91AC67 transparent; scrollbar-width:thin; }
   .ani-welcome { margin:0; color:#343b31; line-height:1.5; } .ani-welcome p{margin:0;font-size:1rem}.ani-welcome .trust-note{margin-top:.75rem;font-size:.84rem;color:#4A5245}
-  .harvest-context { display:grid; gap:.25rem; margin:0 0 1rem; padding:0 0 .9rem; border-bottom:1px solid rgba(32,37,30,.16); }
-  .harvest-context span { color:#6E3511; font-size:.75rem; font-weight:700; }
+  .harvest-context { margin:0 0 1rem; padding:0 0 .9rem; border-bottom:1px solid rgba(32,37,30,.16); }
   .harvest-context strong { color:#20251E; font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; }
-  .harvest-context.is-invalid { border-color:rgba(110,53,17,.28); background:transparent; }
+  .harvest-context.is-invalid { display:grid; gap:.25rem; border-color:rgba(110,53,17,.28); background:transparent; }
   .harvest-context.is-invalid span,.harvest-context.is-invalid strong { color:#6E3511; }
   .ani-draft-warning { margin:0; padding:.55rem .9rem 0; color:#6E3511; background:#fff; font-size:.72rem; line-height:1.4; font-weight:650; }
   .message { max-width:88%; align-self:flex-start; padding:.72rem .82rem; border:1px solid rgba(32,37,30,.1); border-radius:1rem 1rem 1rem .3rem; background:#fff; } .message.farmer { align-self:flex-end; border-radius:1rem 1rem .3rem 1rem; background:#eef3e7; border-color:rgba(89,121,40,.16); } .message-role{display:block;margin-bottom:.2rem;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#687064}.message p{margin:0;font-size:.9rem;line-height:1.45}
