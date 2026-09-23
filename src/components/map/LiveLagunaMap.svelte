@@ -335,18 +335,18 @@
   .live-map-shell,
   .map-fallback-shell {
     position: relative;
-    min-height: 460px;
+    min-height: min(68vh, 46rem);
     overflow: hidden;
-    border: 1px solid rgb(32 37 30 / 0.12);
-    border-radius: 1rem;
-    background: #f4f7f0;
+    border: 0;
+    border-radius: 0;
+    background: #b3c494 url("/plates/map-plate.png") center / cover;
   }
 
   .live-map {
     position: absolute;
     inset: 0;
-    min-height: 460px;
-    background: #edf1e8;
+    min-height: min(68vh, 46rem);
+    background: #b3c494 url("/plates/map-plate.png") center / cover;
   }
 
   .map-status-bar {
@@ -364,11 +364,10 @@
 
   .map-status-bar > div,
   .map-source {
-    border: 1px solid rgb(32 37 30 / 0.12);
-    border-radius: 0.75rem;
-    background: rgb(255 253 248 / 0.94);
-    box-shadow: 0 8px 24px -18px rgb(32 37 30 / 0.48);
-    backdrop-filter: blur(12px);
+    border: 1px solid rgb(32 37 30 / 0.22);
+    border-radius: 0.5rem;
+    background: rgb(255 253 248 / 0.96);
+    box-shadow: 0 8px 20px -18px rgb(32 37 30 / 0.42);
   }
 
   .map-status-bar > div {
@@ -402,11 +401,10 @@
     left: 0.75rem;
     max-width: 32rem;
     padding: 0.8rem;
-    border: 1px solid rgb(32 37 30 / 0.14);
-    border-radius: 1rem;
-    background: rgb(255 253 248 / 0.96);
-    box-shadow: 0 18px 45px -28px rgb(32 37 30 / 0.5);
-    backdrop-filter: blur(14px);
+    border: 1px solid rgb(32 37 30 / 0.24);
+    border-radius: 0.75rem;
+    background: rgb(255 253 248 / 0.98);
+    box-shadow: 0 16px 30px -24px rgb(32 37 30 / 0.5);
   }
 
   .route-card__title {
@@ -506,7 +504,7 @@
     border: 2px solid #fffdf8;
     border-radius: 999px;
     box-shadow: 0 5px 14px rgb(32 37 30 / 0.24);
-    font: 800 0.72rem/1 'Source Sans 3', sans-serif;
+    font: 800 0.72rem/1 'Atkinson Hyperlegible Next', sans-serif;
   }
 
   :global(.aniwhere-origin-marker) {
@@ -537,6 +535,11 @@
   }
 
   @media (max-width: 767px) {
+    .live-map-shell,
+    .map-fallback-shell,
+    .live-map {
+      min-height: 56vh;
+    }
     .map-status-bar {
       right: 3.4rem;
     }

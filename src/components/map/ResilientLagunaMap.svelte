@@ -99,11 +99,11 @@
   }
 </script>
 
-<div class="relative w-full h-full min-h-[460px] bg-[#F4F7F0] rounded-2xl border border-[#20251E]/12 overflow-hidden flex flex-col select-none shadow-xs">
+<div class="relative flex min-h-[56vh] w-full select-none flex-col overflow-hidden bg-[#B3C494] lg:min-h-[68vh]">
   
   <!-- Map Header Bar -->
   <div class="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
-    <div class="bg-[#FFFDF8]/95 backdrop-blur-md border border-[#20251E]/12 px-3 py-1.5 rounded-xl shadow-xs pointer-events-auto flex items-center gap-2">
+    <div class="pointer-events-auto flex items-center gap-2 border border-[#20251E]/25 bg-[#FFFDF8]/95 px-3 py-1.5 shadow-xs">
       <svg class="w-4 h-4 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
       </svg>
@@ -113,7 +113,7 @@
     </div>
 
     <div class="flex items-center gap-1.5 pointer-events-auto">
-      <span class="bg-[#FCECD8]/95 backdrop-blur-md border border-[#20251E]/10 text-[#6E3511] px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-xs">
+      <span class="border border-[#20251E]/15 bg-[#FCECD8]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#6E3511] shadow-xs">
         {lang === 'fil' ? 'Guhit-mapa' : 'Illustrative'}
       </span>
     </div>
@@ -362,7 +362,7 @@
       <div
         role="region"
         aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}
-        class="lg:hidden absolute bottom-3 left-3 right-3 z-20 bg-[#FFFDF8]/98 backdrop-blur-md border border-[#597928]/30 rounded-2xl p-4 shadow-xl space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-150"
+        class="absolute bottom-3 left-3 right-3 z-20 space-y-3 border border-[#597928]/30 bg-[#FFFDF8]/98 p-4 shadow-xl lg:hidden"
       >
         <div class="flex items-start justify-between gap-2">
           <div>
