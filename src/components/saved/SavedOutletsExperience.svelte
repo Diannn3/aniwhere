@@ -115,11 +115,6 @@
     {/if}
   </header>
 
-  <aside class="mt-5 border-y border-[#6E3511]/25 bg-[#FCECD8]/50 px-4 py-3 text-sm leading-relaxed text-[#20251E]">
-    {isFil
-      ? 'Ang mga lugar ay naka-save lang sa browser na ito. Hindi ito reserbasyon at hindi nito kinokontak ang buyer.'
-      : 'These places stay in this browser. Saving does not reserve capacity or contact a buyer.'}
-  </aside>
 
   {#if savedOutlets.length === 0}
     <section class="mt-8 border-y border-[#20251E]/25 bg-[#FCECD8]/20 px-4 py-10 sm:px-8 sm:py-14" aria-labelledby="saved-empty-title">

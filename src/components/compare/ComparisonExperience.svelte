@@ -171,16 +171,6 @@
       </div>
     </section>
 
-    <aside class="border border-[#6E3511]/20 bg-[#FCECD8] px-4 py-4 text-sm leading-6 text-[#20251E] sm:px-5" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
-      <p class="mt-1">{copy(
-        'After entered transport only — not profit or guaranteed income. The figure subtracts the amount below from recorded gross; production costs are not included.',
-        'Pagkatapos lamang ng inilagay na gastos sa biyahe — hindi tubo o garantisadong kita. Ibinabawas ang halaga sa ibaba mula sa nakatalang kabuuan; hindi kasama ang gastos sa produksiyon.',
-      )}</p>
-      <p class="mt-1 text-[#4A5245]">{copy(
-        'Replace the recorded transport estimate with your own amount. With no transport amount or recorded price, the result is not calculated.',
-        'Palitan ang nakatalang tantiya sa biyahe ng sarili mong halaga. Kung walang halagang biyahe o nakatalang presyo, hindi kakalkulahin ang resulta.',
-      )}</p>
-    </aside>
 
     {#if comparedOutlets.length === 0}
       <section class="border-y border-[#20251E]/20 bg-white px-4 py-10 sm:px-8 sm:py-14">
