@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-23T00:00:00Z",
+  "title": "Design System: AniWhere",
+  "extensions": {
+    "colorMeta": {
+      "field-olive": {"role":"primary","displayName":"Field Olive","canonical":"#597928","tonalRamp":["#EAF3DE","#91AC67","#597928","#486320"]},
+      "young-leaf": {"role":"secondary","displayName":"Young Leaf","canonical":"#91AC67","tonalRamp":["#F4F7F0","#DCE8CA","#91AC67"]},
+      "soil-brown": {"role":"tertiary","displayName":"Soil Brown","canonical":"#6E3511","tonalRamp":["#FCECD8","#B86A2B","#6E3511"]},
+      "route-blue": {"role":"tertiary","displayName":"Route Blue","canonical":"#4E7380","tonalRamp":["#EBF2F5","#6F9AA7","#4E7380"]},
+      "warm-surface": {"role":"neutral","displayName":"Warm Surface","canonical":"#FFFDF8","tonalRamp":["#FFFFFF","#FFFDF8","#FCECD8"]},
+      "field-ink": {"role":"neutral","displayName":"Field Ink","canonical":"#20251E","tonalRamp":["#697064","#4A5245","#20251E"]}
+    },
+    "typographyMeta": {
+      "display": {"displayName":"Outfit","purpose":"Compact field-guide headings, brand, and high-level navigation."},
+      "body": {"displayName":"Atkinson Hyperlegible Next","purpose":"High-legibility UI, controls, evidence, and tabular decision data."}
+    },
+    "shadows": [
+      {"name":"ambient-low","value":"0 8px 20px -18px color-mix(in srgb, #20251E 34%, transparent)","purpose":"Quiet control or evidence lift."},
+      {"name":"docket","value":"0 18px 38px -28px rgb(32 37 30 / .55)","purpose":"Separate the harvest docket from the map plate."}
+    ],
+    "motion": [
+      {"name":"micro","value":"140ms cubic-bezier(.2,.8,.2,1)","purpose":"Control state changes."},
+      {"name":"page-pass","value":"360ms cubic-bezier(.16,1,.3,1)","purpose":"One field-guide page transition; removed under reduced motion."}
+    ],
+    "breakpoints": [
+      {"name":"sm","value":"640px"},
+      {"name":"md","value":"768px"},
+      {"name":"lg","value":"1024px"}
+    ]
+  },
+  "components": [
+    {
+      "name":"Primary Button",
+      "kind":"button",
+      "refersTo":"button-primary",
+      "description":"Field Olive action with Outfit semibold label and 44px minimum target.",
+      "html":"<button class=\"almanac-button ds-primary\">View details</button>",
+      "css":".ds-primary{min-height:44px;padding:12px 16px;border:0;border-radius:8px;background:#597928;color:#FFFDF8;font-family:Outfit,sans-serif;font-weight:650}.ds-primary:hover{background:#486320}.ds-primary:focus-visible{outline:3px solid color-mix(in srgb,#597928 65%,white);outline-offset:3px}"
+    },
+    {
+      "name":"Evidence Entry",
+      "kind":"card",
+      "refersTo":"evidence-surface",
+      "description":"Ruled warm entry connecting an outlet to its map marker and evidence.",
+      "html":"<article class=\"almanac-entry\">Outlet evidence</article>",
+      "css":".almanac-entry{border:1px solid color-mix(in srgb,#20251E 13%,transparent);border-radius:12px;background:#FFFDF8;padding:16px}.almanac-entry[aria-current=true]{border-color:#597928;background:color-mix(in srgb,#91AC67 18%,#FFFDF8)}"
+    },
+    {
+      "name":"Cartographic Desk",
+      "kind":"custom",
+      "description":"Full-width map plate with an overlaid harvest docket and synchronized ruled evidence ledger.",
+      "html":"<section class=\"discovery-page\"><aside class=\"discovery-docket\">Harvest</aside><div class=\"discovery-map\">Map</div><div class=\"discovery-outlets\">Evidence</div></section>",
+      "css":"@media(min-width:1024px){.discovery-map{display:block;width:100%;grid-row:1}.discovery-outlets{display:grid;grid-row:2;grid-template-columns:repeat(3,minmax(0,1fr))}.discovery-docket{position:absolute;left:24px;top:24px;width:352px;z-index:20}}"
+    }
+  ],
+  "narrative": {
+    "northStar":"Map-first Field Almanac",
+    "overview":"AniWhere treats Laguna geography as the farmer's working decision surface. Ruled evidence and field-guide indexing keep uncertainty legible without turning the product into a decorative vintage artifact.",
+    "keyCharacteristics":["Full-width operational map","Ruled outlet evidence","Warm uncoated surfaces","Direct high-legibility typography","Explicit uncertainty"],
+    "rules":[
+      {"name":"Map Is the Workspace","body":"On discovery, the map receives the full available width and remains synchronized with outlet evidence.","section":"layout"},
+      {"name":"Evidence Before Confidence","body":"Unknown price, capacity, freshness, or route information stays visibly unknown.","section":"components"}
+    ],
+    "dos":["Do preserve substantial map area on mobile.","Do use Outfit for headings and Atkinson Hyperlegible Next for UI.","Do label straight-line distance explicitly."],
+    "donts":["Don't reduce discovery to a generic card dashboard.","Don't crown a winning outlet.","Don't imply guaranteed demand, capacity, profit, or live routing."]
+  }
+}
