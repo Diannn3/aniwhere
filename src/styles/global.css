@@ -187,6 +187,7 @@
   }
 
   .almanac-map {
+    position: relative;
     background: var(--young-leaf) url("/plates/map-plate.png") center / cover;
     border: 1px solid var(--field-ink);
     border-radius: .75rem;

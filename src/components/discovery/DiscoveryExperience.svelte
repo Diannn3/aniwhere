@@ -586,6 +586,13 @@
     
     <!-- Ruled outlet evidence index -->
     <div class={`discovery-outlets space-y-2 border-t border-[#20251E]/25 p-3 sm:p-5 ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
+      <header class="flex items-end justify-between gap-4 border-b border-[#20251E]/20 pb-3 lg:col-span-3">
+        <div>
+          <h2 class="text-2xl font-bold text-[#20251E]">{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
+          <p class="mt-1 text-xs text-[#596052]">{lang === 'fil' ? 'Piliin ang lugar upang makita ang ruta at ebidensya.' : 'Select a place to inspect its route and evidence.'}</p>
+        </div>
+        <span class="text-xs font-semibold text-[#6E3511]">{lang === 'fil' ? 'Demo — halimbawang datos' : 'Demo — sample data'}</span>
+      </header>
       
       {#if filteredOutlets.length === 0}
         <!-- Empty State -->
@@ -809,6 +816,10 @@
 
     <!-- Dominant synchronized map plate -->
     <div class={`almanac-map discovery-map ${activeMobileView === 'list' ? 'hidden' : 'block'}`}>
+      <div class="absolute right-4 top-4 z-20 hidden border border-[#20251E]/25 bg-[#FFFDF8] p-1 lg:inline-flex" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
+        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class="min-h-11 bg-[#486320] px-4 py-2 text-sm font-bold text-[#FFFDF8]">{lang === 'fil' ? 'Mapa' : 'Map'}</button>
+        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class="min-h-11 px-4 py-2 text-sm font-bold text-[#20251E]">{lang === 'fil' ? 'Listahan' : 'List'}</button>
+      </div>
       <LiveLagunaMap
         items={filteredOutlets}
         {harvest}
