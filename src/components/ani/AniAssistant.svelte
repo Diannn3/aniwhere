@@ -1,10 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import AniAvatar from './AniAvatar.svelte';
-  import { MockAniProvider } from '../../lib/ani/mock-provider';
-  import type { AniAvatarState, AniMessage, AniProvider, AniProviderStatus, AniToolRequest } from '../../lib/ani/types';
-  import { AniToolDispatcher } from '../../lib/ani/tool-dispatcher';
-  import { AniActionExecutor } from '../../lib/ani/action-executor';
+  import type { AniMessage } from '../../lib/ani/types';
   import { parseDiscoverQuery, serializeDiscoverQuery } from '../../lib/state/url-state';
   import {
     subscribeHarvestContext,
@@ -19,31 +16,25 @@
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
   let lang = $state<'en' | 'fil'>(initialLang);
   let open = $state(false);
-  let status = $state<AniProviderStatus>('idle');
   let messages = $state<AniMessage[]>([]);
   let input = $state('');
   let notice = $state('');
   let panel: HTMLElement | null = $state(null);
   let trigger: HTMLButtonElement | null = $state(null);
   let inputEl: HTMLInputElement | null = $state(null);
-  let unsubscribe: (() => void) | undefined;
   let unsubscribeHarvest: (() => void) | undefined;
   let unsubscribeHarvestValidity: (() => void) | undefined;
   let sharedHarvest = $state<HarvestQuery | null>(null);
   let harvestDraftValid = $state(true);
   let onHome = $state(false);
-  let provider = $state<AniProvider | undefined>(undefined);
-  let localMode = $state(true);
   let pathname = $state('/');
   let choices = $state<AniFaq[]>([]);
   let activeFaq = $state<AniFaq | null>(null);
   let selectedTopic = $state<'all' | AniFaq['topic']>('all');
-  const dispatcher = new AniToolDispatcher();
-  const actionExecutor = new AniActionExecutor();
 
   const isFil = () => lang === 'fil';
   const homeNeedsValidDraft = () => onHome && !harvestDraftValid;
-  const avatarState = (): AniAvatarState => status === 'connecting' ? 'attentive' : status === 'ready' ? 'attentive' : status === 'listening' ? 'listening' : status === 'working' ? 'working' : status === 'speaking' ? 'speaking' : status === 'offline' ? 'offline' : status === 'error' ? 'error' : 'idle';
+  const avatarState = (): 'idle' | 'attentive' => open ? 'attentive' : 'idle';
   const harvestSummary = () => {
     if (!sharedHarvest) return '';
     const origin = LAGUNA_MUNICIPALITIES.find((item) => item.id === sharedHarvest?.originMunicipality);
@@ -76,11 +67,6 @@
     });
     unsubscribeHarvestValidity = subscribeHarvestDraftValidity((isValid) => {
       harvestDraftValid = isValid;
-      if (!isValid && onHome && open && !localMode) {
-        notice = isFil()
-          ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
-          : 'Complete the required harvest fields before Ani checks market fit.';
-      }
     });
 
     const handleWindowKeydown = (event: KeyboardEvent) => {
@@ -97,10 +83,8 @@
       window.removeEventListener('aniwhere:open-ani', handleOpenRequest);
       document.documentElement.style.overflow = '';
       setBackgroundInert(false);
-      unsubscribe?.();
       unsubscribeHarvest?.();
       unsubscribeHarvestValidity?.();
-      void provider?.close();
     };
   });
 
@@ -123,41 +107,6 @@
     });
   }
 
-  async function handleToolRequest(request: AniToolRequest) {
-    if (!provider) return;
-    if (homeNeedsValidDraft()) {
-      status = 'ready';
-      notice = isFil()
-        ? 'Kumpletuhin muna ang kinakailangang detalye ng ani bago mag-check si Ani.'
-        : 'Complete the required harvest fields before Ani checks market fit.';
-      await provider.submitToolResult?.({
-        requestId: request.id,
-        tool: request.name,
-        ok: false,
-        dataMode: CURRENT_DATA_MODE,
-        error: {
-          code: 'invalid_arguments',
-          message: isFil()
-            ? 'Hindi pa valid ang kasalukuyang harvest form.'
-            : 'The current harvest form is not valid yet.',
-        },
-      });
-      return;
-    }
-    status = 'working';
-    notice = isFil() ? 'Sinusuri ng AniWhere ang datos…' : 'AniWhere is checking the data…';
-    const harvest = currentHarvest();
-    const result = await dispatcher.dispatch(request, harvest);
-    actionExecutor.apply(request, result, harvest, lang);
-    await provider.submitToolResult?.(result);
-    if (!result.ok) {
-      status = 'error';
-      notice = result.error?.message || (isFil() ? 'Hindi natapos ang aksyon.' : 'The action could not be completed.');
-      return;
-    }
-    status = 'ready';
-    notice = isFil() ? 'Tapos na ang pagsusuri ng AniWhere.' : 'AniWhere finished checking.';
-  }
 
   function actionHref(route: string) {
     const target = new URL(route, window.location.origin);
@@ -181,19 +130,10 @@
     return `${target.pathname}${target.search}`;
   }
 
-  async function disposeProvider() {
-    unsubscribe?.();
-    unsubscribe = undefined;
-    const current = provider;
-    provider = undefined;
-    await current?.close();
-  }
 
   async function openAni() {
     if (open) return;
     open = true;
-    localMode = true;
-    status = 'idle';
     choices = [];
     activeFaq = null;
     selectedTopic = 'all';
@@ -205,80 +145,15 @@
     inputEl?.focus();
   }
 
-  async function connectOnline() {
-    if (!open || !localMode) return;
-
-    localMode = false;
-    choices = [];
-    activeFaq = null;
-    status = 'connecting';
-    notice = isFil() ? 'Kumokonekta sa online Ani…' : 'Connecting to online Ani…';
-
-    await disposeProvider();
-
-    const useMock = import.meta.env.DEV || import.meta.env.PUBLIC_ANI_PROVIDER === 'mock';
-    if (useMock) {
-      provider = new MockAniProvider();
-    } else {
-      const { GeminiLiveAniProvider } = await import('../../lib/ani/gemini-live-provider');
-      provider = new GeminiLiveAniProvider();
-    }
-
-    unsubscribe = provider.subscribe((event) => {
-      if (event.status) status = event.status;
-      if (event.message) messages = [...messages, event.message];
-      if (event.toolRequest) void handleToolRequest(event.toolRequest);
-      if (event.error) {
-        status = 'error';
-        notice = event.error;
-      }
-    });
-
-    try {
-      await provider.connect({
-        language: lang,
-        dataMode: CURRENT_DATA_MODE,
-        harvest: currentHarvest(),
-      });
-      notice = provider.kind === 'mock'
-        ? (isFil()
-            ? 'Preview mode. Online behavior lang ito; demo market data pa rin.'
-            : 'Preview mode. This simulates online Ani; market data is still demo data.')
-        : (isFil() ? 'Handa ang online Ani.' : 'Online Ani is ready.');
-    } catch {
-      await disposeProvider();
-      localMode = true;
-      status = 'idle';
-      notice = isFil()
-        ? 'Hindi makakonekta ang online Ani. Magagamit mo pa rin ang local na tulong.'
-        : 'Online Ani could not connect. Local help is still available.';
-    }
-  }
-
-  async function returnToLocal() {
-    await disposeProvider();
-    localMode = true;
-    status = 'idle';
-    choices = [];
-    activeFaq = null;
-    notice = isFil()
-      ? 'Bumalik sa local na tulong. Walang online na sagot ang ginagamit.'
-      : 'Back to local help. No online answer is being used.';
-    await tick();
-    inputEl?.focus();
-  }
 
   function closeAni() {
     open = false;
-    localMode = true;
-    status = 'idle';
     choices = [];
     activeFaq = null;
     document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'false');
     document.documentElement.style.overflow = '';
     setBackgroundInert(false);
     notice = '';
-    void disposeProvider();
     requestAnimationFrame(() => {
       const mobileTrigger = document.getElementById('ani-mobile-trigger') as HTMLButtonElement | null;
       if (mobileTrigger && mobileTrigger.offsetParent !== null) mobileTrigger.focus();
