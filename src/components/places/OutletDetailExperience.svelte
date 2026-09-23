@@ -193,7 +193,7 @@
   );
 </script>
 
-<div class="almanac-page outlet-detail relative w-full max-w-none px-3 py-3 sm:px-5 sm:py-4">
+<div class="almanac-page outlet-detail relative w-full max-w-none px-4 py-3 sm:px-8 sm:py-4 lg:px-12 xl:px-16">
   <!-- Back Link & Breadcrumbs -->
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
@@ -882,7 +882,7 @@
     .outlet-questions { grid-row: 6; }
   }
   @media (max-width: 639px) {
-    .outlet-detail { gap: 1rem; padding-inline: .75rem; }
+    .outlet-detail { gap: 1rem; padding-inline: 1rem; }
     .outlet-intro, .outlet-decision, .outlet-actions, .outlet-questions > section { padding: 1rem; }
     .outlet-intro > div:last-child { grid-template-columns: 1fr; }
     .outlet-intro > div:last-child > div { padding: .5rem 0; }
