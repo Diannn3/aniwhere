@@ -244,7 +244,9 @@
                 min="1"
                 step="1"
                 bind:value={quantityKg}
-                class="w-full px-3.5 py-2.5 pr-10 text-sm font-semibold bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+                aria-invalid={!!errors.quantity}
+                aria-describedby={errors.quantity ? 'offer-quantity-error' : undefined}
+                class="w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 pr-10 text-base font-semibold text-[#20251E] tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
                 required
               />
               <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#596052]">
@@ -252,7 +254,7 @@
               </span>
             </div>
             {#if errors.quantity}
-              <p class="text-xs text-[#6E3511] font-medium mt-1">{errors.quantity}</p>
+              <p id="offer-quantity-error" class="mt-2 text-sm font-medium text-[#6E3511]">{errors.quantity}</p>
             {/if}
           </div>
 
@@ -260,7 +262,7 @@
           <div>
             <label for="offer-price" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
               {isFil ? 'Alok na Presyo (PHP/kg)' : 'Buying Price (PHP/kg)'}
-              <span class="text-[10px] font-normal text-[#596052] lowercase">
+              <span class="text-xs font-normal text-[#596052] lowercase">
                 ({isFil ? 'opsyonal' : 'optional'})
               </span>
             </label>
@@ -274,83 +276,56 @@
                 min="0"
                 step="0.5"
                 bind:value={pricePerKg}
+                aria-invalid={!!errors.price}
+                aria-describedby={errors.price ? 'offer-price-error' : undefined}
                 placeholder={isFil ? 'Walang nakasaad' : 'Price not posted'}
-                class="w-full pl-8 pr-3.5 py-2.5 text-sm font-semibold bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+                class="w-full rounded-lg border border-[#20251E]/25 bg-white py-3 pl-8 pr-3.5 text-base font-semibold text-[#20251E] tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
               />
             </div>
             {#if errors.price}
-              <p class="text-xs text-[#6E3511] font-medium mt-1">{errors.price}</p>
+              <p id="offer-price-error" class="mt-2 text-sm font-medium text-[#6E3511]">{errors.price}</p>
             {/if}
           </div>
         </div>
 
-        <!-- Status Selector (Radio segmented) -->
-        <div>
-          <label class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-2">
-            {isFil ? 'Katayuan ng Alok' : 'Offer Status'}
-          </label>
-          <div class="grid grid-cols-3 gap-2">
-            <!-- Published -->
-            <label
-              class={`cursor-pointer p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ${
+          <!-- Status selector -->
+          <fieldset class="border-b border-[#20251E]/15 py-6 sm:py-7">
+            <legend class="mb-3 text-xs font-bold uppercase tracking-wider text-[#20251E]">
+              {isFil ? 'Katayuan ng Alok' : 'Offer Status'}
+            </legend>
+            <div class="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
+              <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'published'
-                  ? 'border-[#597928] bg-[#EBF3DF] text-[#47661E] ring-2 ring-[#597928]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="offer-status"
-                value="published"
-                bind:group={status}
-                class="sr-only"
-              />
-              <span class="text-xs font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
-              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
-            </label>
-
-            <!-- In Review -->
-            <label
-              class={`cursor-pointer p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ${
+                  ? 'border-[#597928] bg-[#FCECD8]/60 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-status" value="published" bind:group={status} class="sr-only" />
+                <span class="text-sm font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
+                <span class="text-xs text-[#4A5245]">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
+              </label>
+              <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'in_review'
-                  ? 'border-[#6E3511] bg-[#FCECD8] text-[#6E3511] ring-2 ring-[#6E3511]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#6E3511]/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="offer-status"
-                value="in_review"
-                bind:group={status}
-                class="sr-only"
-              />
-              <span class="text-xs font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
-              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Sample workflow' : 'Sample workflow'}</span>
-            </label>
-
-            <!-- Draft -->
-            <label
-              class={`cursor-pointer p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ${
+                  ? 'border-[#6E3511] bg-[#FCECD8]/60 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-status" value="in_review" bind:group={status} class="sr-only" />
+                <span class="text-sm font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
+                <span class="text-xs text-[#4A5245]">Sample workflow</span>
+              </label>
+              <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'draft'
-                  ? 'border-[#4B5563] bg-[#F3F4F6] text-[#1F2937] ring-2 ring-[#4B5563]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#4B5563]/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="offer-status"
-                value="draft"
-                bind:group={status}
-                class="sr-only"
-              />
-              <span class="text-xs font-bold">{isFil ? 'Burador' : 'Draft'}</span>
-              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
-            </label>
-          </div>
-        </div>
+                  ? 'border-[#20251E]/50 bg-[#FCECD8]/35 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-status" value="draft" bind:group={status} class="sr-only" />
+                <span class="text-sm font-bold">{isFil ? 'Burador' : 'Draft'}</span>
+                <span class="text-xs text-[#4A5245]">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
+              </label>
+            </div>
+          </fieldset>
 
-        <!-- Receiving Details: Delivery Window & Location -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Receiving details -->
+          <div class="grid grid-cols-1 gap-5 border-b border-[#20251E]/15 py-6 sm:grid-cols-2 sm:gap-6 sm:py-7">
           <div>
             <label for="offer-window" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
               {isFil ? 'Petsa ng Pagtanggap' : 'Delivery Window'}
@@ -360,7 +335,7 @@
               type="text"
               bind:value={deliveryWindow}
               placeholder="e.g. YYYY-MM-DD or Sep 18-20"
-              class="w-full px-3.5 py-2.5 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+              class="w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
             />
           </div>
 
@@ -373,37 +348,38 @@
               type="text"
               bind:value={location}
               placeholder="e.g. Los Baños, Laguna"
-              class="w-full px-3.5 py-2.5 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+              class="w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
             />
           </div>
         </div>
 
         <!-- Requirements / Notes -->
-        <div>
+        <div class="py-6 sm:py-7">
           <label for="offer-notes" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
             {isFil ? 'Kondisyon sa Pagtanggap' : 'Receiving Specs & Terms'}
           </label>
           <textarea
             id="offer-notes"
-            rows="2"
+            rows="3"
             bind:value={notes}
             placeholder={isFil ? 'Hal. Ripe, walang pasa, nakalagay sa malinis na crate' : 'e.g. Grade A, undamaged, delivered in plastic crates'}
-            class="w-full px-3.5 py-2 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+            class="w-full resize-y rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           ></textarea>
         </div>
+        </div>
 
-        <!-- Action Buttons -->
-        <div class="pt-3 border-t border-[#20251E]/10 flex items-center justify-end gap-3">
+        <!-- Actions remain visible while the form scrolls -->
+        <div class="flex shrink-0 items-center justify-end gap-2 border-t border-[#20251E]/20 bg-[#FFFDF8] px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-8">
           <button
             type="button"
             onclick={onClose}
-            class="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#4A5245] hover:bg-[#20251E]/5 transition-colors min-h-[44px]"
+            class="min-h-11 rounded-lg px-4 py-2.5 text-sm font-semibold text-[#4A5245] transition-colors hover:bg-[#20251E]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           >
             {isFil ? 'Kanselahin' : 'Cancel'}
           </button>
           <button
             type="submit"
-            class="px-6 py-2.5 rounded-xl text-sm font-bold bg-[#597928] text-white hover:bg-[#47661E] shadow-sm transition-all min-h-[44px] flex items-center gap-2"
+            class="flex min-h-11 items-center gap-2 rounded-lg bg-[#597928] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#486320] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
