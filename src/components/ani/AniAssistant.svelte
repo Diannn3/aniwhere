@@ -107,7 +107,6 @@
     });
   }
 
-
   function actionHref(route: string) {
     const target = new URL(route, window.location.origin);
 
@@ -130,7 +129,6 @@
     return `${target.pathname}${target.search}`;
   }
 
-
   async function openAni() {
     if (open) return;
     open = true;
@@ -144,7 +142,6 @@
     await tick();
     inputEl?.focus();
   }
-
 
   function closeAni() {
     open = false;
@@ -188,33 +185,33 @@
     ];
     input = '';
 
-      const result = matchAniFaq(text);
-      if (result.kind === 'answer') {
-        chooseFaq(result.faq);
-      } else if (result.kind === 'choices') {
-        choices = result.faqs;
-        activeFaq = null;
-        notice = isFil()
-          ? 'May ilang malapit na preloaded na tanong. Piliin ang pinakaangkop.'
-          : 'A few preloaded questions are close. Choose the best match.';
-      } else {
-        choices = [];
-        activeFaq = null;
-        messages = [
-          ...messages,
-          {
-            id: `faq-none-${Date.now()}`,
-            role: 'ani',
-            text: isFil()
-              ? 'Wala pa akong local na sagot para diyan. Pumili ng topic sa ibaba.'
-              : 'I do not have a local answer for that yet. Browse a topic below.',
-            createdAt: Date.now(),
-          },
-        ];
-        notice = isFil()
-          ? 'Walang eksaktong local na sagot.'
-          : 'No exact local answer is available.';
-      }
+    const result = matchAniFaq(text);
+    if (result.kind === 'answer') {
+      chooseFaq(result.faq);
+    } else if (result.kind === 'choices') {
+      choices = result.faqs;
+      activeFaq = null;
+      notice = isFil()
+        ? 'May ilang malapit na preloaded na tanong. Piliin ang pinakaangkop.'
+        : 'A few preloaded questions are close. Choose the best match.';
+    } else {
+      choices = [];
+      activeFaq = null;
+      messages = [
+        ...messages,
+        {
+          id: `faq-none-${Date.now()}`,
+          role: 'ani',
+          text: isFil()
+            ? 'Wala pa akong local na sagot para diyan. Pumili ng topic sa ibaba.'
+            : 'I do not have a local answer for that yet. Browse a topic below.',
+          createdAt: Date.now(),
+        },
+      ];
+      notice = isFil()
+        ? 'Walang eksaktong local na sagot.'
+        : 'No exact local answer is available.';
+    }
   }
 
   function handleKeydown(event: KeyboardEvent) {

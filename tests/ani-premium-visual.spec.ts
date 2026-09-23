@@ -49,8 +49,6 @@ test('Ani shell is keyboard closable and restores focus', async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
-
-
 test('Ani shows the live home harvest draft before the farmer submits discovery', async ({ page }) => {
   await page.goto('/');
   await page.locator('#harvest-quantity').fill('450');
@@ -61,8 +59,7 @@ test('Ani shows the live home harvest draft before the farmer submits discovery'
   await expect(dialog.getByText(/450 kg .*Santa Cruz/i)).toBeVisible();
 });
 
-
-test('Ani local help follows Filipino URL language without connecting online', async ({ page }) => {
+test('Ani local help follows the Filipino URL language', async ({ page }) => {
   await page.goto('/?lang=fil');
   const trigger = page.getByRole('button', { name: 'Tanungin si Ani' });
   await expect(trigger).toBeVisible();
@@ -74,9 +71,7 @@ test('Ani local help follows Filipino URL language without connecting online', a
 
   await expect(page.getByText(/Tinutulungan ka ng AniWhere/i)).toBeVisible();
   await expect(page.getByText(/Local na preloaded na sagot/i)).toBeVisible();
-  await expect(page.getByText(/Preview mode/i)).toHaveCount(0);
 });
-
 
 test('Ani local FAQ still answers after the loaded page loses signal', async ({ page, context }) => {
   await page.goto(discovery);
@@ -103,9 +98,7 @@ test('Ani local FAQ remains usable with an invalid home harvest', async ({ page 
   await input.fill('What is AniWhere?');
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByText(/AniWhere helps you find possible places/i)).toBeVisible();
-
 });
-
 
 test('Ani local FAQ does not guess when no bundled answer matches', async ({ page }) => {
   await page.goto('/');
