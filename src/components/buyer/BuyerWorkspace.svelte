@@ -384,8 +384,8 @@
         </table>
       </div>
 
-      <!-- Mobile Stacked Card View (< 768px, matching 03-mobile-buyer.png) -->
-      <div class="md:hidden divide-y divide-[#20251E]/10">
+      <!-- Mobile offer ledger -->
+      <div class="md:hidden divide-y divide-[#20251E]/15">
         {#if filteredOffers.length === 0}
           <div class="p-8 text-center text-[#596052]">
             <p class="text-sm font-medium">
@@ -394,35 +394,16 @@
           </div>
         {:else}
           {#each filteredOffers as offer (offer.id)}
-            <div class="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-[#FFFDF8]/60 transition-colors">
-              <!-- Left: Crop Badge & Info -->
+            <div class="flex items-center justify-between gap-3 px-1 py-5">
               <button
                 type="button"
                 onclick={() => openEditModal(offer)}
-                class="flex items-center gap-3.5 text-left flex-1 min-w-0"
+                class="flex min-h-11 items-center gap-3 text-left flex-1 min-w-0 focus-visible:outline-2 focus-visible:outline-[#597928]"
               >
-                <!-- Crop Avatar -->
-                {#if offer.cropKey === 'tomato'}
-                  <div class="w-12 h-12 rounded-2xl bg-[#FDE8E8] text-[#9B1C1C] flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    🍅
-                  </div>
-                {:else if offer.cropKey === 'eggplant'}
-                  <div class="w-12 h-12 rounded-2xl bg-[#F3E8FF] text-[#6B21A8] flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    🍆
-                  </div>
-                {:else if offer.cropKey === 'calamansi'}
-                  <div class="w-12 h-12 rounded-2xl bg-[#ECFCCB] text-[#3F6212] flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    🍋
-                  </div>
-                {:else}
-                  <div class="w-12 h-12 rounded-2xl bg-[#EBF3DF] text-[#47661E] flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    🌱
-                  </div>
-                {/if}
 
                 <!-- Text Details -->
                 <div class="min-w-0 flex-1">
-                  <div class="font-serif font-bold text-base text-[#20251E] truncate">
+                  <div class="font-bold text-base text-[#20251E] truncate">
                     {offer.cropLabel}
                   </div>
                   <div class="text-xs font-semibold text-[#4A5245] mt-0.5">
@@ -431,16 +412,16 @@
                     {#if offer.pricePerKg !== undefined && offer.pricePerKg > 0}
                       <span class="text-[#486320] font-bold">PHP {offer.pricePerKg}/kg</span>
                     {:else}
-                      <span class="text-[#596052] italic font-normal">Price not posted</span>
+                      <span class="text-[#596052] italic font-normal">{isFil ? 'Walang nakasaad na presyo' : 'Price not posted'}</span>
                     {/if}
                   </div>
-                  <div class="text-[11px] text-[#596052] mt-0.5 truncate">
+                  <div class="text-xs text-[#596052] mt-0.5 truncate">
                     {#if offer.status === 'published'}
-                      Sample offer &middot; 17 Sep 2026
+                      {isFil ? 'Halimbawang alok · 17 Sep 2026' : 'Sample offer · 17 Sep 2026'}
                     {:else if offer.status === 'in_review'}
-                      Needs review before publication
+                      {isFil ? 'Kailangang suriin bago ilathala' : 'Needs review before publication'}
                     {:else}
-                      Internal draft
+                      {isFil ? 'Panloob na burador' : 'Internal draft'}
                     {/if}
                   </div>
                 </div>
@@ -449,27 +430,27 @@
               <!-- Right: Status Pill & Chevron -->
               <div class="flex items-center gap-2 shrink-0">
                 {#if offer.status === 'published'}
-                  <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBF3DF] text-[#47661E] border border-[#D1E3BA]">
-                    Published
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#EBF3DF] text-[#47661E]">
+                    {isFil ? 'Nailathala' : 'Published'}
                   </span>
                 {:else if offer.status === 'in_review'}
-                  <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FCECD8] text-[#6E3511] border border-[#F6D3AD]">
-                    In review
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#FCECD8] text-[#6E3511]">
+                    {isFil ? 'Nasa pagsusuri' : 'In review'}
                   </span>
                 {:else}
-                  <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB]">
-                    Draft
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#F3F4F6] text-[#4B5563]">
+                    {isFil ? 'Burador' : 'Draft'}
                   </span>
                 {/if}
 
                 <button
                   type="button"
-                  onclick={() => openEditModal(offer)}
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#20251E] transition-colors"
-                  aria-label="Edit offer"
+                  onclick={() => confirmDelete(offer)}
+                  class="min-w-11 min-h-11 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#9B1C1C] transition-colors focus-visible:outline-2 focus-visible:outline-[#597928]"
+                  aria-label={isFil ? `Alisin ang alok para sa ${offer.cropLabel}` : `Delete offer for ${offer.cropLabel}`}
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
@@ -479,43 +460,26 @@
       </div>
     </div>
 
-    <!-- Explanatory Guidance Cards (matching 09-desktop-buyer.png & 03-mobile-buyer.png) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Card 1: Review before publication -->
-      <div class="bg-[#FCECD8]/40 border border-[#6E3511]/15 rounded-2xl p-5 sm:p-6 shadow-xs flex items-start gap-4">
-        <div class="w-10 h-10 rounded-xl bg-[#6E3511]/15 text-[#6E3511] flex items-center justify-center shrink-0 mt-0.5">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div>
-          <h3 class="font-serif text-base font-bold text-[#20251E]">
-            {isFil ? 'Pagsusuri bago Ilathala' : 'Review before publication'}
-          </h3>
-          <ul class="mt-2 text-xs sm:text-sm text-[#4A5245] space-y-1.5 list-disc list-inside">
-            <li>{isFil ? 'Tanging ang mga nailathalang alok ang makikita sa pagtuklas ng magsasaka.' : 'Only published offers appear in farmer discovery.'}</li>
-            <li>{isFil ? 'Panatilihing napapanahon ang dami, kondisyon ng pananim, at petsa ng bisa.' : 'Keep quantity, crop requirements, and validity current.'}</li>
-          </ul>
-        </div>
+    <div class="grid gap-6 border-t border-[#20251E]/20 pt-7 md:grid-cols-2 md:gap-12">
+      <div>
+        <h3 class="text-base font-bold text-[#20251E]">
+          {isFil ? 'Pagsusuri bago Ilathala' : 'Review before publication'}
+        </h3>
+        <ul class="mt-2 space-y-1.5 list-inside list-disc text-sm text-[#4A5245]">
+          <li>{isFil ? 'Tanging ang mga nailathalang alok ang makikita sa pagtuklas ng magsasaka.' : 'Only published offers appear in farmer discovery.'}</li>
+          <li>{isFil ? 'Panatilihing napapanahon ang dami, kondisyon ng pananim, at petsa ng bisa.' : 'Keep quantity, crop requirements, and validity current.'}</li>
+        </ul>
       </div>
 
-      <!-- Card 2: Source and review -->
-      <div class="bg-[#EBF3DF]/40 border border-[#597928]/20 rounded-2xl p-5 sm:p-6 shadow-xs flex items-start gap-4">
-        <div class="w-10 h-10 rounded-xl bg-[#597928]/15 text-[#486320] flex items-center justify-center shrink-0 mt-0.5">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        </div>
-        <div>
-          <h3 class="font-serif text-base font-bold text-[#20251E]">
-            {isFil ? 'Pinagmulan at Pagsusuri' : 'Source and review'}
-          </h3>
-          <p class="mt-2 text-xs sm:text-sm text-[#4A5245] leading-relaxed">
-            {isFil
-              ? 'Ang mga kondisyon ay sinusuri bago ilathala sa pampublikong direktoryo. Ang mga pagbabago rito ay lokal sa iyong browser lamang.'
-              : 'Terms are reviewed before publication in the public directory. Changes made in this demo are stored locally on your device only.'}
-          </p>
-        </div>
+      <div class="md:border-l md:border-[#20251E]/15 md:pl-10">
+        <h3 class="text-base font-bold text-[#20251E]">
+          {isFil ? 'Pinagmulan at Pagsusuri' : 'Source and review'}
+        </h3>
+        <p class="mt-2 text-sm leading-relaxed text-[#4A5245]">
+          {isFil
+            ? 'Ang mga kondisyon ay sinusuri bago ilathala sa pampublikong direktoryo. Ang mga pagbabago rito ay lokal sa iyong browser lamang.'
+            : 'Terms are reviewed before publication in the public directory. Changes made in this demo are stored locally on your device only.'}
+        </p>
       </div>
     </div>
 
