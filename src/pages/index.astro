@@ -48,6 +48,7 @@ const isFil = lang === 'fil';
 </BaseLayout>
 
 <style>
+  :global(#main-content) { background: color-mix(in srgb, var(--rice-cream) 24%, var(--warm-surface)); }
   .landing-hero { position: relative; display: grid; min-height: min(740px, calc(100svh - 64px)); place-items: center; isolation: isolate; padding: 5rem 1.5rem 5.5rem; color: white; background: #293d28 url('/plates/landing-hero.webp') center / cover no-repeat; }
   .landing-hero::before { position: absolute; z-index: -1; inset: 0; content: ''; background: linear-gradient(90deg, rgba(14,30,18,.52), rgba(14,30,18,.4) 65%, rgba(14,30,18,.38)), linear-gradient(0deg, rgba(14,30,18,.48), transparent 45%); }
   .landing-hero-content { width: min(100%, 980px); text-align: center; }
