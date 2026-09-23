@@ -200,9 +200,7 @@
     document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'true');
     document.documentElement.style.overflow = 'hidden';
     setBackgroundInert(true);
-    notice = isFil()
-      ? 'Handa ang local na tulong. Naka-bundle ang mga sagot na ito sa AniWhere.'
-      : 'Local help is ready. These answers are bundled with AniWhere.';
+    notice = '';
     await tick();
     inputEl?.focus();
   }
@@ -436,12 +434,14 @@
         <button type="button" class="icon-button" aria-label={isFil() ? 'Isara si Ani' : 'Close Ani'} onclick={closeAni}>×</button>
       </header>
 
-      <div class="ani-status" aria-live="polite" aria-atomic="true">
-        <span class="status-copy">{notice || (isFil() ? 'I-type o sabihin ang tanong mo.' : 'Type or say what you need.')}</span>
-        {#if status === 'speaking' && provider?.stopOutput}
-          <button type="button" class="stop-audio" onclick={() => provider?.stopOutput?.()}>{isFil() ? 'Itigil ang audio' : 'Stop audio'}</button>
-        {/if}
-      </div>
+      {#if notice || (status === 'speaking' && provider?.stopOutput)}
+        <div class="ani-status" aria-live="polite" aria-atomic="true">
+          <span class="status-copy">{notice}</span>
+          {#if status === 'speaking' && provider?.stopOutput}
+            <button type="button" class="stop-audio" onclick={() => provider?.stopOutput?.()}>{isFil() ? 'Itigil ang audio' : 'Stop audio'}</button>
+          {/if}
+        </div>
+      {/if}
 
       <div class="ani-transcript" role="log" aria-live="polite" aria-relevant="additions text" aria-label={isFil() ? 'Usapan kay Ani' : 'Conversation with Ani'}>
         {#if messages.length === 0}
@@ -460,24 +460,14 @@
                 <strong>{harvestSummary()}</strong>
               </div>
             {/if}
-            <p>
-              {localMode
-                ? (isFil()
-                    ? 'Magtanong tungkol sa paggamit ng AniWhere, fit labels, presyo, biyahe, mapa, Saved, Compare, at offline mode.'
-                    : 'Ask about using AniWhere, fit labels, prices, transport, maps, Saved, Compare, and offline mode.')
-                : (isFil()
-                    ? 'Online Ani ito. Maaari itong gumamit ng AniWhere tools para sa market-context questions.'
-                    : 'This is online Ani. It can use AniWhere tools for market-context questions.')}
-            </p>
-            <p class="trust-note">
-              {localMode
-                ? (isFil()
-                    ? 'Preloaded at text-only ang local na sagot. Hindi nito kinukuwenta ang market fit.'
-                    : 'Local answers are preloaded and text-only. They do not calculate market fit.')
-                : (isFil()
-                    ? 'Ang deterministic AniWhere tools ang authority sa market fit — hindi sariling hula ni Ani.'
-                    : 'Deterministic AniWhere tools remain authoritative for market fit — not Ani’s own guess.')}
-            </p>
+            {#if !localMode}
+              <p>{isFil()
+                ? 'Online Ani ito. Maaari itong gumamit ng AniWhere tools para sa market-context questions.'
+                : 'This is online Ani. It can use AniWhere tools for market-context questions.'}</p>
+              <p class="trust-note">{isFil()
+                ? 'Ang deterministic AniWhere tools ang authority sa market fit — hindi sariling hula ni Ani.'
+                : 'Deterministic AniWhere tools remain authoritative for market fit — not Ani’s own guess.'}</p>
+            {/if}
           </div>
         {:else}
           {#each messages as message (message.id)}
