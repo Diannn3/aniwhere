@@ -145,72 +145,37 @@
         </div>
       </div>
 
-      <!-- Metrics Row: Mobile Compact Strip & Desktop Generous Grid -->
-      <!-- Mobile View (< lg) -->
-      <div class="mt-6 lg:hidden space-y-3">
-        <div class="grid grid-cols-3 gap-2">
-          <!-- Published Card Mobile -->
-          <button
-            type="button"
-            onclick={() => { activeFilter = activeFilter === 'published' ? 'all' : 'published'; }}
-            class={`text-center bg-white border rounded-xl p-3 shadow-2xs transition-all flex flex-col items-center justify-center min-h-[64px] ${
-              activeFilter === 'published' ? 'border-[#597928] bg-[#EBF3DF]/40 ring-2 ring-[#597928]' : 'border-[#20251E]/10 hover:border-[#597928]/40'
-            }`}
-          >
-            <span class="text-[10px] font-bold text-[#596052] uppercase tracking-wider">
-              {isFil ? 'Nailathala' : 'Published'}
-            </span>
-            <span class="text-xl font-bold font-serif text-[#20251E] mt-0.5">
-              {counts.published}
-            </span>
+          <span class="text-2xl font-normal leading-none" aria-hidden="true">+</span>
+          {isFil ? 'Gumawa ng alok' : 'Create offer'}
+        </button>
+        <div class="grid grid-cols-3 border-y border-[#20251E]/15 lg:border-y-0" role="group" aria-label={isFil ? 'Salain ayon sa katayuan' : 'Filter offers by status'}>
+          <button type="button" onclick={() => { activeFilter = activeFilter === 'published' ? 'all' : 'published'; }}
+            aria-pressed={activeFilter === 'published'}
+            class={`min-h-20 border-r border-[#20251E]/15 px-2 py-3 text-left sm:px-6 lg:border-l ${activeFilter === 'published' ? 'bg-[#EBF3DF] text-[#47661E]' : 'text-[#20251E] hover:bg-[#EBF3DF]/50'} focus-visible:outline-2 focus-visible:outline-[#597928]`}>
+            <span class="block text-xs font-semibold sm:text-sm">{isFil ? 'Nailathala' : 'Published'}</span>
+            <span class="mt-1 block text-2xl font-bold tabular-nums">{counts.published}</span>
           </button>
-
-          <!-- In Review Card Mobile -->
-          <button
-            type="button"
-            onclick={() => { activeFilter = activeFilter === 'in_review' ? 'all' : 'in_review'; }}
-            class={`text-center bg-white border rounded-xl p-3 shadow-2xs transition-all flex flex-col items-center justify-center min-h-[64px] ${
-              activeFilter === 'in_review' ? 'border-[#6E3511] bg-[#FCECD8]/40 ring-2 ring-[#6E3511]' : 'border-[#20251E]/10 hover:border-[#6E3511]/40'
-            }`}
-          >
-            <span class="text-[10px] font-bold text-[#596052] uppercase tracking-wider">
-              {isFil ? 'Pagsusuri' : 'In review'}
-            </span>
-            <span class="text-xl font-bold font-serif text-[#20251E] mt-0.5">
-              {counts.inReview}
-            </span>
+          <button type="button" onclick={() => { activeFilter = activeFilter === 'in_review' ? 'all' : 'in_review'; }}
+            aria-pressed={activeFilter === 'in_review'}
+            class={`min-h-20 border-r border-[#20251E]/15 px-2 py-3 text-left sm:px-6 ${activeFilter === 'in_review' ? 'bg-[#FCECD8] text-[#6E3511]' : 'text-[#20251E] hover:bg-[#FCECD8]/50'} focus-visible:outline-2 focus-visible:outline-[#597928]`}>
+            <span class="block text-xs font-semibold sm:text-sm">{isFil ? 'Pagsusuri' : 'In review'}</span>
+            <span class="mt-1 block text-2xl font-bold tabular-nums">{counts.inReview}</span>
           </button>
-
-          <!-- Draft Card Mobile -->
-          <button
-            type="button"
-            onclick={() => { activeFilter = activeFilter === 'draft' ? 'all' : 'draft'; }}
-            class={`text-center bg-white border rounded-xl p-3 shadow-2xs transition-all flex flex-col items-center justify-center min-h-[64px] ${
-              activeFilter === 'draft' ? 'border-[#4B5563] bg-[#F3F4F6]/60 ring-2 ring-[#4B5563]' : 'border-[#20251E]/10 hover:border-[#4B5563]/40'
-            }`}
-          >
-            <span class="text-[10px] font-bold text-[#596052] uppercase tracking-wider">
-              {isFil ? 'Burador' : 'Draft'}
-            </span>
-            <span class="text-xl font-bold font-serif text-[#20251E] mt-0.5">
-              {counts.draft}
-            </span>
+          <button type="button" onclick={() => { activeFilter = activeFilter === 'draft' ? 'all' : 'draft'; }}
+            aria-pressed={activeFilter === 'draft'}
+            class={`min-h-20 px-2 py-3 text-left sm:px-6 ${activeFilter === 'draft' ? 'bg-[#F3F4F6] text-[#20251E]' : 'text-[#20251E] hover:bg-[#F3F4F6]'} focus-visible:outline-2 focus-visible:outline-[#597928]`}>
+            <span class="block text-xs font-semibold sm:text-sm">{isFil ? 'Burador' : 'Draft'}</span>
+            <span class="mt-1 block text-2xl font-bold tabular-nums">{counts.draft}</span>
           </button>
         </div>
-
-        <!-- Mobile Primary CTA: Create Offer -->
-        <button
-          type="button"
-          onclick={openCreateModal}
-          class="w-full py-3 px-4 rounded-xl bg-[#597928] text-white hover:bg-[#47661E] font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 min-h-[48px]"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>{isFil ? 'Gumawa ng alok' : 'Create offer'}</span>
-        </button>
       </div>
 
+    </div>
+  </section>
+
+  <!-- Main Offers Workspace Content -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Toast Notification Banner -->
       <!-- Desktop View (>= lg) -->
       <div class="hidden lg:grid mt-8 grid-cols-4 gap-4">
         <!-- Published Card -->
