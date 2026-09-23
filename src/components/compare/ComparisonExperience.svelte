@@ -149,53 +149,46 @@
   }
 </script>
 
-<div class="almanac-page comparison-page mx-auto max-w-[92rem] min-w-0 px-4 py-8 sm:px-6 md:py-12 lg:px-8">
-  <div class="space-y-7">
-    <header class="grid gap-5 border-b border-[#20251E]/15 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+<div class="almanac-page comparison-page w-full min-w-0 max-w-none px-4 py-6 sm:px-8 sm:py-8 lg:px-12 xl:px-16">
+  <div class="min-w-0 space-y-8 lg:space-y-10">
+    <header class="flex flex-wrap items-end justify-between gap-5 border-b border-[#20251E]/20 pb-6">
       <div class="max-w-3xl">
-        <h1 class="font-serif text-3xl font-bold tracking-[-0.02em] text-[#20251E] sm:text-4xl">{copy('Compare options for your harvest', 'Paghambingin ang mga opsyon para sa ani mo')}</h1>
-        <p class="mt-2 max-w-2xl text-sm leading-6 text-[#4A5245] sm:text-base">{copy('Read the same decision facts across each outlet. AniWhere does not rank or guarantee an option.', 'Basahin ang parehong impormasyon sa bawat outlet. Hindi nagraranggo o naggagarantiya ang AniWhere ng anumang opsyon.')}</p>
+        <h1 class="font-serif text-3xl font-bold leading-tight tracking-[-0.025em] text-[#20251E] sm:text-4xl">{copy('Compare options for your harvest', 'Paghambingin ang mga opsyon para sa ani mo')}</h1>
+        <p class="mt-3 text-base leading-6 text-[#4A5245]">{copy('The same decision facts for each outlet. No ranking or guaranteed acceptance — choose what to confirm before traveling.', 'Parehong batayan ng desisyon para sa bawat outlet. Walang ranggo o garantisadong pagtanggap — piliin ang dapat kumpirmahin bago bumiyahe.')}</p>
       </div>
-      <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#597928]/35 bg-[#FFFDF8] px-4 py-2 text-sm font-semibold text-[#486320] transition-colors hover:bg-[#486320]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Edit harvest context', 'Baguhin ang konteksto ng ani')}</a>
+      <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#597928]/35 bg-[#FFFDF8] px-4 py-2 text-sm font-semibold text-[#486320] transition-colors hover:bg-[#FCECD8]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Edit harvest context', 'Baguhin ang konteksto ng ani')}</a>
     </header>
 
-    <section aria-label={copy('Harvest context', 'Konteksto ng ani')} class="grid gap-px overflow-hidden rounded-xl border border-[#20251E]/15 bg-[#20251E]/15 sm:grid-cols-4">
-      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold text-[#20251E]">{cropName}</p></div>
-      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Quantity', 'Dami')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.quantityKg.toLocaleString('en-PH')} kg</p></div>
-      <div class="bg-[#FFFDF8] px-4 py-3">
-        <p class="text-xs font-semibold text-[#596052]">{copy('Origin municipality', 'Munisipalidad')}</p>
-        <p class="mt-1 font-semibold text-[#20251E]">{originMun.name}</p>
-        <p class="mt-1 text-[10px] leading-4 text-[#596052]">
-          {copy('Distance reference: municipality center', 'Batayan ng layo: sentro ng munisipyo')}
-        </p>
+    <section aria-label={copy('Harvest context', 'Konteksto ng ani')} class="border-y border-[#20251E]/20 bg-[#FCECD8]/35">
+      <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4 sm:gap-x-0">
+        <div class="min-w-0 border-b border-[#20251E]/10 py-3 pr-3 sm:border-b-0 sm:px-4 sm:first:pl-0"><p class="text-xs font-semibold text-[#596052]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold text-[#20251E]">{cropName}</p></div>
+        <div class="min-w-0 border-b border-[#20251E]/10 py-3 sm:border-b-0 sm:border-l sm:border-[#20251E]/10 sm:px-4"><p class="text-xs font-semibold text-[#596052]">{copy('Quantity', 'Dami')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.quantityKg.toLocaleString('en-PH')} kg</p></div>
+        <div class="min-w-0 py-3 pr-3 sm:border-l sm:border-[#20251E]/10 sm:px-4">
+          <p class="text-xs font-semibold text-[#596052]">{copy('Origin municipality', 'Munisipalidad')}</p>
+          <p class="mt-1 font-semibold text-[#20251E]">{originMun.name}</p>
+          <p class="mt-1 text-xs leading-4 text-[#596052]">{copy('Distance reference: municipality center', 'Batayan ng layo: sentro ng munisipyo')}</p>
+        </div>
+        <div class="min-w-0 border-l border-[#20251E]/10 py-3 pl-4 sm:px-4"><p class="text-xs font-semibold text-[#596052]">{copy('Ready date', 'Petsa ng ani')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.readyDate}</p></div>
       </div>
-      <div class="bg-[#FFFDF8] px-4 py-3"><p class="text-xs font-semibold text-[#596052]">{copy('Ready date', 'Petsa ng ani')}</p><p class="mt-1 font-semibold tabular-nums text-[#20251E]">{harvest.readyDate}</p></div>
     </section>
 
-    <aside class="grid gap-3 border-y border-[#6E3511]/25 bg-[#FCECD8]/55 p-4 text-sm text-[#4A5245] sm:grid-cols-[auto_1fr] sm:items-start" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
-      <svg class="mt-0.5 h-5 w-5 text-[#6E3511]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <div>
-        <p class="font-semibold text-[#20251E]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p>
-        <p class="mt-1 leading-5">
-          {copy(
-            'After-transport figures are simple arithmetic using the transport amount shown below — not profit or guaranteed income.',
-            'Simpleng kalkulasyon lamang ang halagang matapos ang biyahe gamit ang halagang ipinapakita sa ibaba — hindi ito tubo o garantisadong kita.',
-          )}
-        </p>
-        <p class="mt-1 text-xs leading-5 text-[#4A5245]">
-          {copy(
-            'You can replace a prefilled demo transport estimate with your own amount. If no amount is available, AniWhere leaves the result uncalculated.',
-            'Maaari mong palitan ang naka-prefill na demo transport estimate ng sarili mong halaga. Kapag walang halaga, hindi ito kakalkulahin ng AniWhere.',
-          )}
-        </p>
-      </div>
+    <aside class="border border-[#6E3511]/20 bg-[#FCECD8] px-4 py-4 text-sm leading-6 text-[#20251E] sm:px-5" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
+      <p class="font-bold text-[#6E3511]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p>
+      <p class="mt-1">{copy(
+        'After entered transport only — not profit or guaranteed income. The figure subtracts the amount below from recorded gross; production costs are not included.',
+        'Pagkatapos lamang ng inilagay na gastos sa biyahe — hindi tubo o garantisadong kita. Ibinabawas ang halaga sa ibaba mula sa nakatalang kabuuan; hindi kasama ang gastos sa produksiyon.',
+      )}</p>
+      <p class="mt-1 text-[#4A5245]">{copy(
+        'Replace a recorded demo transport estimate with your own amount. With no transport amount or recorded price, the result is not calculated.',
+        'Palitan ang nakatalang demo tantiya sa biyahe ng sarili mong halaga. Kung walang halagang biyahe o nakatalang presyo, hindi kakalkulahin ang resulta.',
+      )}</p>
     </aside>
 
     {#if comparedOutlets.length === 0}
-      <section class="mx-auto max-w-2xl rounded-2xl border border-[#20251E]/15 bg-white px-6 py-12 text-center shadow-[0_1px_3px_rgba(32,37,30,0.05)]">
+      <section class="border-y border-[#20251E]/20 bg-white px-4 py-10 sm:px-8 sm:py-14">
         <h2 class="font-serif text-2xl font-bold text-[#20251E]">{copy('No outlets selected', 'Walang napiling outlet')}</h2>
-        <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-[#4A5245]">{copy('Select up to three outlets from discovery to compare the same details side by side.', 'Pumili ng hanggang tatlong outlet mula sa paghahanap upang maihambing ang parehong detalye nang magkatabi.')}</p>
-        <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="mt-6 inline-flex min-h-[44px] items-center rounded-lg bg-[#486320] px-5 py-2.5 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#3A5219] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Find selling options', 'Maghanap ng mapagbebentahan')}</a>
+        <p class="mt-3 max-w-xl text-base leading-6 text-[#4A5245]">{copy('Select up to three outlets from discovery to compare the same details side by side.', 'Pumili ng hanggang tatlong outlet mula sa paghahanap upang maihambing ang parehong detalye nang magkatabi.')}</p>
+        <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="mt-6 inline-flex min-h-11 items-center rounded-lg bg-[#486320] px-5 py-2.5 text-sm font-semibold text-[#FFFDF8] transition-colors hover:bg-[#3A5219] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Find selling options', 'Maghanap ng mapagbebentahan')}</a>
       </section>
     {:else}
       <section class="sm:hidden" aria-labelledby="mobile-comparison-title">
