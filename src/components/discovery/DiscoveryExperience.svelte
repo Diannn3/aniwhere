@@ -327,7 +327,6 @@
   
   <!-- 1. Harvest Context Header & Quick Editor Bar (Compact & Ergonomic) -->
   <div class="discovery-docket border border-[#20251E]/25 bg-[#FFFDF8] p-3.5 sm:p-5">
-    <div class="docket-index"><span>01&nbsp;&nbsp; FIELD DOCKET</span><span>AniWhere</span></div>
     <div class="flex items-center justify-between gap-3">
       <div>
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
