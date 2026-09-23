@@ -1,83 +1,72 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import LandingSearch from '../components/harvest/LandingSearch.svelte';
 import HarvestForm from '../components/harvest/HarvestForm.svelte';
 
-const langParam = Astro.url.searchParams.get('lang');
-const lang = langParam === 'fil' ? 'fil' : 'en';
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
 const isFil = lang === 'fil';
 ---
 
 <BaseLayout
-  title={isFil ? 'AniWhere — Ano ang aanihin mo?' : 'AniWhere — What are you harvesting?'}
-  description={isFil ? 'Ilagay ang ani, dami, lugar, at petsa upang makita ang mga posibleng outlet sa Laguna.' : 'Enter your harvest, quantity, origin, and date to see possible Laguna outlets.'}
+  title={isFil ? 'AniWhere — Saan maaaring pumunta ang ani mo?' : 'AniWhere — Where can your harvest go?'}
+  description={isFil ? 'Hanapin ang mga posibleng outlet sa Laguna at alamin kung ano ang dapat kumpirmahin bago bumiyahe.' : 'Find possible outlets in Laguna and know what to confirm before you travel.'}
   lang={lang}
 >
-  <div class="almanac-page mx-auto max-w-[92rem] px-4 py-8 sm:px-6 sm:py-12 lg:py-14">
-    <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] lg:gap-12">
-      <section class="min-w-0">
-        <div class="max-w-2xl">
-          <h1 class="max-w-[12ch] text-5xl font-bold leading-[0.98] tracking-[-0.035em] text-[#20251E] sm:text-6xl lg:text-7xl" data-i18n-en="Where can your harvest go?" data-i18n-fil="Saan maaaring pumunta ang ani mo?">
-            {isFil ? 'Saan maaaring pumunta ang ani mo?' : 'Where can your harvest go?'}
-          </h1>
-          <p class="mt-5 max-w-xl text-lg leading-relaxed text-[#4A5245] sm:text-xl" data-i18n-en="Describe your harvest to see possible selling outlets, what each can accept, and what to confirm before you travel." data-i18n-fil="Ilagay ang ani mo para makita ang mga posibleng mapagbebentahan, ang kayang tanggapin ng bawat isa, at ang dapat kumpirmahin bago bumiyahe.">
-            {isFil ? 'Ilagay ang ani mo para makita ang mga posibleng mapagbebentahan, ang kayang tanggapin ng bawat isa, at ang dapat kumpirmahin bago bumiyahe.' : 'Describe your harvest to see possible selling outlets, what each can accept, and what to confirm before you travel.'}
-          </p>
-        </div>
-
-        <div class="mt-8 sm:mt-10">
-          <HarvestForm client:load initialLang={lang} />
-        </div>
-      </section>
-
-      <aside class="route-surface min-h-[30rem] rounded-2xl border border-[#20251E]/12 p-5 sm:p-7 lg:sticky lg:top-24 lg:min-h-[38rem]" aria-label={isFil ? 'Guhit ng ruta ng ani sa Laguna' : 'Illustrative harvest route in Laguna'}>
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl" data-i18n-en="From harvest to outlet" data-i18n-fil="Mula ani hanggang outlet">{isFil ? 'Mula ani hanggang outlet' : 'From harvest to outlet'}</h2>
-            <p class="mt-2 max-w-sm text-sm leading-relaxed text-[#4A5245]" data-i18n-en="Routes and locations are illustrative. The next screen shows the actual fit and evidence for each outlet." data-i18n-fil="Ang mga ruta at lokasyon ay guhit lamang. Makikita ang aktuwal na fit at impormasyon sa susunod na screen.">{isFil ? 'Ang mga ruta at lokasyon ay guhit lamang. Makikita ang aktuwal na fit at impormasyon sa susunod na screen.' : 'Routes and locations are illustrative. The next screen shows the actual fit and evidence for each outlet.'}</p>
-          </div>
-          <span class="documentary-label shrink-0" data-i18n-en="Illustrative map" data-i18n-fil="Guhit-mapa">{isFil ? 'Guhit-mapa' : 'Illustrative map'}</span>
-        </div>
-
-        <div class="mt-8 border-y border-[#20251E]/12 py-6 sm:mt-10 sm:py-8">
-          <svg class="h-auto w-full" viewBox="0 0 620 440" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="water" x1="66" y1="70" x2="570" y2="320" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#4E7380" stop-opacity=".32" />
-                <stop offset="1" stop-color="#4E7380" stop-opacity=".08" />
-              </linearGradient>
-              <linearGradient id="field" x1="89" y1="337" x2="491" y2="151" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#597928" stop-opacity=".72" />
-                <stop offset="1" stop-color="#91AC67" stop-opacity=".28" />
-              </linearGradient>
-              <linearGradient id="route" x1="183" y1="318" x2="506" y2="130" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#6E3511" />
-                <stop offset="1" stop-color="#597928" />
-              </linearGradient>
-            </defs>
-            <path d="M28 88C117 42 201 98 279 75C364 50 433 53 591 22V194C507 238 404 198 321 230C229 264 130 218 28 264V88Z" fill="url(#water)" />
-            <path d="M48 307C119 238 176 249 236 285C307 328 361 260 436 236C509 213 558 245 592 284V417H48V307Z" fill="url(#field)" />
-            <path d="M77 367 176 300 283 418M198 418l107-122 94 122M342 418l88-112 135 58" stroke="#FFFDF8" stroke-opacity=".52" stroke-width="2" />
-            <path class="route-line" d="M165 330C247 298 281 250 335 217C391 183 440 180 508 126" stroke="url(#route)" stroke-linecap="round" stroke-width="5" />
-            <path d="M165 330C126 293 92 264 65 232" stroke="#6E3511" stroke-dasharray="6 8" stroke-linecap="round" stroke-width="3" />
-            <path d="M351 83C399 101 451 93 510 58" stroke="#4E7380" stroke-opacity=".65" stroke-width="2" />
-            <text x="344" y="141" fill="#4E7380" font-family="Source Sans 3, sans-serif" font-size="16" font-weight="700">Laguna de Bay</text>
-            <text x="116" y="405" fill="#20251E" font-family="Source Sans 3, sans-serif" font-size="15" font-weight="700">Los Baños</text>
-            <text x="430" y="108" fill="#20251E" font-family="Source Sans 3, sans-serif" font-size="15" font-weight="700">Santa Cruz</text>
-            <text x="37" y="213" fill="#6E3511" font-family="Source Sans 3, sans-serif" font-size="14" font-weight="700">Calamba</text>
-            <g transform="translate(165 330)"><path d="M0-16c-8.4 0-15.2 6.6-15.2 14.7C-15.2 10.1 0 26 0 26S15.2 10.1 15.2-1.3C15.2-9.4 8.4-16 0-16Z" fill="#6E3511"/><circle cy="-1" r="4.5" fill="#FFFDF8"/></g>
-            <g transform="translate(508 126)"><path d="M0-16c-8.4 0-15.2 6.6-15.2 14.7C-15.2 10.1 0 26 0 26S15.2 10.1 15.2-1.3C15.2-9.4 8.4-16 0-16Z" fill="#597928"/><circle cy="-1" r="4.5" fill="#FFFDF8"/></g>
-            <g transform="translate(65 232)"><path d="M0-13c-7.2 0-13 5.6-13 12.6C-13 9 0 22.5 0 22.5S13 9 13-.4C13-7.4 7.2-13 0-13Z" fill="#4E7380"/><circle cy="-.5" r="3.8" fill="#FFFDF8"/></g>
-          </svg>
-        </div>
-
-        <dl class="mt-6 grid grid-cols-3 gap-3 text-sm">
-          <div class="border-r border-[#20251E]/12 pr-3"><dt class="documentary-label">{isFil ? 'Una' : 'First'}</dt><dd class="mt-1 font-semibold text-[#20251E]">{isFil ? 'Ani' : 'Harvest'}</dd></div>
-          <div class="border-r border-[#20251E]/12 pr-3"><dt class="documentary-label">{isFil ? 'Sunod' : 'Then'}</dt><dd class="mt-1 font-semibold text-[#20251E]">{isFil ? 'Fit' : 'Fit'}</dd></div>
-          <div><dt class="documentary-label">{isFil ? 'Bago umalis' : 'Before travel'}</dt><dd class="mt-1 font-semibold text-[#20251E]">{isFil ? 'Kumpirmahin' : 'Confirm'}</dd></div>
-        </dl>
-
-        <p class="mt-8 border-t border-[#20251E]/12 pt-5 text-xs leading-relaxed text-[#4A5245]" data-i18n-en="AniWhere helps prepare a decision. It does not guarantee a purchase or reserve capacity." data-i18n-fil="Ang AniWhere ay tumutulong maghanda ng desisyon. Hindi nito ginagarantiyahan ang pagbili o pagreserba ng kapasidad.">{isFil ? 'Ang AniWhere ay tumutulong maghanda ng desisyon. Hindi nito ginagarantiyahan ang pagbili o pagreserba ng kapasidad.' : 'AniWhere helps prepare a decision. It does not guarantee a purchase or reserve capacity.'}</p>
-      </aside>
+  <section class="landing-hero" aria-labelledby="landing-title">
+    <div class="landing-hero-content">
+      <h1 id="landing-title" data-i18n-en="Your harvest has somewhere to go." data-i18n-fil="May patutunguhan ang ani mo.">{isFil ? 'May patutunguhan ang ani mo.' : 'Your harvest has somewhere to go.'}</h1>
+      <p data-i18n-en="Find possible outlets in Laguna. Know what to confirm before you travel." data-i18n-fil="Maghanap ng posibleng outlet sa Laguna. Alamin ang dapat kumpirmahin bago bumiyahe.">{isFil ? 'Maghanap ng posibleng outlet sa Laguna. Alamin ang dapat kumpirmahin bago bumiyahe.' : 'Find possible outlets in Laguna. Know what to confirm before you travel.'}</p>
+      <div class="landing-search-slot">
+        <LandingSearch client:load lang={lang} />
+      </div>
     </div>
-  </div>
+    <p class="landing-demo" data-i18n-en="Demo — sample data. Confirm terms before traveling." data-i18n-fil="Demo — halimbawang datos. Kumpirmahin ang mga detalye bago bumiyahe.">{isFil ? 'Demo — halimbawang datos. Kumpirmahin ang mga detalye bago bumiyahe.' : 'Demo — sample data. Confirm terms before traveling.'}</p>
+  </section>
+
+  <section id="how-it-works" class="landing-story" aria-labelledby="story-title">
+    <div class="landing-story-intro">
+      <div>
+        <h2 id="story-title" data-i18n-en="From harvest to a clearer next step." data-i18n-fil="Mula ani tungo sa mas malinaw na susunod na hakbang.">{isFil ? 'Mula ani tungo sa mas malinaw na susunod na hakbang.' : 'From harvest to a clearer next step.'}</h2>
+        <p data-i18n-en="A list of places is not enough. See how your harvest fits, what is known, and what still needs asking." data-i18n-fil="Hindi sapat ang listahan ng mga lugar. Tingnan kung tugma ang ani mo, ano ang alam, at ano ang kailangan pang itanong.">{isFil ? 'Hindi sapat ang listahan ng mga lugar. Tingnan kung tugma ang ani mo, ano ang alam, at ano ang kailangan pang itanong.' : 'A list of places is not enough. See how your harvest fits, what is known, and what still needs asking.'}</p>
+      </div>
+      <div class="landing-story-photo" role="img" data-aria-en="Illustrative image of a tomato harvest" data-aria-fil="Guhit ng ani ng kamatis" aria-label={isFil ? 'Guhit ng ani ng kamatis' : 'Illustrative image of a tomato harvest'}></div>
+    </div>
+    <ol class="landing-steps">
+      <li><span>01</span><h3 data-i18n-en="Tell us your harvest" data-i18n-fil="Ilarawan ang ani">{isFil ? 'Ilarawan ang ani' : 'Tell us your harvest'}</h3><p data-i18n-en="Add the crop, quantity, origin, and ready date." data-i18n-fil="Ilagay ang pananim, dami, pinanggalingan, at petsang handa na.">{isFil ? 'Ilagay ang pananim, dami, pinanggalingan, at petsang handa na.' : 'Add the crop, quantity, origin, and ready date.'}</p></li>
+      <li><span>02</span><h3 data-i18n-en="Compare fit and evidence" data-i18n-fil="Suriin ang tugma at ebidensiya">{isFil ? 'Suriin ang tugma at ebidensiya' : 'Compare fit and evidence'}</h3><p data-i18n-en="Review possible outlets, their evidence, and what remains uncertain." data-i18n-fil="Tingnan ang posibleng outlet, batayan ng impormasyon, at mga hindi pa tiyak.">{isFil ? 'Tingnan ang posibleng outlet, batayan ng impormasyon, at mga hindi pa tiyak.' : 'Review possible outlets, their evidence, and what remains uncertain.'}</p></li>
+      <li><span>03</span><h3 data-i18n-en="Contact to confirm" data-i18n-fil="Kumpirmahin bago bumiyahe">{isFil ? 'Kumpirmahin bago bumiyahe' : 'Contact to confirm'}</h3><p data-i18n-en="Check capacity, price, and receiving terms before you travel." data-i18n-fil="Alamin muna ang kapasidad, presyo, at pagtanggap bago umalis.">{isFil ? 'Alamin muna ang kapasidad, presyo, at pagtanggap bago umalis.' : 'Check capacity, price, and receiving terms before you travel.'}</p></li>
+    </ol>
+  </section>
+
+  <section class="landing-entry" aria-labelledby="entry-title">
+    <div class="landing-entry-copy">
+      <h2 id="entry-title" data-i18n-en="Start with what you have." data-i18n-fil="Ang desisyon ay nagsisimula sa ani mo.">{isFil ? 'Ang desisyon ay nagsisimula sa ani mo.' : 'Start with what you have.'}</h2>
+      <p data-i18n-en="Complete your harvest details to explore possible outlets. Results use sample data, not a promise that an outlet will buy." data-i18n-fil="Kumpletuhin ang detalye ng ani upang makita ang mga posibleng mapagbebentahan. Ang mga resultang ito ay mula sa halimbawang datos, hindi pangako ng pagbili.">{isFil ? 'Kumpletuhin ang detalye ng ani upang makita ang mga posibleng mapagbebentahan. Ang mga resultang ito ay mula sa halimbawang datos, hindi pangako ng pagbili.' : 'Complete your harvest details to explore possible outlets. Results use sample data, not a promise that an outlet will buy.'}</p>
+    </div>
+    <div id="harvest-details"><HarvestForm client:load initialLang={lang} /></div>
+  </section>
 </BaseLayout>
+
+<style>
+  .landing-hero { position: relative; display: grid; min-height: min(740px, calc(100svh - 64px)); place-items: center; isolation: isolate; padding: 5rem 1.5rem 5.5rem; color: white; background: #293d28 url('/plates/map-plate.png') center / cover no-repeat; }
+  .landing-hero::before { position: absolute; z-index: -1; inset: 0; content: ''; background: linear-gradient(90deg, rgba(14,30,18,.87), rgba(14,30,18,.7) 65%, rgba(14,30,18,.65)); }
+  .landing-hero-content { width: min(100%, 980px); text-align: center; }
+  .landing-hero h1 { max-width: 14ch; margin: 0 auto; font-size: clamp(3.3rem, 7.1vw, 6rem); line-height: .99; letter-spacing: -.035em; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.25); }
+  .landing-hero-content > p { max-width: 58ch; margin: 1.6rem auto 2rem; font-size: clamp(1.05rem, 1.8vw, 1.45rem); font-weight: 650; line-height: 1.4; text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+  .landing-search-slot { max-width: 790px; margin: 0 auto; }
+  .landing-demo { position: absolute; bottom: 1.25rem; left: max(1.5rem, calc((100vw - 1440px)/2)); margin: 0; font-size: .85rem; font-weight: 700; text-shadow: 0 1px 8px #17210d; }
+  .landing-story { max-width: 1440px; margin: auto; padding: clamp(3rem, 6vw, 6rem) clamp(1.25rem, 5vw, 5rem) 2.5rem; }
+  .landing-story-intro { display: grid; grid-template-columns: 1fr minmax(220px, 30%); align-items: center; gap: clamp(2rem, 6vw, 7rem); }
+  .landing-story h2, .landing-entry h2 { max-width: 18ch; font-size: clamp(2.3rem, 4vw, 4rem); line-height: 1.07; }
+  .landing-story-intro p, .landing-entry p { max-width: 55ch; margin-top: 1.25rem; font-size: 1.15rem; color: #4a5245; }
+  .landing-story-photo { height: 230px; border-radius: 12px; background: #91ac67 url('/plates/landing-harvest-original.webp') 88% 75% / 260% auto no-repeat; }
+  .landing-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 3rem; padding: 0; list-style: none; }
+  .landing-steps li { border-top: 1px solid #9ea495; padding-top: 1rem; }
+  .landing-steps span { color: #597928; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .landing-steps h3 { margin-top: .5rem; font-size: 1.5rem; }
+  .landing-steps p { max-width: 34ch; margin-top: .5rem; color: #4a5245; }
+  .landing-entry { max-width: 1440px; margin: 0 auto; padding: 3rem clamp(1.25rem, 5vw, 5rem) 6rem; scroll-margin-top: 5rem; }
+  .landing-entry-copy { margin-bottom: 2rem; }
+  #harvest-details { width: 100%; scroll-margin-top: 5rem; }
+  @media (max-width: 640px) { .landing-hero { min-height: 650px; padding: 3rem 1.25rem 5rem; background-position: 42% center; } .landing-hero h1 { font-size: clamp(3rem, 12vw, 4.5rem); } .landing-story-intro { grid-template-columns: 1fr; } .landing-story-photo { height: 190px; } .landing-steps { grid-template-columns: 1fr; gap: 2rem; margin-top: 3rem; } }
+</style>
