@@ -136,12 +136,13 @@ const farmerContextHref = (path: string) => {
     </main>
 
     <nav data-ani-background class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" data-aria-en="Mobile navigation" data-aria-fil="Nabigasyon sa mobile" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
-      <div class="mx-auto grid max-w-md grid-cols-4 gap-1">
+      <div class="mx-auto grid max-w-md grid-cols-5 gap-1">
         {[
           { href: '/', label: isFil ? 'Ani ko' : 'Harvest', icon: 'home' },
           { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', icon: 'search' },
           { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', icon: 'saved' },
           { href: '/compare', label: isFil ? 'Ihambing' : 'Compare', icon: 'compare' },
+          { href: '/buyer', label: isFil ? 'Mamimili' : 'Buyers', icon: 'buyer' },
         ].map((item) => (
           <a
             href={farmerContextHref(item.href)}
@@ -155,7 +156,8 @@ const farmerContextHref = (path: string) => {
             {item.icon === 'search' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>}
             {item.icon === 'saved' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>}
             {item.icon === 'compare' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v18M17 3v18M3 7h8M13 17h8"/><path d="m8 4 3 3-3 3M16 14l-3 3 3 3"/></svg>}
-            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : item.href === '/saved' ? 'Saved' : 'Compare'} data-i18n-fil={item.href === '/' ? 'Ani ko' : item.href === '/discover' ? 'Maghanap' : item.href === '/saved' ? 'Nai-save' : 'Ihambing'}>{item.label}</span>
+            {item.icon === 'buyer' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : item.href === '/saved' ? 'Saved' : item.href === '/compare' ? 'Compare' : 'Buyers'} data-i18n-fil={item.href === '/' ? 'Ani ko' : item.href === '/discover' ? 'Maghanap' : item.href === '/saved' ? 'Nai-save' : item.href === '/compare' ? 'Ihambing' : 'Mamimili'}>{item.label}</span>
           </a>
         ))}
       </div>
