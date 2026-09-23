@@ -5,7 +5,7 @@ export const DEMO_PLACES: PlaceRecord[] = [
   {
     id: 'demo-cooperative',
     slug: 'demo-cooperative',
-    name: 'Demo Cooperative',
+    name: 'Santa Cruz Cooperative',
     category: 'cooperative',
     municipality: 'Santa Cruz',
     lat: 14.281,
@@ -21,7 +21,7 @@ export const DEMO_PLACES: PlaceRecord[] = [
   {
     id: 'demo-processor',
     slug: 'demo-processor',
-    name: 'Demo Processor',
+    name: 'Calamba Processor',
     category: 'processor',
     municipality: 'Calamba',
     lat: 14.214,
@@ -37,7 +37,7 @@ export const DEMO_PLACES: PlaceRecord[] = [
   {
     id: 'demo-market',
     slug: 'demo-market',
-    name: 'Demo Market',
+    name: 'Los Baños Market',
     category: 'market',
     municipality: 'Los Baños',
     lat: 14.18,
@@ -53,7 +53,7 @@ export const DEMO_PLACES: PlaceRecord[] = [
   {
     id: 'demo-msme-confirm',
     slug: 'demo-msme-confirm',
-    name: 'Demo MSME (Confirm Capacity)',
+    name: 'San Pablo Food Workshop (Confirm Capacity)',
     category: 'msme',
     municipality: 'San Pablo',
     lat: 14.067,
@@ -69,7 +69,7 @@ export const DEMO_PLACES: PlaceRecord[] = [
   {
     id: 'demo-organic-shop',
     slug: 'demo-organic-shop',
-    name: 'Demo Organic Shop',
+    name: 'Liliw Organic Shop',
     category: 'restaurant',
     municipality: 'Liliw',
     lat: 14.133,

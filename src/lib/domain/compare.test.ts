@@ -15,20 +15,20 @@ describe('Comparison Calculations', () => {
 
     expect(rows).toHaveLength(3);
 
-    // 1. Demo Coop
-    expect(rows[0].outlet.name).toBe('Demo Cooperative');
+    // 1. Santa Cruz Cooperative
+    expect(rows[0].outlet.name).toBe('Santa Cruz Cooperative');
     expect(rows[0].fit.grossPay).toBe(8400);
     expect(rows[0].fit.enteredTransport).toBe(600);
     expect(rows[0].fit.afterTransportPay).toBe(7800);
 
-    // 2. Demo Processor
-    expect(rows[1].outlet.name).toBe('Demo Processor');
+    // 2. Calamba Processor
+    expect(rows[1].outlet.name).toBe('Calamba Processor');
     expect(rows[1].fit.grossPay).toBe(9600);
     expect(rows[1].fit.enteredTransport).toBe(300);
     expect(rows[1].fit.afterTransportPay).toBe(9300);
 
-    // 3. Demo Market
-    expect(rows[2].outlet.name).toBe('Demo Market');
+    // 3. Los Baños Market
+    expect(rows[2].outlet.name).toBe('Los Baños Market');
     expect(rows[2].fit.grossPay).toBe(6000);
     expect(rows[2].fit.enteredTransport).toBe(300);
     expect(rows[2].fit.afterTransportPay).toBe(5700);

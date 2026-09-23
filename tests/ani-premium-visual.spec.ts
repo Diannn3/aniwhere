@@ -199,7 +199,7 @@ test('Ani shared harvest state updates the real comparison surface', async ({ pa
 
 test('Ani transport state updates the real comparison ledger', async ({ page }) => {
   await page.goto(compare);
-  const transport = page.getByLabel(/Transport for Demo Processor/i);
+  const transport = page.getByLabel(/Transport for Calamba Processor/i);
   await expect(transport).toBeVisible();
 
   await page.evaluate(() => {

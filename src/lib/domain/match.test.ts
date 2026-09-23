@@ -12,7 +12,7 @@ describe('Deterministic Harvest Matching', () => {
     readyDate: '2026-09-18',
   };
 
-  it('300 kg tomatoes vs Demo Cooperative yields exact match and P7,800 after transport', () => {
+  it('300 kg tomatoes at Santa Cruz Cooperative yields exact match and P7,800 after transport', () => {
     const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
     const result = evaluateFit(coop, query300, 600);
 
@@ -26,7 +26,7 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.evidenceKind).toBe('demo');
   });
 
-  it('300 kg tomatoes vs Demo Processor yields exact match and P9,300 after transport', () => {
+  it('300 kg tomatoes at Calamba Processor yields exact match and P9,300 after transport', () => {
     const proc = DEMO_OUTLETS.find((o) => o.id === 'demo-processor')!;
     const result = evaluateFit(proc, query300, 300);
 
@@ -39,7 +39,7 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.afterTransportPay).toBe(9300);
   });
 
-  it('300 kg tomatoes vs Demo Market yields partial match and computes only accepted quantity', () => {
+  it('300 kg tomatoes at Los Baños Market yields partial match and computes only accepted quantity', () => {
     const market = DEMO_OUTLETS.find((o) => o.id === 'demo-market')!;
     const result = evaluateFit(market, query300, 300);
 
