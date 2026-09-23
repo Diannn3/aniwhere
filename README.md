@@ -190,7 +190,7 @@ These are historical/design artifacts; the current source tree and current imple
 
 **Team Walang Ani Buseng** &middot; UPLB TTBDO NextGen Agri Hackathon 2026
 
-- **Aedrian Ponce** ([@Diannn3](https://github.com/Diannn3))
-- **Lukas Bebis** ([@klnwlks](https://github.com/klnwlks))
-- **Alvin Abadier** ([@avoabadier](https://github.com/avoabadier))
-- **Mentor**: Asst. Prof. Joseph Anthony Hermocilla Nazareno
+- **Aedrian F. Ponce** ([@Diannn3](https://github.com/Diannn3))
+- **Kalinaw Lukas Aom C. Bebis** ([@klnwlks](https://github.com/klnwlks))
+- **Jazz Avo M. Abadier** ([@avoabadier](https://github.com/avoabadier))
+- **Mentor**: Asst. Prof. Allen L. Nazareno
