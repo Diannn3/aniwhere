@@ -75,7 +75,7 @@
     saveBuyerOffer(updated);
     refreshOffers();
     isModalOpen = false;
-    showToast(isFil ? 'Nai-save sa device na ito para sa demo' : 'Saved on this device for demo');
+    showToast(isFil ? 'Nai-save sa device na ito' : 'Saved on this device');
   }
 
   function confirmDelete(offer: BuyerDemoOffer) {
@@ -96,7 +96,7 @@
     refreshOffers();
     activeFilter = 'all';
     searchQuery = '';
-    showToast(isFil ? 'Naibalik sa 3 orihinal na halimbawang alok' : 'Reset to original 3 sample offers');
+    showToast(isFil ? 'Naibalik ang mga default na alok' : 'Restored default offers');
   }
 
   function showToast(msg: string) {
@@ -126,16 +126,6 @@
           </p>
         </div>
 
-        <aside class="max-w-sm border-t border-[#597928]/40 pt-3 md:border-t-0 md:border-l md:py-1 md:pl-5" aria-label={isFil ? 'Paalala tungkol sa demo' : 'Demo notice'}>
-          <strong class="text-sm font-bold text-[#486320]">
-            {isFil ? 'Demo — Halimbawang Datos' : 'Demo — sample data'}
-          </strong>
-          <p class="mt-1 text-sm leading-snug text-[#4A5245]">
-            {isFil
-              ? 'Ito ay isang demonstration workspace. Ang mga alok ay naka-save sa device na ito lamang at hindi naglalathala ng totoong transaksyon.'
-              : 'This is a demonstration workspace. Offers are saved on this device only and do not publish real buyer demand.'}
-          </p>
-        </aside>
       </div>
 
       <!-- The action leads; status counts double as quick filters. -->
@@ -326,9 +316,6 @@
                           </svg>
                           <span>{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
                         </div>
-                        <span class="text-xs text-[#6E3511] mt-0.5 pl-1">
-                          Sample workflow state
-                        </span>
                       </div>
                     {:else}
                       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB]">
@@ -343,7 +330,7 @@
                   <!-- Last Updated -->
                   <td class="py-4 px-6 text-xs text-[#596052]">
                     {#if offer.status === 'published'}
-                      <span>Sample offer &middot; 17 Sep 2026</span>
+                      <span>Offer &middot; 17 Sep 2026</span>
                     {:else if offer.status === 'in_review'}
                       <span>Needs review before publication</span>
                     {:else}
@@ -417,7 +404,7 @@
                   </div>
                   <div class="text-xs text-[#596052] mt-0.5 truncate">
                     {#if offer.status === 'published'}
-                      {isFil ? 'Halimbawang alok · 17 Sep 2026' : 'Sample offer · 17 Sep 2026'}
+                      {isFil ? 'Alok · 17 Sep 2026' : 'Offer · 17 Sep 2026'}
                     {:else if offer.status === 'in_review'}
                       {isFil ? 'Kailangang suriin bago ilathala' : 'Needs review before publication'}
                     {:else}
@@ -460,28 +447,6 @@
       </div>
     </div>
 
-    <div class="grid gap-6 border-t border-[#20251E]/20 pt-7 md:grid-cols-2 md:gap-12">
-      <div>
-        <h3 class="text-base font-bold text-[#20251E]">
-          {isFil ? 'Pagsusuri bago Ilathala' : 'Review before publication'}
-        </h3>
-        <ul class="mt-2 space-y-1.5 list-inside list-disc text-sm text-[#4A5245]">
-          <li>{isFil ? 'Tanging ang mga nailathalang alok ang makikita sa pagtuklas ng magsasaka.' : 'Only published offers appear in farmer discovery.'}</li>
-          <li>{isFil ? 'Panatilihing napapanahon ang dami, kondisyon ng pananim, at petsa ng bisa.' : 'Keep quantity, crop requirements, and validity current.'}</li>
-        </ul>
-      </div>
-
-      <div class="md:border-l md:border-[#20251E]/15 md:pl-10">
-        <h3 class="text-base font-bold text-[#20251E]">
-          {isFil ? 'Pinagmulan at Pagsusuri' : 'Source and review'}
-        </h3>
-        <p class="mt-2 text-sm leading-relaxed text-[#4A5245]">
-          {isFil
-            ? 'Ang mga kondisyon ay sinusuri bago ilathala sa pampublikong direktoryo. Ang mga pagbabago rito ay lokal sa iyong browser lamang.'
-            : 'Terms are reviewed before publication in the public directory. Changes made in this demo are stored locally on your device only.'}
-        </p>
-      </div>
-    </div>
 
     <!-- Reset / Testing Utility Link -->
     <div class="pt-4 text-center">
@@ -490,7 +455,7 @@
         onclick={handleReset}
         class="text-xs text-[#596052] hover:text-[#6E3511] underline transition-colors"
       >
-        {isFil ? 'Ibalik sa orihinal na 3 halimbawang alok' : 'Reset to default sample offers (1 published, 1 in review, 1 draft)'}
+        {isFil ? 'Ibalik ang mga default na alok' : 'Restore default offers'}
       </button>
     </div>
   </div>

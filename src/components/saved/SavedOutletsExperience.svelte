@@ -116,7 +116,6 @@
   </header>
 
   <aside class="mt-5 border-y border-[#6E3511]/25 bg-[#FCECD8]/50 px-4 py-3 text-sm leading-relaxed text-[#20251E]">
-    <strong>{isFil ? 'Demo — halimbawang datos. Naka-save lang sa device na ito.' : 'Demo — sample data. Saved only on this device.'}</strong>
     {isFil
       ? 'Ang mga lugar ay naka-save lang sa browser na ito. Hindi ito reserbasyon at hindi nito kinokontak ang buyer.'
       : 'These places stay in this browser. Saving does not reserve capacity or contact a buyer.'}

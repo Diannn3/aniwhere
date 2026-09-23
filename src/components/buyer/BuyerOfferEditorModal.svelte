@@ -155,7 +155,6 @@
       aria-modal="true"
       aria-labelledby="modal-offer-title"
       onkeydown={handleDialogKeyDown}
-      aria-describedby="modal-offer-notice"
     >
       <!-- Modal Header -->
       <div class="flex shrink-0 items-start justify-between gap-4 border-b border-[#20251E]/20 px-5 py-5 sm:px-8 sm:py-7">
@@ -165,11 +164,6 @@
               ? (isFil ? 'Baguhin ang Alok' : 'Edit Buying Offer')
               : (isFil ? 'Gumawa ng Bagong Alok' : 'Create Buying Offer')}
           </h2>
-          <p id="modal-offer-notice" class="mt-2 max-w-md text-sm leading-5 text-[#4A5245]">
-            {isFil
-              ? 'Naka-save sa device na ito lamang para sa demonstrasyon.'
-              : 'Saved on this device only for hackathon demonstration.'}
-          </p>
         </div>
         <button
           type="button"
@@ -301,7 +295,6 @@
               }`}>
                 <input type="radio" name="offer-status" value="published" bind:group={status} class="sr-only" />
                 <span class="text-sm font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
-                <span class="text-xs text-[#4A5245]">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
               </label>
               <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'in_review'
@@ -310,7 +303,6 @@
               }`}>
                 <input type="radio" name="offer-status" value="in_review" bind:group={status} class="sr-only" />
                 <span class="text-sm font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
-                <span class="text-xs text-[#4A5245]">Sample workflow</span>
               </label>
               <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'draft'

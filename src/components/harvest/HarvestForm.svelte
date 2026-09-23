@@ -236,7 +236,6 @@
     <div class="max-w-xl">
       <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
     </div>
-    <span class="hidden shrink-0 rounded-lg bg-[#FCECD8] px-3 py-2 text-xs font-semibold text-[#6E3511] sm:inline-block">{t('demoNotice', lang)}</span>
   </div>
 
   {#if Object.keys(errors).length > 0}
@@ -335,5 +334,4 @@
     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
   </button>
 
-  <p class="text-center text-xs leading-relaxed text-[#4A5245]">{t('noAccountNeeded', lang)} <span class="text-[#6E3511]">{t('confirmTermsNotice', lang)}</span></p>
 </form>

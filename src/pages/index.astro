@@ -20,14 +20,12 @@ const isFil = lang === 'fil';
         <LandingSearch client:load lang={lang} />
       </div>
     </div>
-    <p class="landing-demo" data-i18n-en="Demo — sample data. Confirm terms before traveling." data-i18n-fil="Demo — halimbawang datos. Kumpirmahin ang mga detalye bago bumiyahe.">{isFil ? 'Demo — halimbawang datos. Kumpirmahin ang mga detalye bago bumiyahe.' : 'Demo — sample data. Confirm terms before traveling.'}</p>
   </section>
 
   <section id="how-it-works" class="landing-story" aria-labelledby="story-title">
     <div class="landing-story-intro">
       <div>
         <h2 id="story-title" data-i18n-en="From harvest to a clearer next step." data-i18n-fil="Mula ani tungo sa mas malinaw na susunod na hakbang.">{isFil ? 'Mula ani tungo sa mas malinaw na susunod na hakbang.' : 'From harvest to a clearer next step.'}</h2>
-        <p data-i18n-en="A list of places is not enough. See how your harvest fits, what is known, and what still needs asking." data-i18n-fil="Hindi sapat ang listahan ng mga lugar. Tingnan kung tugma ang ani mo, ano ang alam, at ano ang kailangan pang itanong.">{isFil ? 'Hindi sapat ang listahan ng mga lugar. Tingnan kung tugma ang ani mo, ano ang alam, at ano ang kailangan pang itanong.' : 'A list of places is not enough. See how your harvest fits, what is known, and what still needs asking.'}</p>
       </div>
       <div class="landing-story-photo" role="img" data-aria-en="Illustrative image of a tomato harvest" data-aria-fil="Guhit ng ani ng kamatis" aria-label={isFil ? 'Guhit ng ani ng kamatis' : 'Illustrative image of a tomato harvest'}></div>
     </div>
@@ -54,7 +52,6 @@ const isFil = lang === 'fil';
   .landing-hero h1 { max-width: 14ch; margin: 0 auto; font-size: clamp(3.3rem, 7.1vw, 6rem); line-height: .99; letter-spacing: -.035em; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.25); }
   .landing-hero-content > p { max-width: 58ch; margin: 1.6rem auto 2rem; font-size: clamp(1.05rem, 1.8vw, 1.45rem); font-weight: 650; line-height: 1.4; text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
   .landing-search-slot { max-width: 790px; margin: 0 auto; }
-  .landing-demo { position: absolute; bottom: 1.25rem; left: max(1.5rem, calc((100vw - 1440px)/2)); margin: 0; font-size: .85rem; font-weight: 700; text-shadow: 0 1px 8px #17210d; }
   .landing-story { max-width: 1440px; margin: auto; padding: clamp(3rem, 6vw, 6rem) clamp(1.25rem, 5vw, 5rem) 2.5rem; }
   .landing-story-intro { display: grid; grid-template-columns: 1fr minmax(220px, 30%); align-items: center; gap: clamp(2rem, 6vw, 7rem); }
   .landing-story h2, .landing-entry h2 { max-width: 18ch; font-size: clamp(2.3rem, 4vw, 4rem); line-height: 1.07; }
