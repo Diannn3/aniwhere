@@ -315,7 +315,7 @@
               fill="#20251E"
               text-anchor="middle"
             >
-              {item.outlet.name.replace('Demo ', '')}
+              {item.outlet.name}
             </text>
           </g>
         </g>

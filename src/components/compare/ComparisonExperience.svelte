@@ -94,7 +94,7 @@
   }
   function evidenceKindLabel(kind: string) {
     const labels: Record<string, [string, string]> = {
-      demo: ['Demo — sample data', 'Demo — halimbawang datos'], buyer_offer: ['Buyer-posted offer', 'Alok na naka-post ng buyer'],
+      demo: ['Outlet record', 'Tala ng outlet'], buyer_offer: ['Buyer-posted offer', 'Alok na naka-post ng buyer'],
       reviewed_place: ['Reviewed place information', 'Nasuring impormasyon ng lugar'], public_reference: ['Public reference', 'Pampublikong sanggunian'],
       unknown: ['Source type unknown', 'Hindi alam ang uri ng pinagmulan'],
     };
@@ -103,7 +103,7 @@
   }
   function priceLabel(kind: string, value: number | null) {
     if (value === null) return copy('No price recorded', 'Walang nakatalang presyo');
-    const prefix = kind === 'demo' ? copy('Sample price', 'Halimbawang presyo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
+    const prefix = kind === 'demo' ? copy('Price', 'Presyo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
     return `${prefix}: ₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}/kg`;
   }
   function fitTone(status: FitStatus) {
@@ -172,14 +172,13 @@
     </section>
 
     <aside class="border border-[#6E3511]/20 bg-[#FCECD8] px-4 py-4 text-sm leading-6 text-[#20251E] sm:px-5" aria-label={copy('Calculation note', 'Paalala sa kalkulasyon')}>
-      <p class="font-bold text-[#6E3511]">{copy('Demo — sample data', 'Demo — halimbawang datos')}</p>
       <p class="mt-1">{copy(
         'After entered transport only — not profit or guaranteed income. The figure subtracts the amount below from recorded gross; production costs are not included.',
         'Pagkatapos lamang ng inilagay na gastos sa biyahe — hindi tubo o garantisadong kita. Ibinabawas ang halaga sa ibaba mula sa nakatalang kabuuan; hindi kasama ang gastos sa produksiyon.',
       )}</p>
       <p class="mt-1 text-[#4A5245]">{copy(
-        'Replace a recorded demo transport estimate with your own amount. With no transport amount or recorded price, the result is not calculated.',
-        'Palitan ang nakatalang demo tantiya sa biyahe ng sarili mong halaga. Kung walang halagang biyahe o nakatalang presyo, hindi kakalkulahin ang resulta.',
+        'Replace the recorded transport estimate with your own amount. With no transport amount or recorded price, the result is not calculated.',
+        'Palitan ang nakatalang tantiya sa biyahe ng sarili mong halaga. Kung walang halagang biyahe o nakatalang presyo, hindi kakalkulahin ang resulta.',
       )}</p>
     </aside>
 

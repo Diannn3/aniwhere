@@ -28,4 +28,4 @@ if (CURRENT_DATA_MODE === 'pilot') {
 }
 
 export const CURRENT_OUTLETS: Outlet[] = DEMO_OUTLETS;
-export const CURRENT_DATA_LABEL = 'Demo — sample data';
+export const CURRENT_DATA_LABEL = 'Outlet record';

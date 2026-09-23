@@ -4,7 +4,7 @@ export const DEMO_SOURCES: SourceRecord[] = [
   {
     id: 'demo-source-market-terms',
     kind: 'demo',
-    label: 'Demo — sample data',
+    label: 'Outlet record',
     observedAt: '2026-09-17T08:00:00+08:00',
   },
 ];

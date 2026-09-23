@@ -162,7 +162,7 @@
 
   const priceLabel = $derived(
     fitResult.evidenceKind === 'demo'
-      ? (isFil ? 'Halimbawang presyo' : 'Sample price')
+      ? (isFil ? 'Presyo' : 'Price')
       : fitResult.evidenceKind === 'buyer_offer'
         ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
         : (isFil ? 'Presyo' : 'Price')
@@ -431,7 +431,7 @@
         </div>
       </div>
 
-      <!-- 3. Sample Price -->
+      <!-- 3. Price -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
         <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {priceLabel}
@@ -472,7 +472,7 @@
             : (isFil ? 'Walang nakatala' : 'Not recorded')}
         </div>
         <div class="text-[11px] text-[#596052]">
-          {isFil ? 'Tantiya sa demo record, hindi aktuwal na quote sa biyahe' : 'Demo-record estimate, not an actual hauling quote'}
+          {isFil ? 'Tinatayang gastos sa biyahe, hindi aktuwal na quote' : 'Recorded estimate, not an actual hauling quote'}
         </div>
       </div>
 
@@ -640,10 +640,6 @@
         {isFil ? 'Pinagmulan' : 'Source'}:
         <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || (isFil ? 'Hindi alam' : 'Source unknown')} &bull; {outlet.sampleOfferDate}</span>
       </div>
-      <div>
-        {isFil ? 'Uri ng datos' : 'Data mode'}:
-        <span class="font-medium text-[#20251E]">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'} &bull; NextGen Agri Hackathon 2026</span>
-      </div>
     </div>
   </section>
 </div>
@@ -680,7 +676,7 @@
       </div>
 
       <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
-        <strong>{isFil ? 'Paalala sa demo:' : 'Demo notice:'}</strong>
+        <strong>{isFil ? 'Paalala:' : 'Notice:'}</strong>
         {isFil
           ? ' Hindi awtomatikong nagpapadala ng SMS ang AniWhere. Kopyahin ang mensahe at ipadala mo mismo kung may beripikadong contact.'
           : ' AniWhere does not send automated SMS. Copy the message and send it yourself only when you have a verified contact.'}
@@ -768,8 +764,8 @@
             {/if}
             <p class="text-[11px] leading-relaxed text-[#6E3511]">
               {isFil
-                ? 'Demo field ito, hindi beripikadong real-world contact. Huwag tumawag o mag-message batay sa demo record.'
-                : 'This is a demo field, not a verified real-world contact. Do not call or message based on the demo record.'}
+                ? 'Hindi beripikadong contact. Kumpirmahin bago tumawag o mag-message.'
+                : 'Unverified contact. Verify before calling or messaging.'}
             </p>
           </div>
         {:else}
@@ -783,8 +779,8 @@
         <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
           <strong>{isFil ? 'Paalala:' : 'Notice:'}</strong>
           {isFil
-            ? ' Demo — halimbawang datos para sa NextGen Agri Hackathon. Hindi gumagawa ang AniWhere ng tawag, reserbasyon, o transaksyon.'
-            : ' Demo — sample data for the NextGen Agri Hackathon. AniWhere does not place calls, reserve capacity, or execute transactions.'}
+            ? 'Hindi gumagawa ang AniWhere ng tawag, reserbasyon, o transaksyon.'
+            : 'AniWhere does not place calls, reserve capacity, or complete transactions.'}
         </div>
       </div>
 

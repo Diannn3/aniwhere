@@ -10,7 +10,6 @@
   import type { HarvestQuery } from '../../lib/domain/types';
   import { getCropLabel } from '../../lib/domain/crops';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { CURRENT_DATA_MODE } from '../../lib/data/current-market';
   import { faqsForRoute, matchAniFaq, type AniFaq } from '../../lib/ani/faq';
 
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
@@ -354,7 +353,7 @@
             : 'Local FAQ still works. Fix the harvest form before market checks.'}
         </p>
       {/if}
-      <p class="ani-footnote">{CURRENT_DATA_MODE === 'demo' ? (isFil() ? 'Demo data ngayon. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Demo data for now. Confirm price, capacity, and receiving terms before travelling.') : (isFil() ? 'Kumpirmahin pa rin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.')}</p>
+      <p class="ani-footnote">{isFil() ? 'Kumpirmahin pa rin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Confirm price, capacity, and receiving terms before travelling.'}</p>
     </section>
     <button type="button" class="ani-scrim" aria-label={isFil() ? 'Isara si Ani' : 'Close Ani'} onclick={closeAni}></button>
   {/if}

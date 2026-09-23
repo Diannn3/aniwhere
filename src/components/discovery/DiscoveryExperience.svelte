@@ -314,7 +314,7 @@
 
   function priceLabelFor(fit: FitResult): string {
     if (fit.evidenceKind === 'demo') {
-      return lang === 'fil' ? 'Halimbawang presyo' : 'Sample price';
+      return lang === 'fil' ? 'Presyo' : 'Price';
     }
     if (fit.evidenceKind === 'buyer_offer') {
       return lang === 'fil' ? 'Presyong naka-post ng buyer' : 'Buyer-posted price';
@@ -735,7 +735,7 @@
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
 
-            <!-- Evidence / freshness: demo, buyer-posted, reviewed, and public-reference data must stay visibly distinct. -->
+            <!-- Evidence / freshness: source types must stay visibly distinct. -->
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-[#20251E]/12 bg-[#FCECD8]/35 px-3 py-2 text-[10px] text-[#4A5245]">
               <span class="font-bold text-[#20251E]">{item.fit.sourceLabel || (lang === 'fil' ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
               {#if item.fit.dataUpdatedAt}
