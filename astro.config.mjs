@@ -13,5 +13,9 @@ export default defineConfig({
   integrations: [svelte()],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      port: 4321,
+      strictPort: true,
+    },
   },
 });
