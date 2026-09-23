@@ -313,7 +313,6 @@
     ];
     input = '';
 
-    if (localMode) {
       const result = matchAniFaq(text);
       if (result.kind === 'answer') {
         chooseFaq(result.faq);
@@ -332,8 +331,8 @@
             id: `faq-none-${Date.now()}`,
             role: 'ani',
             text: isFil()
-              ? 'Wala pa akong local na sagot para diyan. Pumili ng topic sa ibaba o gamitin ang online Ani kapag may koneksyon.'
-              : 'I do not have a local answer for that yet. Browse a topic below or use online Ani when you have a connection.',
+              ? 'Wala pa akong local na sagot para diyan. Pumili ng topic sa ibaba.'
+              : 'I do not have a local answer for that yet. Browse a topic below.',
             createdAt: Date.now(),
           },
         ];
@@ -341,73 +340,6 @@
           ? 'Walang eksaktong local na sagot.'
           : 'No exact local answer is available.';
       }
-      return;
-    }
-
-    if (!provider || status === 'offline' || status === 'error' || status === 'connecting') {
-      notice = isFil()
-        ? 'Hindi pa handa ang online Ani. Maaari kang bumalik sa local na tulong.'
-        : 'Online Ani is not ready yet. You can return to local help.';
-      return;
-    }
-
-    try {
-      await provider.sendText(text);
-    } catch {
-      await disposeProvider();
-      localMode = true;
-      status = 'idle';
-      notice = isFil()
-        ? 'Naputol ang koneksyon. Bumalik si Ani sa local na tulong.'
-        : 'The connection was interrupted. Ani returned to local help.';
-    }
-  }
-
-  async function requestMic() {
-    if (localMode) {
-      notice = isFil()
-        ? 'Text-only ang local na tulong. Piliin ang online Ani para gumamit ng voice.'
-        : 'Local help is text-only. Switch to online Ani to use voice.';
-      inputEl?.focus();
-      return;
-    }
-
-    if (!provider || status === 'connecting' || status === 'offline' || status === 'error') {
-      notice = isFil()
-        ? 'Hindi pa handa ang online voice. Maaari kang mag-type o bumalik sa local na tulong.'
-        : 'Online voice is not ready. You can type or return to local help.';
-      inputEl?.focus();
-      return;
-    }
-
-    notice = isFil() ? 'Humihingi ng pahintulot sa mikropono.' : 'Requesting microphone permission.';
-    if (!provider.startListening) {
-      notice = isFil()
-        ? 'Hindi available ang voice dito. Maaari kang mag-type kay Ani.'
-        : 'Voice is unavailable here. You can type to Ani instead.';
-      inputEl?.focus();
-      return;
-    }
-
-    try {
-      // The provider owns microphone acquisition so permission is requested only once per session.
-      await provider.startListening();
-      status = 'listening';
-      notice = isFil()
-        ? 'Nakikinig ang online Ani. Pindutin muli para huminto.'
-        : 'Online Ani is listening. Press again to stop.';
-    } catch {
-      notice = isFil()
-        ? 'Hindi mabuksan ang mikropono. Maaari kang mag-type kay Ani.'
-        : 'The microphone could not be opened. You can type to Ani instead.';
-      inputEl?.focus();
-    }
-  }
-
-  async function stopListening() {
-    await provider?.stopListening?.();
-    status = 'ready';
-    notice = isFil() ? 'Huminto sa pakikinig.' : 'Stopped listening.';
   }
 
   function handleKeydown(event: KeyboardEvent) {
