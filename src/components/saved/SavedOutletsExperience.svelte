@@ -127,37 +127,14 @@
       : 'These places stay in this browser. Saving does not reserve capacity or contact a buyer.'}
   </aside>
 
-  <!-- Content States -->
   {#if savedOutlets.length === 0}
-    <!-- Empty State -->
-    <div class="almanac-entry p-8 sm:p-12 text-center space-y-5">
-      <div class="w-16 h-16 rounded-full bg-[#486320]/10 text-[#486320] mx-auto flex items-center justify-center">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
-      </div>
-
-      <div class="space-y-1.5 max-w-md mx-auto">
-        <h2 class="text-xl sm:text-2xl font-serif font-bold text-[#20251E]">
-          {t('noSavedTitle', lang)}
-        </h2>
-        <p class="text-xs sm:text-sm text-[#4A5245] leading-relaxed">
-          {t('noSavedSubtitle', lang)}
-        </p>
-      </div>
-
-      <div class="pt-2">
-        <a
-          href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
-          class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#486320] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <span>{t('exploreOutlets', lang)}</span>
-        </a>
-      </div>
-    </div>
+    <section class="mt-8 border-y border-[#20251E]/25 bg-[#FCECD8]/20 px-4 py-10 sm:px-8 sm:py-14" aria-labelledby="saved-empty-title">
+      <h2 id="saved-empty-title" class="font-serif text-2xl font-bold text-[#20251E] sm:text-3xl">{t('noSavedTitle', lang)}</h2>
+      <p class="mt-3 max-w-xl text-base leading-relaxed text-[#4A5245]">{t('noSavedSubtitle', lang)}</p>
+      <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="mt-6 inline-flex min-h-11 items-center rounded-lg bg-[#486320] px-5 py-2 text-sm font-semibold text-[#FFFDF8] hover:bg-[#3A5219]">
+        {t('exploreOutlets', lang)}
+      </a>
+    </section>
   {:else}
     <!-- Saved Outlets Grid -->
     <div class="grid grid-cols-1 gap-3">
