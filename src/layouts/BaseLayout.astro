@@ -18,6 +18,7 @@ const {
 } = Astro.props;
 
 const isFil = lang === 'fil';
+const isBagsakanWorkspace = currentPath.startsWith('/bagsakan') || currentPath.startsWith('/buyer');
 const showAni = import.meta.env.PUBLIC_ANI_ENABLED !== 'false' && !currentPath.startsWith('/buyer') && !currentPath.startsWith('/bagsakan');
 const farmerNav = [
   { href: '/discover', label: isFil ? 'Maghanap' : 'Discover' },
@@ -131,11 +132,11 @@ const farmerContextHref = (path: string) => {
       </div>
     </header>
 
-    <main data-ani-background id="main-content" class="page-enter min-w-0 flex-1 overflow-x-clip pb-24 md:pb-12">
+    <main data-ani-background id="main-content" class={`page-enter min-w-0 flex-1 overflow-x-clip ${isBagsakanWorkspace ? 'pb-12' : 'pb-24 md:pb-12'}`}>
       <slot />
     </main>
 
-    <nav data-ani-background class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" data-aria-en="Mobile navigation" data-aria-fil="Nabigasyon sa mobile" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
+    {!isBagsakanWorkspace && <nav data-ani-background class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" data-aria-en="Mobile navigation" data-aria-fil="Nabigasyon sa mobile" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
       <div class="mx-auto grid max-w-md grid-cols-4 gap-1">
         {[
           { href: '/', label: isFil ? 'Ani ko' : 'Harvest', icon: 'home' },
@@ -159,7 +160,7 @@ const farmerContextHref = (path: string) => {
           </a>
         ))}
       </div>
-    </nav>
+    </nav>}
 
     {showAni && <AniAssistant client:load initialLang={lang} />}
 
@@ -167,7 +168,7 @@ const farmerContextHref = (path: string) => {
       <div class="mx-auto flex max-w-[92rem] flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
         <BrandMark size="sm" />
         <p class="max-w-xl" data-i18n-en="Prepare the trip. Confirm price, capacity, and receiving terms before travelling." data-i18n-fil="Ihanda ang biyahe. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.">{isFil ? 'Ihanda ang biyahe. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Prepare the trip. Confirm price, capacity, and receiving terms before travelling.'}</p>
-        <a href={`/bagsakan${lang === 'fil' ? '?lang=fil' : ''}`} class="inline-flex min-h-11 items-center font-semibold text-[#486320] underline underline-offset-4" data-i18n-en="For Bagsakan" data-i18n-fil="Para sa Bagsakan">{isFil ? 'Para sa Bagsakan' : 'For Bagsakan'}</a>
+        {!isBagsakanWorkspace && <a href={`/bagsakan${lang === 'fil' ? '?lang=fil' : ''}`} data-route-href="/bagsakan" class="inline-flex min-h-11 items-center font-semibold text-[#486320] underline underline-offset-4" data-i18n-en="For Bagsakan" data-i18n-fil="Para sa Bagsakan">{isFil ? 'Para sa Bagsakan' : 'For Bagsakan'}</a>}
       </div>
     </footer>
 
