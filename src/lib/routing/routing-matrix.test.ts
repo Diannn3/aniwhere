@@ -3,10 +3,13 @@ import {
   distanceForBasis,
   distanceForSorting,
   getOutletRouteEstimate,
+  getOutletRouteEstimateFromArtifact,
   getRoutingMatrixArtifact,
   hasRoadRoutingData,
+  hasRoadRoutingDataForArtifact,
   sharedDistanceBasis,
   type OutletRouteEstimate,
+  type RouteMatrixArtifact,
 } from './routing-matrix';
 
 describe('routing matrix trust boundary', () => {
@@ -23,6 +26,50 @@ describe('routing matrix trust boundary', () => {
     expect(route.roadDistanceKm).toBeNull();
     expect(route.roadDurationMinutes).toBeNull();
     expect(route.provider).toBeNull();
+  });
+
+
+  it('reads validated road evidence from an injected ready artifact', () => {
+    const ready: RouteMatrixArtifact = {
+      schemaVersion: 1,
+      generatedAt: '2026-09-25T00:00:00Z',
+      provider: 'openrouteservice',
+      providerBase: 'https://api.heigit.org/openrouteservice/v2',
+      profile: 'driving-car',
+      status: 'ready',
+      origins: { 'los-banos': { name: 'Los Baños, Laguna', lat: 14.17, lng: 121.241 } },
+      outlets: { 'demo-market': { name: 'Market', lat: 14.18, lng: 121.243 } },
+      cells: {
+        'los-banos': {
+          'demo-market': { status: 'routed', distanceMeters: 1750, durationSeconds: 420 },
+        },
+      },
+    };
+
+    const route = getOutletRouteEstimateFromArtifact(ready, 'los-banos', 'demo-market', 1.1);
+    expect(hasRoadRoutingDataForArtifact(ready)).toBe(true);
+    expect(route.source).toBe('road');
+    expect(route.roadDistanceKm).toBe(1.8);
+    expect(route.roadDurationMinutes).toBe(7);
+  });
+
+  it('keeps an unavailable cell on straight-line fallback even in a partial artifact', () => {
+    const partial: RouteMatrixArtifact = {
+      schemaVersion: 1,
+      generatedAt: '2026-09-25T00:00:00Z',
+      provider: 'openrouteservice',
+      providerBase: 'https://api.heigit.org/openrouteservice/v2',
+      profile: 'driving-car',
+      status: 'partial',
+      origins: {},
+      outlets: {},
+      cells: { 'los-banos': { 'demo-market': { status: 'unavailable' } } },
+    };
+
+    const route = getOutletRouteEstimateFromArtifact(partial, 'los-banos', 'demo-market', 1.1);
+    expect(route.source).toBe('straight_line');
+    expect(route.roadDistanceKm).toBeNull();
+    expect(route.roadDurationMinutes).toBeNull();
   });
 
   it('sorts by the only supported distance when road routing is unavailable', () => {

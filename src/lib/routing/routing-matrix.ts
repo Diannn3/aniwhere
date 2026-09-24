@@ -48,15 +48,16 @@ export function getRoutingMatrixArtifact(): RouteMatrixArtifact {
   return artifact;
 }
 
-export function getOutletRouteEstimate(
+export function getOutletRouteEstimateFromArtifact(
+  artifactInput: RouteMatrixArtifact,
   originId: string,
   outletId: string,
   straightLineDistanceKm: number
 ): OutletRouteEstimate {
-  const cell = artifact.cells?.[originId]?.[outletId];
+  const cell = artifactInput.cells?.[originId]?.[outletId];
 
   if (
-    artifact.status !== 'not_generated' &&
+    artifactInput.status !== 'not_generated' &&
     cell?.status === 'routed' &&
     finitePositive(cell.distanceMeters) &&
     finitePositive(cell.durationSeconds)
@@ -67,9 +68,9 @@ export function getOutletRouteEstimate(
       roadDistanceKm: Math.round((cell.distanceMeters / 1000) * 10) / 10,
       roadDurationMinutes: Math.max(1, Math.round(cell.durationSeconds / 60)),
       geometry: cell.geometry,
-      provider: artifact.provider,
-      profile: artifact.profile,
-      generatedAt: artifact.generatedAt,
+      provider: artifactInput.provider,
+      profile: artifactInput.profile,
+      generatedAt: artifactInput.generatedAt,
     };
   }
 
@@ -82,6 +83,14 @@ export function getOutletRouteEstimate(
     profile: null,
     generatedAt: null,
   };
+}
+
+export function getOutletRouteEstimate(
+  originId: string,
+  outletId: string,
+  straightLineDistanceKm: number
+): OutletRouteEstimate {
+  return getOutletRouteEstimateFromArtifact(artifact, originId, outletId, straightLineDistanceKm);
 }
 
 export type RouteDistanceBasis = 'road' | 'straight_line';
@@ -116,6 +125,10 @@ export function distanceForSorting(route: OutletRouteEstimate): number {
   return route.roadDistanceKm ?? route.straightLineDistanceKm;
 }
 
+export function hasRoadRoutingDataForArtifact(artifactInput: RouteMatrixArtifact): boolean {
+  return artifactInput.status === 'ready' || artifactInput.status === 'partial';
+}
+
 export function hasRoadRoutingData(): boolean {
-  return artifact.status === 'ready' || artifact.status === 'partial';
+  return hasRoadRoutingDataForArtifact(artifact);
 }
