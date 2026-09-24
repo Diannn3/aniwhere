@@ -55,13 +55,20 @@ describe('AniToolDispatcher', () => {
     const route = result.data as any;
     expect(route.originMunicipality).toBe('los-banos');
     expect(route.originBasis).toBe('municipality_centroid');
-    expect(route.source).toBe('straight_line');
     expect(route.straightLineDistanceKm).toBeTypeOf('number');
-    expect(route.roadDistanceKm).toBeNull();
-    expect(route.roadDurationSeconds).toBeNull();
-    expect(route.roadDurationMinutes).toBeNull();
-    expect(route.provider).toBeNull();
-    expect(route.geometryAvailable).toBe(false);
+    if (route.source === 'road') {
+      expect(route.roadDistanceKm).toBeTypeOf('number');
+      expect(route.roadDurationMinutes).toBeTypeOf('number');
+      expect(route.provider).toBe('openrouteservice');
+      expect(route.geometryAvailable).toBe(true);
+    } else {
+      expect(route.source).toBe('straight_line');
+      expect(route.roadDistanceKm).toBeNull();
+      expect(route.roadDurationSeconds).toBeNull();
+      expect(route.roadDurationMinutes).toBeNull();
+      expect(route.provider).toBeNull();
+      expect(route.geometryAvailable).toBe(false);
+    }
   });
 
   it('rejects route estimates for unknown outlets', async () => {
