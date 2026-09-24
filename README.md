@@ -151,7 +151,7 @@ $env:ORS_API_KEY="..."
 pnpm dev
 ```
 
-The dev server exposes a same-origin `/api/route-estimate` bridge; the browser never receives the ORS key. Production serverless deployments should keep `ORS_API_KEY` server-only and set `PUBLIC_RUNTIME_ROUTING_ENDPOINT=/api/route-estimate` at build time.
+The dev server exposes a same-origin `/api/route-estimate` bridge; the browser never receives the ORS key. Production serverless deployments should keep `ORS_API_KEY` server-only and set `PUBLIC_RUNTIME_ROUTING_ENDPOINT=/api/route-estimate` at build time. The production adapter rejects cross-site browser requests by default; `ROUTING_ALLOWED_ORIGINS` is only for explicit additional trusted origins.
 
 Verification:
 
