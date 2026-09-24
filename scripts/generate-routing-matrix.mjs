@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createRoutingClient } from './lib/routing-provider.mjs';
 import {
@@ -50,6 +50,9 @@ const matrix = await ors(`/matrix/${PROFILE}`, {
 assertMatrixResponse(matrix, origins.length, outlets.length);
 
 const generatedAt = new Date().toISOString();
+const geometryRunId = WITH_GEOMETRY
+  ? `${generatedAt.replace(/\D/g, '').slice(0, 14)}-${inputFingerprint.slice(0, 12)}`
+  : null;
 const artifact = {
   schemaVersion: 2,
   generatedAt,
@@ -60,6 +63,7 @@ const artifact = {
   status: 'ready',
   attribution: 'Routing data © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
   inputFingerprint,
+  geometryRunId,
   note: WITH_GEOMETRY
     ? 'Road matrix and route geometries generated from OpenRouteService.'
     : 'Road matrix generated from OpenRouteService. Geometry was not requested.',
@@ -90,6 +94,8 @@ for (let oi = 0; oi < origins.length; oi += 1) {
 }
 
 if (WITH_GEOMETRY) {
+  const geometryDirectory = resolve('public/generated/routes', geometryRunId);
+  await mkdir(geometryDirectory, { recursive: true });
   console.log(`Fetching route geometry for ${origins.length * outlets.length} demo origin/outlet pairs at a conservative rate...`);
   for (const [originId, , originLat, originLng] of origins) {
     for (const [outletId, , outletLat, outletLng] of outlets) {
@@ -112,7 +118,14 @@ if (WITH_GEOMETRY) {
           summary.duration >= 0;
 
         if (validateRouteGeometry(geometry) && validSummary) {
-          cell.geometry = geometry;
+          const geometryPath = `/generated/routes/${geometryRunId}/${originId}--${outletId}.geojson`;
+          const geometryFile = resolve('public', geometryPath.slice(1));
+          await writeJsonAtomic(geometryFile, geometry, (candidate) => {
+            if (!validateRouteGeometry(candidate)) {
+              throw new Error(`Invalid route geometry for ${originId} -> ${outletId}.`);
+            }
+          });
+          cell.geometryPath = geometryPath;
           cell.geometryStatus = 'ready';
           cell.distanceMeters = summary.distance;
           cell.durationSeconds = summary.duration;

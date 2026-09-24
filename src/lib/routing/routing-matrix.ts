@@ -30,6 +30,7 @@ export interface RouteMatrixArtifact {
   status: 'ready' | 'not_generated' | 'partial';
   attribution: string;
   inputFingerprint: string;
+  geometryRunId?: string | null;
   note?: string;
   engine?: {
     version?: string;

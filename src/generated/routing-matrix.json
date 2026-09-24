@@ -11,5 +11,6 @@
   "note": "No road-routing claims are bundled until this artifact is generated with a valid private routing credential.",
   "origins": {},
   "outlets": {},
-  "cells": {}
+  "cells": {},
+  "geometryRunId": null
 }
