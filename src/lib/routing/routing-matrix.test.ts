@@ -6,7 +6,6 @@ import {
   getOutletRouteEstimate,
   getOutletRouteEstimateFromArtifact,
   getRoutingMatrixArtifact,
-  hasRoadRoutingData,
   hasRoadRoutingDataForArtifact,
   sharedDistanceBasis,
   type OutletRouteEstimate,
@@ -14,14 +13,31 @@ import {
 } from './routing-matrix';
 
 describe('routing matrix trust boundary', () => {
-  it('fails closed when the checked-in road matrix has not been generated', () => {
-    const artifact = getRoutingMatrixArtifact();
-    expect(artifact.status).toBe('not_generated');
-    expect(hasRoadRoutingData()).toBe(false);
+  it('fails closed when a road matrix has not been generated', () => {
+    const ungenerated: RouteMatrixArtifact = {
+      schemaVersion: 2,
+      generatedAt: null,
+      provider: 'openrouteservice',
+      providerBase: 'https://api.heigit.org/openrouteservice/v2',
+      profile: 'driving-car',
+      generationMode: 'not_generated',
+      status: 'not_generated',
+      attribution: 'Routing data test attribution',
+      inputFingerprint: 'test-fingerprint',
+      origins: {},
+      outlets: {},
+      cells: {},
+    };
+    expect(hasRoadRoutingDataForArtifact(ungenerated)).toBe(false);
+    const route = getOutletRouteEstimateFromArtifact(ungenerated, 'los-banos', 'demo-cooperative', 22.4);
+    expect(route.source).toBe('straight_line');
+    expect(route.roadDistanceKm).toBeNull();
+    expect(route.roadDurationMinutes).toBeNull();
+    expect(route.provider).toBeNull();
   });
 
   it('keeps Haversine fallback explicitly separate from road routing', () => {
-    const route = getOutletRouteEstimate('los-banos', 'demo-cooperative', 22.4);
+    const route = getOutletRouteEstimate('los-banos', 'non-existent-outlet', 22.4);
     expect(route.source).toBe('straight_line');
     expect(route.straightLineDistanceKm).toBe(22.4);
     expect(route.roadDistanceKm).toBeNull();
@@ -126,7 +142,7 @@ describe('routing matrix trust boundary', () => {
   });
 
   it('sorts by the only supported distance when road routing is unavailable', () => {
-    const route = getOutletRouteEstimate('los-banos', 'demo-market', 1.1);
+    const route = getOutletRouteEstimate('los-banos', 'non-existent-outlet', 1.1);
     expect(distanceForSorting(route)).toBe(1.1);
   });
 
