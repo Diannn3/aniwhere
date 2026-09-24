@@ -142,11 +142,63 @@ describe('routing artifact validation', () => {
     ).toThrow('inconsistent geometry provenance');
   });
 
+  it('rejects not-generated artifacts that contain generated route state', () => {
+    const placeholder = {
+      ...artifact(),
+      status: 'not_generated',
+      generationMode: 'not_generated',
+      generatedAt: null,
+      geometryRunId: null,
+      origins: {},
+      outlets: {},
+      cells: {
+        'los-banos': {
+          'demo-market': {
+            status: 'routed',
+            distanceMeters: 1,
+            durationSeconds: 1,
+            metricSource: 'matrix',
+            geometryStatus: 'not_requested',
+          },
+        },
+      },
+    };
+
+    expect(() =>
+      validateRoutingArtifact(placeholder, ['los-banos'], ['demo-market'])
+    ).toThrow('contains generated route state');
+  });
+
+  it('rejects geometry state that disagrees with generation mode', () => {
+    const inconsistent = artifact();
+    inconsistent.cells['los-banos']['demo-market'].geometryStatus = 'ready';
+    inconsistent.cells['los-banos']['demo-market'].metricSource = 'directions';
+    inconsistent.cells['los-banos']['demo-market'].geometryPath =
+      '/generated/routes/run/los-banos--demo-market.geojson';
+
+    expect(() =>
+      validateRoutingArtifact(inconsistent, ['los-banos'], ['demo-market'])
+    ).toThrow('unexpected geometry state');
+  });
+
+  it('requires partial status when requested road geometry is unavailable', () => {
+    const inconsistent = artifact();
+    inconsistent.generationMode = 'metrics_and_geometry';
+    inconsistent.geometryRunId = 'run';
+    inconsistent.cells['los-banos']['demo-market'].geometryStatus = 'unavailable';
+
+    expect(() =>
+      validateRoutingArtifact(inconsistent, ['los-banos'], ['demo-market'])
+    ).toThrow('Ready geometry artifact contains unavailable geometry');
+  });
+
   it('allows a not-generated placeholder without fabricated cells', () => {
     const placeholder = {
       ...artifact(),
       status: 'not_generated',
       generationMode: 'not_generated',
+      generatedAt: null,
+      geometryRunId: null,
       origins: {},
       outlets: {},
       cells: {},

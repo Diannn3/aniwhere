@@ -105,14 +105,62 @@ export function validateRouteGeometry(geometry) {
 
 export function validateRoutingArtifact(artifact, expectedOrigins, expectedOutlets) {
   if (artifact?.schemaVersion !== 2) throw new Error('Routing artifact schema must be version 2.');
+  if (artifact.provider !== 'openrouteservice') {
+    throw new Error('Routing artifact has an unsupported provider.');
+  }
+  if (typeof artifact.providerBase !== 'string' || !/^https?:\/\//.test(artifact.providerBase)) {
+    throw new Error('Routing artifact has an invalid provider base URL.');
+  }
+  if (artifact.profile !== 'driving-car') {
+    throw new Error('Routing artifact has an unsupported routing profile.');
+  }
   if (!['ready', 'partial', 'not_generated'].includes(artifact.status)) {
     throw new Error('Routing artifact has an invalid status.');
   }
-  if (typeof artifact.inputFingerprint !== 'string' || artifact.inputFingerprint.length !== 64) {
+  if (!['metrics', 'metrics_and_geometry', 'not_generated'].includes(artifact.generationMode)) {
+    throw new Error('Routing artifact has an invalid generation mode.');
+  }
+  if (typeof artifact.attribution !== 'string' || artifact.attribution.trim().length === 0) {
+    throw new Error('Routing artifact is missing routing attribution.');
+  }
+  if (typeof artifact.inputFingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(artifact.inputFingerprint)) {
     throw new Error('Routing artifact is missing a SHA-256 input fingerprint.');
   }
 
-  if (artifact.status === 'not_generated') return artifact;
+  const generated = artifact.status !== 'not_generated';
+  if (!generated) {
+    if (
+      artifact.generationMode !== 'not_generated' ||
+      artifact.generatedAt !== null ||
+      artifact.geometryRunId != null ||
+      Object.keys(artifact.origins || {}).length > 0 ||
+      Object.keys(artifact.outlets || {}).length > 0 ||
+      Object.keys(artifact.cells || {}).length > 0
+    ) {
+      throw new Error('Not-generated routing artifact contains generated route state.');
+    }
+    return artifact;
+  }
+
+  if (!Number.isFinite(Date.parse(artifact.generatedAt))) {
+    throw new Error('Generated routing artifact has an invalid generatedAt timestamp.');
+  }
+  if (artifact.generationMode === 'not_generated') {
+    throw new Error('Generated routing artifact cannot use not_generated generation mode.');
+  }
+  if (artifact.status === 'partial' && artifact.generationMode !== 'metrics_and_geometry') {
+    throw new Error('Partial routing artifacts are reserved for incomplete geometry generation.');
+  }
+  if (artifact.generationMode === 'metrics') {
+    if (artifact.geometryRunId != null) {
+      throw new Error('Metrics-only routing artifact must not expose a geometry run ID.');
+    }
+  } else if (
+    typeof artifact.geometryRunId !== 'string' ||
+    !/^[a-z0-9-]+$/.test(artifact.geometryRunId)
+  ) {
+    throw new Error('Geometry-enabled routing artifact has an invalid geometry run ID.');
+  }
 
   const originIds = Object.keys(artifact.origins || {}).sort();
   const outletIds = Object.keys(artifact.outlets || {}).sort();
@@ -141,8 +189,18 @@ export function validateRoutingArtifact(artifact, expectedOrigins, expectedOutle
         if (!['not_requested', 'ready', 'unavailable'].includes(cell.geometryStatus)) {
           throw new Error(`Routed cell ${originId} -> ${outletId} has invalid geometry state.`);
         }
+        if (artifact.generationMode === 'metrics' && cell.geometryStatus !== 'not_requested') {
+          throw new Error(`Metrics-only cell ${originId} -> ${outletId} has unexpected geometry state.`);
+        }
+        if (
+          artifact.generationMode === 'metrics_and_geometry' &&
+          cell.geometryStatus === 'not_requested'
+        ) {
+          throw new Error(`Geometry-enabled cell ${originId} -> ${outletId} was not evaluated for geometry.`);
+        }
         if (cell.geometryStatus === 'ready') {
           if (
+            artifact.generationMode !== 'metrics_and_geometry' ||
             cell.metricSource !== 'directions' ||
             typeof cell.geometryPath !== 'string' ||
             !/^\/generated\/routes\/[a-z0-9-]+\/[a-z0-9-]+--[a-z0-9-]+\.geojson$/.test(cell.geometryPath)
@@ -152,9 +210,17 @@ export function validateRoutingArtifact(artifact, expectedOrigins, expectedOutle
         } else if (cell.geometryPath) {
           throw new Error(`Routed cell ${originId} -> ${outletId} exposes an unvalidated geometry path.`);
         }
+        if (artifact.status === 'ready' && artifact.generationMode === 'metrics_and_geometry' && cell.geometryStatus === 'unavailable') {
+          throw new Error(`Ready geometry artifact contains unavailable geometry for ${originId} -> ${outletId}.`);
+        }
       } else if (cell?.status === 'unavailable') {
         if (cell.distanceMeters !== undefined || cell.durationSeconds !== undefined || cell.geometryPath) {
           throw new Error(`Unavailable cell ${originId} -> ${outletId} contains routed evidence.`);
+        }
+        const expectedGeometryStatus =
+          artifact.generationMode === 'metrics_and_geometry' ? 'unavailable' : 'not_requested';
+        if (cell.geometryStatus !== expectedGeometryStatus) {
+          throw new Error(`Unavailable cell ${originId} -> ${outletId} has inconsistent geometry state.`);
         }
       } else {
         throw new Error(`Cell ${originId} -> ${outletId} has an invalid status.`);
