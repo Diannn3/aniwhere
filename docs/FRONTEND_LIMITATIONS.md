@@ -40,7 +40,7 @@ The new `supabase/` directory is a **handoff scaffold**, not evidence that a rem
 
 ### B. Demo and production data must stay distinguishable
 
-Current outlet terms are explicit fictional fixtures in `src/content/demo-outlets.ts`.
+Current outlet terms are explicit fictional fixtures separated into places, crop capabilities, offers, sources, and hauling assumptions in `src/content/`. The demo shifts its sample dates relative to the current Manila date for offline presentation; the displayed freshness is illustrative, not evidence of recent verification.
 
 The trust-model v2 domain now carries:
 
@@ -68,13 +68,7 @@ Route distance/time remains separate from market evidence, buyer acceptance, fit
 
 ## 3. Matching Boundaries
 
-Detailed fixture matching is currently scoped to:
-
-1. tomato / kamatis;
-2. eggplant / talong;
-3. calamansi / kalamansi.
-
-Other crops return **Contact to confirm**.
+Detailed demo fixture matching covers tomato / kamatis, eggplant / talong, calamansi / kalamansi, banana / saging, papaya, pechay / petsay, and string beans / sitaw. Other crops return **Contact to confirm**.
 
 Within the pilot crops, the engine now distinguishes:
 
