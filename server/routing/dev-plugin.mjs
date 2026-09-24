@@ -39,8 +39,7 @@ export function runtimeRoutingDevPlugin() {
         'https://api.heigit.org/openrouteservice/v2';
     },
     configureServer(server) {
-      server.middlewares.use('/api/route-estimate', async (req, res, next) => {
-        if (!req.url?.startsWith('/api/route-estimate')) return next();
+      server.middlewares.use('/api/route-estimate', async (req, res) => {
         if (req.method !== 'POST') {
           res.setHeader('Allow', 'POST');
           send(res, 405, { error: 'method_not_allowed' });
