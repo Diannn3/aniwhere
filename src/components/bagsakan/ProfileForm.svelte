@@ -15,7 +15,7 @@
   let latInput = $state(profile ? String(profile.lat) : '');
   let lngInput = $state(profile ? String(profile.lng) : '');
   let locationBasis = $state<'municipality_center' | 'exact_pin'>(profile?.locationBasis ?? 'municipality_center');
-  let mapRecenterVersion = $state(0);
+  let mapRecenterRequest = $state<{ version: number; lat: number; lng: number } | undefined>(undefined);
   let errors = $state<Record<string, string>>({});
   const isFil = $derived(lang === 'fil');
   const municipality = $derived(LAGUNA_MUNICIPALITIES.find((item) => item.id === municipalityId));
@@ -32,7 +32,13 @@
     latInput = selected ? String(selected.lat) : '';
     lngInput = selected ? String(selected.lng) : '';
     locationBasis = 'municipality_center';
-    if (selected) mapRecenterVersion += 1;
+    if (selected) {
+      mapRecenterRequest = {
+        version: (mapRecenterRequest?.version ?? 0) + 1,
+        lat: selected.lat,
+        lng: selected.lng,
+      };
+    }
     errors = {};
   }
 
@@ -95,7 +101,7 @@
     <div class="space-y-3">
       <p class="font-semibold">{isFil ? 'Pin sa mapa (opsyonal)' : 'Map pin (optional)'}</p>
       <p class="text-sm text-[#4A5245]">{isFil ? 'Nagsisimula ito sa sentro ng bayan. Gamitin lamang ang eksaktong pin kung alam ang lokasyon.' : 'This starts at the municipality center. Set an exact pin only if you know the location.'}</p>
-      <PinPicker lat={Number(latInput)} lng={Number(lngInput)} {lang} recenterVersion={mapRecenterVersion} onPick={setPin} />
+      <PinPicker lat={Number(latInput)} lng={Number(lngInput)} {lang} recenterRequest={mapRecenterRequest} onPick={setPin} />
       <div class="grid gap-4 sm:grid-cols-2">
         <div><label for="bag-profile-lat" class="mb-1 block font-semibold">{isFil ? 'Latitude ng pin' : 'Pin latitude'}</label><input id="bag-profile-lat" type="number" step="any" bind:value={latInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lat)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lat}<p class="mt-1 text-sm text-[#6E3511]">{errors.lat}</p>{/if}</div>
         <div><label for="bag-profile-lng" class="mb-1 block font-semibold">{isFil ? 'Longitude ng pin' : 'Pin longitude'}</label><input id="bag-profile-lng" type="number" step="any" bind:value={lngInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lng)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lng}<p class="mt-1 text-sm text-[#6E3511]">{errors.lng}</p>{/if}</div>

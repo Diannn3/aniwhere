@@ -3,11 +3,11 @@
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import { loadAniwhereMapStyle, LAGUNA_MAP_BOUNDS, MAP_ATTRIBUTION } from '../../lib/map/map-config';
 
-  let { lat, lng, lang = 'en', recenterVersion = 0, onPick }: {
+  let { lat, lng, lang = 'en', recenterRequest, onPick }: {
     lat: number;
     lng: number;
     lang?: 'en' | 'fil';
-    recenterVersion?: number;
+    recenterRequest?: { version: number; lat: number; lng: number };
     onPick: (lat: number, lng: number) => void;
   } = $props();
 
@@ -15,9 +15,9 @@
   let state = $state<'loading' | 'ready' | 'failed'>('loading');
   let map: any;
   let marker: any;
-  // The map already starts at the initial coordinates, so any recenter request
-  // that existed before this component mounted is already satisfied.
-  let handledRecenterVersion = recenterVersion;
+  // The map constructor already uses the initial pin coordinates. A recenter
+  // request that predates mount is therefore already represented by the camera.
+  let handledRecenterVersion = recenterRequest?.version ?? 0;
 
   onMount(() => {
     let disposed = false;
@@ -63,16 +63,17 @@
   });
 
   // Moving the pin and moving the camera are separate interactions.
-  // Map clicks/manual coordinate edits update only the marker so the selected
-  // point visibly moves on screen. Municipality changes/resets opt into a
-  // camera recenter through recenterVersion.
+  // Map clicks/manual coordinate edits update only the marker. Municipality
+  // changes/resets send an explicit camera target so a delayed recenter can
+  // never accidentally follow a newer map click.
   $effect(() => {
-    const requestedVersion = recenterVersion;
-    if (requestedVersion === handledRecenterVersion) return;
-    if (!map || state !== 'ready' || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const request = recenterRequest;
+    if (!request || request.version === handledRecenterVersion) return;
+    if (!map || state !== 'ready') return;
+    if (!Number.isFinite(request.lat) || !Number.isFinite(request.lng)) return;
 
-    handledRecenterVersion = requestedVersion;
-    map.easeTo({ center: [lng, lat], duration: 0 });
+    handledRecenterVersion = request.version;
+    map.easeTo({ center: [request.lng, request.lat], duration: 0 });
   });
 </script>
 
