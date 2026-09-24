@@ -2,7 +2,8 @@
 
 **Date:** 25 September 2026  
 **Branch:** `feat/routing-matrix-v2`  
-**Baseline:** `main@1e3d29e1cf5f663dbc34eafa6546bbf587650163`
+**Initial baseline:** `main@1e3d29e1cf5f663dbc34eafa6546bbf587650163`  
+**Reconciled current main:** `0f43dad659dacda253ff24598b3af6ed0a57d444` — Bagsakan demand flow merge
 
 ## Status
 
@@ -193,8 +194,15 @@ At minimum inspect:
 Check that geometry follows plausible roads, endpoints snap reasonably, there are no impossible water
 crossings, and distance/time remain plausible planning estimates.
 
+## Bagsakan routing boundary
+
+The new same-device Bagsakan flow is preserved by the reconciliation merge. A local Bagsakan can be created
+or moved at runtime, so it is intentionally **not** part of the checked-in 10 × 11 static matrix. Its
+farmer-facing route context therefore stays on labelled straight-line distance. A future exact/runtime
+routing path must be designed separately with secure rate limiting and location-privacy controls.
+
 ## Remaining boundary
 
-Until a reviewed generated artifact is committed, the user-visible application should continue showing
+Until a reviewed generated artifact is committed, the checked-in demo outlets also continue showing
 straight-line distance and `Road route unavailable`. That is intentional fail-closed behavior, not a
 reason to synthesize driving distance.
