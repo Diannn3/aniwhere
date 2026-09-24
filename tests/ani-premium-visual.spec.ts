@@ -21,7 +21,7 @@ for (const viewport of [
 
     await page.goto(discovery);
     await expect(page.getByRole('heading', { name: /300 kg/i })).toBeVisible();
-    await expect(page.getByText('Can accept').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Potential outlets/ }).first()).toBeVisible();
     await page.screenshot({ path: `tests/.artifacts/visual/${viewport.name}-discovery.png`, fullPage: true });
 
     await page.goto(compare);
