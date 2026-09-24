@@ -5,6 +5,7 @@ import { clearRouteGeometryCache, loadRouteGeometry } from './route-geometry';
 function road(overrides: Partial<OutletRouteEstimate> = {}): OutletRouteEstimate {
   return {
     source: 'road',
+    routeEvidence: 'static_artifact',
     straightLineDistanceKm: 10,
     roadDistanceKm: 14,
     roadDurationSeconds: 1200,
