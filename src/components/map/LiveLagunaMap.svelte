@@ -8,6 +8,7 @@
   } from '../../lib/routing/routing-matrix';
   import type { OutletRouteEstimate, RouteGeometry } from '../../lib/routing/routing-matrix';
   import { loadRouteGeometry } from '../../lib/routing/route-geometry';
+  import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import {
     loadAniwhereMapStyle,
@@ -53,6 +54,8 @@
   let loadedRouteGeometry = $state<RouteGeometry | undefined>();
   let geometryLoadState = $state<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
   let geometryRequestId = 0;
+  let internalRuntimeRoute = $state<OutletRouteEstimate | undefined>();
+  let internalRouteState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
 
   const origin = $derived(
     LAGUNA_MUNICIPALITIES.find((item) => item.id === harvest.originMunicipality) ??
@@ -62,6 +65,7 @@
   const selectedItem = $derived(items.find((item) => item.outlet.id === selectedId));
   const selectedRoute = $derived<OutletRouteEstimate | undefined>(
     routeOverride ??
+      internalRuntimeRoute ??
       (selectedItem
         ? getOutletRouteEstimate(
             harvest.originMunicipality,
@@ -69,6 +73,9 @@
             selectedItem.distanceKm
           )
         : undefined)
+  );
+  const effectiveRouteRequestState = $derived(
+    routeOverride ? routeRequestState : internalRouteState
   );
 
   function activeRouteGeometry(): RouteGeometry | undefined {
@@ -135,7 +142,11 @@
       button.textContent = String(index + 1);
       button.setAttribute(
         'aria-label',
-        `${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
+        `${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${
+          item.outlet.id === selectedId && selectedRoute?.source === 'road'
+            ? `${selectedRoute.roadDistanceKm?.toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
+            : `${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
+        }`
       );
       button.setAttribute('aria-pressed', item.outlet.id === selectedId ? 'true' : 'false');
       button.addEventListener('click', () => onSelect(item.outlet.id));
@@ -200,6 +211,46 @@
     syncMarkers();
     syncRoute();
   }
+
+
+  $effect(() => {
+    const item = selectedItem;
+    if (routeOverride || !item?.outlet.isLocalBagsakan) {
+      internalRuntimeRoute = undefined;
+      internalRouteState = 'idle';
+      return;
+    }
+
+    const immediate = getImmediateOutletRoute(
+      harvest.originMunicipality,
+      item.outlet,
+      item.distanceKm
+    );
+    internalRuntimeRoute = immediate.route;
+    if (immediate.state === 'cached') {
+      internalRouteState = 'ready';
+      return;
+    }
+
+    internalRouteState = 'loading';
+    const controller = new AbortController();
+    void resolveOutletRoute(
+      harvest.originMunicipality,
+      item.outlet,
+      item.distanceKm,
+      { signal: controller.signal }
+    ).then((result) => {
+      if (controller.signal.aborted) return;
+      internalRuntimeRoute = result.route;
+      internalRouteState =
+        result.route.source === 'road'
+          ? 'ready'
+          : result.failureReason === 'not_configured'
+            ? 'not_configured'
+            : 'unavailable';
+    });
+    return () => controller.abort();
+  });
 
   $effect(() => {
     const route = selectedRoute;
@@ -376,20 +427,20 @@
             <div>
               <dt>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</dt>
               <dd>
-                {routeRequestState === 'loading'
+                {effectiveRouteRequestState === 'loading'
                   ? (lang === 'fil' ? 'Nilo-load…' : 'Loading…')
-                  : routeRequestState === 'not_configured'
+                  : effectiveRouteRequestState === 'not_configured'
                     ? (lang === 'fil' ? 'Hindi naka-configure' : 'Not configured')
-                    : routeRequestState === 'unavailable'
+                    : effectiveRouteRequestState === 'unavailable'
                       ? (lang === 'fil' ? 'Pansamantalang hindi available' : 'Temporarily unavailable')
                       : (lang === 'fil' ? 'Hindi available' : 'Unavailable')}
               </dd>
             </div>
           </dl>
           <p>
-            {routeRequestState === 'loading'
+            {effectiveRouteRequestState === 'loading'
               ? (lang === 'fil' ? 'Kinukuha ang rutang pangkalsada. Tuwid na konteksto muna ang ipinapakita.' : 'Fetching the road route. Straight-line context is shown while it loads.')
-              : routeRequestState === 'unavailable'
+              : effectiveRouteRequestState === 'unavailable'
                 ? (lang === 'fil' ? 'Hindi na-load ang ruta sa ngayon. Ang putol-putol na linya ay tuwid na konteksto lamang.' : 'Road routing could not be loaded right now. The dashed line is straight-line context only.')
                 : (lang === 'fil' ? 'Mula ito sa reference point ng munisipyo. Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'This starts from the municipality reference point. The dashed line is geographic context only, not road directions.')}
           </p>
