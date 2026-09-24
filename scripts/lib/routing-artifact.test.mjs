@@ -139,7 +139,7 @@ describe('routing artifact validation', () => {
       '/generated/routes/20260925-abcdef123456/los-banos--demo-market.geojson';
     expect(() =>
       validateRoutingArtifact(inconsistent, ['los-banos'], ['demo-market'])
-    ).toThrow('inconsistent geometry provenance');
+    ).toThrow('unexpected geometry state');
   });
 
   it('rejects not-generated artifacts that contain generated route state', () => {

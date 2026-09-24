@@ -1,4 +1,4 @@
-import matrixArtifact from '../../generated/routing-matrix.json';
+import matrixArtifact from '../../generated/routing-matrix.json' with { type: 'json' };
 
 export type RouteCellStatus = 'routed' | 'unavailable';
 
