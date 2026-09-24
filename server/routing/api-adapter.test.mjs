@@ -9,6 +9,7 @@ function response() {
     setHeader(name, value) { this.headers[name] = value; },
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
+    end(body) { this.body = body; return this; },
   };
 }
 
@@ -18,7 +19,7 @@ describe('runtime route API adapter', () => {
     await handler({ method: 'GET', headers: {}, socket: {} }, res);
     expect(res.statusCode).toBe(405);
     expect(res.body).toEqual({ error: 'method_not_allowed' });
-    expect(res.headers.Allow).toBe('POST');
+    expect(res.headers.Allow).toBe('POST, OPTIONS');
   });
 
   it('rejects cross-site browser requests before provider work', async () => {
@@ -63,6 +64,30 @@ describe('runtime route API adapter', () => {
     } finally {
       if (previous === undefined) delete process.env.ORS_API_KEY;
       else process.env.ORS_API_KEY = previous;
+    }
+  });
+
+  it('answers CORS preflight only for an explicitly trusted origin', async () => {
+    const previous = process.env.ROUTING_ALLOWED_ORIGINS;
+    process.env.ROUTING_ALLOWED_ORIGINS = 'https://preview.example';
+    try {
+      const res = response();
+      await handler({
+        method: 'OPTIONS',
+        headers: {
+          origin: 'https://preview.example',
+          host: 'api.aniwhere.example',
+          'x-forwarded-proto': 'https',
+        },
+        socket: {},
+      }, res);
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['Access-Control-Allow-Origin']).toBe('https://preview.example');
+      expect(res.headers['Access-Control-Allow-Methods']).toBe('POST, OPTIONS');
+      expect(res.headers.Vary).toBe('Origin');
+    } finally {
+      if (previous === undefined) delete process.env.ROUTING_ALLOWED_ORIGINS;
+      else process.env.ROUTING_ALLOWED_ORIGINS = previous;
     }
   });
 
