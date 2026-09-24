@@ -15,7 +15,9 @@
   let state = $state<'loading' | 'ready' | 'failed'>('loading');
   let map: any;
   let marker: any;
-  let handledRecenterVersion = 0;
+  // The map already starts at the initial coordinates, so any recenter request
+  // that existed before this component mounted is already satisfied.
+  let handledRecenterVersion = recenterVersion;
 
   onMount(() => {
     let disposed = false;
