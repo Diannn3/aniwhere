@@ -10,10 +10,9 @@
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
-  import {
-    formatEstimatedDriveDuration,
-    getOutletRouteEstimate,
-  } from '../../lib/routing/routing-matrix';
+  import { formatEstimatedDriveDuration } from '../../lib/routing/routing-matrix';
+  import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
 
   interface Props {
     outlet: Outlet;
@@ -41,6 +40,8 @@
   let contactPanel: HTMLDivElement | null = $state(null);
   let messageCloseButton: HTMLButtonElement | null = $state(null);
   let contactCloseButton: HTMLButtonElement | null = $state(null);
+  let resolvedRoute = $state<OutletRouteEstimate | undefined>();
+  let routeRequestState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
 
   onMount(() => {
     saved = isOutletSaved(outlet.id);
@@ -64,7 +65,43 @@
   );
 
   const fitResult = $derived(evaluateFit(outlet, harvest));
-  const routeEstimate = $derived(getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distanceKm));
+  const immediateRoute = $derived(
+    getImmediateOutletRoute(harvest.originMunicipality, outlet, distanceKm)
+  );
+  const routeEstimate = $derived(resolvedRoute ?? immediateRoute.route);
+
+  $effect(() => {
+    const originId = harvest.originMunicipality;
+    const straightLineDistanceKm = distanceKm;
+    const immediate = getImmediateOutletRoute(originId, outlet, straightLineDistanceKm);
+    resolvedRoute = immediate.route;
+
+    if (
+      !outlet.isLocalBagsakan ||
+      immediate.state === 'static' ||
+      immediate.state === 'cached'
+    ) {
+      routeRequestState = immediate.route.source === 'road' ? 'ready' : 'idle';
+      return;
+    }
+
+    routeRequestState = 'loading';
+    const controller = new AbortController();
+    void resolveOutletRoute(originId, outlet, straightLineDistanceKm, {
+      signal: controller.signal,
+    }).then((result) => {
+      if (controller.signal.aborted) return;
+      resolvedRoute = result.route;
+      routeRequestState =
+        result.route.source === 'road'
+          ? 'ready'
+          : result.failureReason === 'not_configured'
+            ? 'not_configured'
+            : 'unavailable';
+    });
+
+    return () => controller.abort();
+  });
 
   const isFil = $derived(lang === 'fil');
   const cropName = $derived(getCropLabel(harvest.crop, lang));
@@ -370,6 +407,8 @@
           selectedId={outlet.id}
           lang={lang}
           onSelect={() => {}}
+          routeOverride={routeEstimate}
+          {routeRequestState}
         />
       </div>
 
