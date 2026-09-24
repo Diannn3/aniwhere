@@ -122,3 +122,83 @@ test('local Bagsakan remains usable when runtime routing fails', async ({ page }
   await expect(page.getByText('Accepts part of your harvest').first()).toBeVisible();
   await expect(page.locator('.route-card')).toHaveAttribute('data-route-kind', 'straight_line');
 });
+
+test('static reviewed outlet never calls the runtime route endpoint', async ({ page }) => {
+  let requestCount = 0;
+  await page.route('**/api/route-estimate', async (route) => {
+    requestCount += 1;
+    await route.fulfill({ status: 500, body: '{}' });
+  });
+
+  const params = new URLSearchParams({
+    ...CANONICAL_HARVEST,
+    place: 'demo-nagcarlan-kitchen',
+  });
+  await page.goto(`/places/demo-nagcarlan-kitchen?${params.toString()}`);
+
+  await expect(page.getByText(/27\.5 km by road/).first()).toBeVisible();
+  expect(requestCount).toBe(0);
+});
+
+test('comparison adopts road basis only after the local route resolves', async ({ page }) => {
+  const timestamp = new Date().toISOString();
+  const today = todayInManila();
+  await page.evaluate(([key, value]) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [storageKey, {
+    version: 1,
+    profile: {
+      id: profileId,
+      name: 'Compare Bagsakan',
+      municipalityId: 'pagsanjan',
+      lat: 14.275,
+      lng: 121.459,
+      locationBasis: 'exact_pin',
+      updatedAt: timestamp,
+    },
+    demands: [{
+      id: 'need-tomato',
+      profileId,
+      cropKey: 'tomato',
+      maxKg: 200,
+      status: 'active',
+      validFrom: today,
+      validUntil: today,
+      updatedAt: timestamp,
+    }],
+  }] as const);
+
+  await page.route('**/api/route-estimate', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        schemaVersion: 1,
+        provider: 'openrouteservice',
+        profile: 'driving-car',
+        distanceMeters: 30500,
+        durationSeconds: 2280,
+        geometryStatus: 'ready',
+        geometry: {
+          type: 'LineString',
+          coordinates: [[121.241, 14.17], [121.35, 14.22], [121.459, 14.275]],
+        },
+        generatedAt: '2026-09-25T00:00:00Z',
+        attribution: 'Routing © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
+      }),
+    });
+  });
+
+  const params = new URLSearchParams({
+    ...CANONICAL_HARVEST,
+    places: `demo-nagcarlan-kitchen,${placeId}`,
+  });
+  await page.goto(`/compare?${params.toString()}`);
+
+  await expect(page.getByText(/Fetching comparable road estimates/)).toBeVisible();
+  await expect(page.getByText(/All selected places have road estimates/).first()).toBeVisible();
+  await expect(page.getByText(/Fetching comparable road estimates/)).toHaveCount(0);
+  await expect(page.getByText(/Road distance from Los Baños municipality center/).first()).toBeVisible();
+});
+
