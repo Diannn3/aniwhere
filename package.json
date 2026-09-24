@@ -15,6 +15,7 @@
     "test:e2e:install": "playwright install chromium",
     "verify": "npm run test:unit && npm run check && npm run build && npm run test:e2e",
     "routing:check": "vitest run src/lib/routing/routing-inputs.test.ts",
+    "routing:secrets": "node scripts/check-routing-secrets.mjs",
     "routing:generate": "node scripts/generate-routing-matrix.mjs",
     "routing:generate:geometry": "node scripts/generate-routing-matrix.mjs --geometry"
   },

@@ -47,6 +47,9 @@ jobs:
       - name: Production build
         run: pnpm build
 
+      - name: Routing secret scan
+        run: pnpm routing:secrets
+
 
   browser:
     name: Playwright, accessibility, visual QA
