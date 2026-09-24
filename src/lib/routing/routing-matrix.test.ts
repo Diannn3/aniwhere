@@ -175,6 +175,7 @@ describe('routing matrix trust boundary', () => {
       provider: null,
       profile: null,
       generatedAt: null,
+      attribution: null,
     };
 
     const basis = sharedDistanceBasis([routed, fallback]);
