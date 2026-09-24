@@ -12,6 +12,30 @@ function clientKey(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
+function requestOriginAllowed(req) {
+  const origin = req.headers?.origin;
+  if (!origin) return true;
+
+  const allowlist = new Set(
+    (process.env.ROUTING_ALLOWED_ORIGINS || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+  );
+  if (allowlist.has(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    const forwardedHost = req.headers?.['x-forwarded-host'];
+    const host = (typeof forwardedHost === 'string' && forwardedHost) || req.headers?.host;
+    const forwardedProto = req.headers?.['x-forwarded-proto'];
+    if (!host || parsed.host !== host) return false;
+    return !forwardedProto || parsed.protocol === `${forwardedProto}:`;
+  } catch {
+    return false;
+  }
+}
+
 function parseBody(body) {
   if (body && typeof body === 'object' && !Buffer.isBuffer(body)) return body;
   if (typeof body !== 'string') return null;
@@ -29,6 +53,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'method_not_allowed' });
+  }
+  if (!requestOriginAllowed(req)) {
+    return res.status(403).json({ error: 'origin_not_allowed' });
   }
 
   const serializedLength =
