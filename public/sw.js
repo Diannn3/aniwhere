@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'aniwhere-core-';
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
-const CORE_ROUTES = ['/', '/discover', '/saved', '/compare', '/manifest.webmanifest', '/favicon.svg', '/ani/ani-avatar.webp'];
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CORE_ROUTES = ['/', '/discover', '/saved', '/compare', '/bagsakan', '/bagsakan/preview', '/buyer', '/manifest.webmanifest', '/favicon.svg', '/ani/ani-avatar.webp'];
 
 async function cacheCore() {
   const cache = await caches.open(CACHE_NAME);
@@ -76,6 +76,11 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirstNavigation(request));
+    return;
+  }
+
+  if (url.pathname.startsWith('/generated/routes/')) {
+    event.respondWith(cacheFirstAsset(request));
     return;
   }
 

@@ -4,6 +4,8 @@
 **Branch:** feat/live-map-routing-matrix  
 **Target:** Diannn3/aniwhere
 
+> **Historical note (25 Sep 2026):** this document records the original 10-origin × 5-outlet routing design. The current implementation has 11 demo outlets and is superseded for routing operations by `ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md`.
+
 ## Correction / target
 
 The mapping work belongs in **AniWhere**, not UPPETITE. The earlier exploratory UPPETITE branch is isolated and is not merged. This plan adapts the useful UPPETITE + Room TBA architecture patterns to AniWhere's different domain: Laguna-wide farmer-to-market **road travel**, not UPLB pedestrian routing.

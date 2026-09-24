@@ -8,6 +8,7 @@ import {
   expectNoPageOverflow,
   fillHomeHarvest,
 } from './support';
+import { todayInManila } from '../src/lib/state/url-state';
 
 test.beforeEach(async ({ page }) => {
   await clearClientState(page);
@@ -92,13 +93,17 @@ const auditTargets: AuditTarget[] = [
   { name: 'comparison', path: comparisonPath(['demo-processor', 'demo-market']) },
   { name: 'saved', path: `/saved?${new URL(discoverPath, 'http://aniwhere.local').searchParams}` },
   {
-    name: 'buyer offer modal',
-    path: '/buyer',
+    name: 'Bagsakan workspace',
+    path: '/bagsakan',
     prepare: async (page) => {
-      await page.getByRole('button', { name: /create offer/i }).click();
-      await expect(page.getByRole('dialog')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Set up your bagsakan' })).toBeVisible();
     },
   },
+  {
+    name: 'local Bagsakan preview recovery',
+    path: `/bagsakan/preview?place=local-bagsakan-missing&crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`,
+  },
+  { name: 'buyer compatibility route', path: '/buyer?lang=fil' },
   { name: 'not found', path: '/does-not-exist' },
 ];
 

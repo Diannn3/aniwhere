@@ -68,7 +68,11 @@ export interface Outlet {
   sampleOfferDate: string;
   acceptedCrops: Partial<Record<CropKey | string, CropCondition>>;
   excludedCrops?: string[];
+  /** Stable source label for place-level claims when no crop rule exists. */
+  sourceLabel?: string;
   isDemoFixture: boolean;
+  /** A device-local demo Bagsakan composed after browser hydration. */
+  isLocalBagsakan?: boolean;
 }
 
 /**

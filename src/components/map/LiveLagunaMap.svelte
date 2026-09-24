@@ -2,8 +2,12 @@
   import { onMount } from 'svelte';
   import type { FitResult, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
-  import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import {
+    formatEstimatedDriveDuration,
+    getOutletRouteEstimate,
+  } from '../../lib/routing/routing-matrix';
+  import type { OutletRouteEstimate, RouteGeometry } from '../../lib/routing/routing-matrix';
+  import { loadRouteGeometry } from '../../lib/routing/route-geometry';
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import {
     loadAniwhereMapStyle,
@@ -44,6 +48,9 @@
   let maplibre: any;
   let originMarker: any;
   let outletMarkers: any[] = [];
+  let loadedRouteGeometry = $state<RouteGeometry | undefined>();
+  let geometryLoadState = $state<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+  let geometryRequestId = 0;
 
   const origin = $derived(
     LAGUNA_MUNICIPALITIES.find((item) => item.id === harvest.originMunicipality) ??
@@ -61,10 +68,15 @@
       : undefined
   );
 
+  function activeRouteGeometry(): RouteGeometry | undefined {
+    return loadedRouteGeometry ?? selectedRoute?.geometry;
+  }
+
   function routeCoordinates(): Array<[number, number]> {
     if (!selectedItem) return [];
-    if (selectedRoute?.geometry?.coordinates?.length) {
-      return selectedRoute.geometry.coordinates;
+    const geometry = activeRouteGeometry();
+    if (geometry?.coordinates?.length) {
+      return geometry.coordinates;
     }
     return [
       [origin.lng, origin.lat],
@@ -76,7 +88,8 @@
     return {
       type: 'Feature',
       properties: {
-        routeKind: selectedRoute?.source === 'road' && selectedRoute.geometry ? 'road' : 'straight_line',
+        routeKind:
+          selectedRoute?.source === 'road' && activeRouteGeometry() ? 'road' : 'straight_line',
       },
       geometry: {
         type: 'LineString',
@@ -112,10 +125,14 @@
       button.type = 'button';
       button.className = `aniwhere-outlet-marker status-${item.fit.status}`;
       if (item.outlet.id === selectedId) button.classList.add('is-selected');
+      if (item.outlet.isLocalBagsakan) {
+        button.classList.add('is-local-bagsakan');
+        button.title = lang === 'fil' ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device';
+      }
       button.textContent = String(index + 1);
       button.setAttribute(
         'aria-label',
-        `${item.outlet.name}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
+        `${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
       );
       button.setAttribute('aria-pressed', item.outlet.id === selectedId ? 'true' : 'false');
       button.addEventListener('click', () => onSelect(item.outlet.id));
@@ -155,7 +172,7 @@
       });
     }
 
-    const actualRoad = selectedRoute?.source === 'road' && Boolean(selectedRoute.geometry);
+    const actualRoad = selectedRoute?.source === 'road' && Boolean(activeRouteGeometry());
     map.setPaintProperty(
       'aniwhere-selected-route-line',
       'line-dasharray',
@@ -182,10 +199,35 @@
   }
 
   $effect(() => {
+    const route = selectedRoute;
+    const requestId = ++geometryRequestId;
+    loadedRouteGeometry = route?.geometry;
+    geometryLoadState = route?.geometry ? 'ready' : 'idle';
+
+    if (
+      route?.source === 'road' &&
+      !route.geometry &&
+      route.geometryStatus === 'ready' &&
+      route.geometryPath
+    ) {
+      geometryLoadState = 'loading';
+      void loadRouteGeometry(route).then((geometry) => {
+        if (requestId !== geometryRequestId) return;
+        loadedRouteGeometry = geometry ?? undefined;
+        geometryLoadState = geometry ? 'ready' : 'unavailable';
+      });
+    } else if (route?.source === 'road' && route.geometryStatus === 'unavailable') {
+      geometryLoadState = 'unavailable';
+    }
+  });
+
+  $effect(() => {
     items;
     selectedId;
     harvest.originMunicipality;
     selectedRoute;
+    loadedRouteGeometry;
+    geometryLoadState;
     if (liveReady) syncMap();
   });
 
@@ -292,6 +334,7 @@
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
+          {#if selectedItem.outlet.isLocalBagsakan}<span>{lang === 'fil' ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device'}</span>{/if}
           <span class="route-origin">
             {lang === 'fil'
               ? `Batayang lokasyon: sentro ng ${origin.name}`
@@ -318,10 +361,15 @@
             </div>
             <div>
               <dt>{lang === 'fil' ? 'Tinatayang biyahe' : 'Estimated drive'}</dt>
-              <dd>~{selectedRoute.roadDurationMinutes} min</dd>
+              <dd>{formatEstimatedDriveDuration(selectedRoute) ?? '—'}</dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate from the municipality reference point, not the exact farm. Confirm the receiving schedule before travel.'}</p>
+          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid o live traffic ETA. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate from the municipality reference point, not the exact farm or a live-traffic ETA. Confirm the receiving schedule before travel.'}</p>
+          {#if geometryLoadState === 'loading'}
+            <p>{lang === 'fil' ? 'Nilo-load ang guhit ng ruta sa kalsada…' : 'Loading the road-route line…'}</p>
+          {:else if geometryLoadState === 'unavailable' || selectedRoute.geometryStatus !== 'ready'}
+            <p>{lang === 'fil' ? 'Hindi available ang guhit ng ruta; tuwid na konteksto lamang ang ipinapakita sa mapa.' : 'Road-route line unavailable; the map shows straight-line geographic context only.'}</p>
+          {/if}
         {:else}
           <dl>
             <div>
@@ -530,6 +578,7 @@
   :global(.aniwhere-outlet-marker.status-partial) { background: #B86A2B; }
   :global(.aniwhere-outlet-marker.status-confirm) { background: #4E7380; }
   :global(.aniwhere-outlet-marker.status-no_match) { background: #6B7167; }
+  :global(.aniwhere-outlet-marker.is-local-bagsakan) { border-style: dashed; border-width: 3px; }
 
   :global(.aniwhere-outlet-marker:hover),
   :global(.aniwhere-outlet-marker:focus-visible),

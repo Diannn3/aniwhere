@@ -2,13 +2,15 @@
   import { onMount } from 'svelte';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
   import { subscribeTransportUpdate } from '../../lib/ani/ui-sync';
-  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
+  import { getClientMarketOutlets, subscribeClientMarketOutlets } from '../../lib/data/client-market';
+  import { outletDetailHref } from '../../lib/data/outlet-links';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { getCropLabel } from '../../lib/domain/crops';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import {
     distanceForBasis,
+    formatEstimatedDriveDuration,
     getOutletRouteEstimate,
     sharedDistanceBasis,
   } from '../../lib/routing/routing-matrix';
@@ -24,9 +26,11 @@
   const { initialLang = 'en', initialPlaceIds = [] } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
-  function normalizeSelectedIds(ids: string[]): string[] {
-    const knownIds = new Set(CURRENT_OUTLETS.map((outlet) => outlet.id));
-    const knownSlugs = new Map(CURRENT_OUTLETS.map((outlet) => [outlet.slug, outlet.id]));
+  let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
+  let unavailablePlaceCount = $state(0);
+  function normalizeSelectedIds(ids: string[], outlets: Outlet[] = marketOutlets): string[] {
+    const knownIds = new Set(outlets.map((outlet) => outlet.id));
+    const knownSlugs = new Map(outlets.map((outlet) => [outlet.slug, outlet.id]));
     return ids
       .map((id) => knownIds.has(id) ? id : knownSlugs.get(id))
       .filter((id): id is string => Boolean(id))
@@ -34,12 +38,13 @@
       .slice(0, 3);
   }
 
-  let selectedIds = $state<string[]>(normalizeSelectedIds(initialPlaceIds));
+  let selectedIds = $state<string[]>(initialPlaceIds.slice(0, 3));
   let harvest = $state<HarvestQuery>({ crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: todayInManila() });
   let transportDrafts = $state<Record<string, string>>({});
   let transportAnnouncement = $state('');
 
   onMount(() => {
+    marketOutlets = getClientMarketOutlets();
     const parsed = parseCompareQuery(window.location.search);
     harvest = parsed.harvest;
     lang = parsed.lang || lang;
@@ -47,13 +52,24 @@
     const params = new URLSearchParams(window.location.search);
     if (params.has('places')) {
       selectedIds = normalizeSelectedIds(parsed.placeIds);
+      unavailablePlaceCount = parsed.placeIds.length - selectedIds.length;
       safeStorage.setItem('aniwhere_compare_ids', selectedIds);
       syncComparisonUrl(selectedIds);
-      return;
+    } else {
+      const rawStored = safeStorage.getItem<unknown>('aniwhere_compare_ids', []);
+      const stored = Array.isArray(rawStored) ? rawStored.filter((value): value is string => typeof value === 'string').slice(0, 3) : [];
+      selectedIds = normalizeSelectedIds(stored);
+      unavailablePlaceCount = stored.length - selectedIds.length;
     }
-
-    const stored = safeStorage.getItem<string[]>('aniwhere_compare_ids', []);
-    selectedIds = normalizeSelectedIds(stored);
+    return subscribeClientMarketOutlets((outlets) => {
+      marketOutlets = outlets;
+      const valid = normalizeSelectedIds(selectedIds, outlets);
+      if (valid.length === selectedIds.length) return;
+      unavailablePlaceCount += selectedIds.length - valid.length;
+      selectedIds = valid;
+      safeStorage.setItem('aniwhere_compare_ids', valid);
+      syncComparisonUrl(valid);
+    });
   });
 
   onMount(() => subscribeHarvestContext((next) => {
@@ -63,7 +79,7 @@
   onMount(() => subscribeTransportUpdate(({ outletId, amount }) => {
     if (!selectedIds.includes(outletId)) return;
     transportDrafts = { ...transportDrafts, [outletId]: String(amount) };
-    const outlet = CURRENT_OUTLETS.find((item) => item.id === outletId || item.slug === outletId);
+    const outlet = marketOutlets.find((item) => item.id === outletId || item.slug === outletId);
     if (!outlet) return;
     const fit = evaluateFit(outlet, harvest, amount);
     transportAnnouncement = fit.afterTransportPay === null
@@ -74,7 +90,7 @@
   const isFil = $derived(lang === 'fil');
   const cropName = $derived(getCropLabel(harvest.crop, lang));
   const originMun = $derived(LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]);
-  const comparedOutlets = $derived(selectedIds.map((id) => CURRENT_OUTLETS.find((o) => o.id === id || o.slug === id)).filter((o): o is Outlet => Boolean(o)).slice(0, 3));
+  const comparedOutlets = $derived(selectedIds.map((id) => marketOutlets.find((o) => o.id === id || o.slug === id)).filter((o): o is Outlet => Boolean(o)).slice(0, 3));
   const comparisonDistanceBasis = $derived(
     sharedDistanceBasis(
       comparedOutlets.map((outlet) => {
@@ -101,9 +117,9 @@
     const label = labels[kind] || labels.unknown;
     return isFil ? label[1] : label[0];
   }
-  function priceLabel(kind: string, value: number | null) {
+  function priceLabel(kind: string, value: number | null, local = false) {
     if (value === null) return copy('No price recorded', 'Walang nakatalang presyo');
-    const prefix = kind === 'demo' ? copy('Price', 'Presyo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
+    const prefix = local ? copy('Local demo price', 'Presyo sa lokal na demo') : kind === 'demo' ? copy('Price', 'Presyo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
     return `${prefix}: ₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}/kg`;
   }
   function fitTone(status: FitStatus) {
@@ -171,6 +187,9 @@
       </div>
     </section>
 
+    {#if unavailablePlaceCount > 0}
+      <p class="border border-[#6E3511]/30 bg-[#FCECD8]/45 px-4 py-3 text-sm text-[#6E3511]" role="status">{copy('A selected place is unavailable on this device and was removed from comparison.', 'May napiling lugar na hindi available sa device na ito at inalis sa paghahambing.')}</p>
+    {/if}
 
     {#if comparedOutlets.length === 0}
       <section class="border-y border-[#20251E]/20 bg-white px-4 py-10 sm:px-8 sm:py-14">
@@ -208,6 +227,7 @@
                 <div class="min-w-0">
                   <h3 class="font-serif text-xl font-bold leading-tight text-[#20251E]">{outlet.name}</h3>
                   <p class="mt-1 text-sm text-[#4A5245]">{outlet.municipality}, Laguna · {outlet.category}</p>
+                  {#if outlet.isLocalBagsakan}<p class="mt-1 text-xs font-semibold text-[#6E3511]">{copy('Demo Bagsakan on this device', 'Demo bagsakan sa device na ito')}</p>{/if}
                 </div>
                 <button
                   type="button"
@@ -235,8 +255,8 @@
                 </div>
                 <div class="py-3">
                   <dt class="text-sm text-[#4A5245]">{copy('Price evidence', 'Ebidensya ng presyo')}</dt>
-                  <dd class="mt-1 font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg)}</dd>
-                  <dd class="text-sm text-[#4A5245]">{evidenceKindLabel(fit.evidenceKind)}</dd>
+                  <dd class="mt-1 font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg, Boolean(outlet.isLocalBagsakan))}</dd>
+                  <dd class="text-sm text-[#4A5245]">{outlet.isLocalBagsakan ? copy('Local demo entry', 'Lokal na demo entry') : evidenceKindLabel(fit.evidenceKind)}</dd>
                 </div>
                 <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
                   <dt class="text-sm text-[#4A5245]">{copy('Gross amount', 'Kabuuang halaga')}</dt>
@@ -298,7 +318,7 @@
               </div>
 
               <a
-                href={`/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
+                href={outletDetailHref(outlet, harvest, lang)}
                 class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-[#597928]/35 px-4 py-2 text-sm font-semibold text-[#486320] hover:bg-[#486320]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
               >
                 {copy('Review this place', 'Suriin ang lugar na ito')}
@@ -330,21 +350,21 @@
             <thead class="bg-[#FCECD8]"><tr class="align-top">
               <th scope="col" class="ledger-metric w-[220px] border-b border-r border-[#20251E]/20 bg-[#FCECD8] px-4 py-4 text-sm font-semibold text-[#20251E]">{copy('Decision fact', 'Batayan ng desisyon')}</th>
               {#each comparedOutlets as outlet (outlet.id)}
-                <th scope="col" class="border-b border-r border-[#20251E]/15 px-4 py-4 last:border-r-0"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="font-serif text-lg font-bold leading-5 text-[#20251E]">{outlet.name}</p><p class="mt-2 text-sm font-medium text-[#4A5245]">{outlet.municipality}, Laguna · {outlet.category}</p></div><button type="button" onclick={() => handleRemove(outlet.id)} class="-mr-2 -mt-2 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-[#4A5245] transition-colors hover:bg-[#20251E]/8 hover:text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]" aria-label={copy(`Remove ${outlet.name} from comparison`, `Alisin ang ${outlet.name} sa paghahambing`)}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" /></svg></button></div></th>
+                <th scope="col" class="border-b border-r border-[#20251E]/15 px-4 py-4 last:border-r-0"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="font-serif text-lg font-bold leading-5 text-[#20251E]">{outlet.name}</p><p class="mt-2 text-sm font-medium text-[#4A5245]">{outlet.municipality}, Laguna · {outlet.category}</p>{#if outlet.isLocalBagsakan}<p class="mt-1 text-xs font-semibold text-[#6E3511]">{copy('Demo on this device', 'Demo sa device na ito')}</p>{/if}</div><button type="button" onclick={() => handleRemove(outlet.id)} class="-mr-2 -mt-2 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-[#4A5245] transition-colors hover:bg-[#20251E]/8 hover:text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]" aria-label={copy(`Remove ${outlet.name} from comparison`, `Alisin ang ${outlet.name} sa paghahambing`)}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" /></svg></button></div></th>
               {/each}
             </tr></thead>
             <tbody>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Fit', 'Pagkakatugma')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 align-top"><p class="font-semibold text-[#20251E]">{isFil ? fit.statusLabelFil : fit.statusLabel}</p><p class="mt-1 text-sm leading-5 text-[#4A5245]">{isFil ? fit.reasonFil : fit.reason}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Accepted quantity', 'Kayang tanggapin')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatKg(fit.acceptedKg)}</td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Remaining harvest', 'Natitirang ani')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatKg(fit.remainingKg)}</td>{/each}</tr>
-              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Price evidence', 'Ebidensya ng presyo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg)}</p><p class="mt-1 text-xs text-[#4A5245]">{evidenceKindLabel(fit.evidenceKind)}</p></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Price evidence', 'Ebidensya ng presyo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{priceLabel(fit.evidenceKind, fit.samplePricePerKg, Boolean(outlet.isLocalBagsakan))}</p><p class="mt-1 text-xs text-[#4A5245]">{outlet.isLocalBagsakan ? copy('Local demo entry', 'Lokal na demo entry') : evidenceKindLabel(fit.evidenceKind)}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Gross amount', 'Kabuuang halaga')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatPeso(fit.grossPay)}</td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Transport amount used', 'Halagang biyahe na gagamitin')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const value = transportValue(outlet, recordedTransport)}<td class="px-4 py-4 align-top"><label class="mb-2 block font-semibold text-[#20251E]" for={`transport-${outlet.id}`}>{copy('Transport for', 'Biyahe para sa')} {outlet.name}</label><div class="relative max-w-[200px]"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span><input id={`transport-${outlet.id}`} type="number" min="0" step="50" inputmode="decimal" value={value} placeholder={copy('Not entered', 'Wala pang halaga')} oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)} class={`min-h-11 w-full rounded-lg border bg-[#FFFDF8] py-2 pl-7 pr-3 text-base font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/35'}`} /></div><p class="mt-2 text-sm leading-5 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('After transport amount', 'Matapos ang halagang biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const afterTransport = transport === null ? null : fit.afterTransportPay}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{formatPeso(afterTransport)}</p><p class="mt-1 text-xs leading-4 text-[#4A5245]">{transport === null ? copy('Enter transport to calculate.', 'Maglagay ng gastos upang makalkula.') : copy('Not profit or guaranteed income.', 'Hindi ito tubo o garantisadong kita.')}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}{@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km</p><p class="mt-1 text-xs text-[#4A5245]">{comparisonDistanceBasis === 'road'
   ? copy(
-      `Road distance from ${originMun.name.split(',')[0]} municipality center · ~${route.roadDurationMinutes} min drive`,
-      `Layo sa kalsada mula sa sentro ng ${originMun.name.split(',')[0]} · ~${route.roadDurationMinutes} min biyahe`,
+      `Road distance from ${originMun.name.split(',')[0]} municipality center · ${formatEstimatedDriveDuration(route) ?? 'duration unavailable'} estimated drive · not live traffic`,
+      `Layo sa kalsada mula sa sentro ng ${originMun.name.split(',')[0]} · ${formatEstimatedDriveDuration(route) ?? 'walang tantyang oras'} tantyang biyahe · hindi live traffic`,
     )
   : copy(
       `Straight-line from ${originMun.name.split(',')[0]} municipality center; used consistently across all selected places.`,
@@ -352,7 +372,7 @@
     )}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Source and freshness', 'Pinagmulan at kasariwaan')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4"><p class="font-semibold text-[#20251E]">{fit.sourceLabel || copy('Source unknown', 'Hindi alam ang pinagmulan')}</p><dl class="mt-2 grid gap-1 text-xs text-[#4A5245]"><div class="flex justify-between gap-3"><dt>{copy('Updated', 'Na-update')}</dt><dd class="tabular-nums text-right">{formatEvidenceDate(fit.dataUpdatedAt)}</dd></div><div class="flex justify-between gap-3"><dt>{copy('Valid until', 'May bisa hanggang')}</dt><dd class="tabular-nums text-right">{formatEvidenceDate(fit.dataValidUntil)}</dd></div></dl></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Confirm before travel', 'Kumpirmahin bago bumiyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const questions = isFil ? fit.conditionsToConfirmFil : fit.conditionsToConfirm}{@const unknowns = isFil ? fit.unknownsFil : fit.unknowns}<td class="px-4 py-4 align-top">{#if unknowns.length > 0}<p class="mb-2 text-xs font-semibold text-[#4E7380]">{copy('Still unknown:', 'Hindi pa alam:')} {unknowns.join(', ')}</p>{/if}{#if questions.length > 0}<ul class="space-y-1.5 text-xs leading-5 text-[#4A5245]">{#each questions as question}<li class="flex gap-2"><span aria-hidden="true" class="text-[#6E3511]">—</span><span>{question}</span></li>{/each}</ul>{:else}<p class="text-xs leading-5 text-[#4A5245]">{copy('No additional question is recorded. Confirm current terms before travel.', 'Walang nakatalang dagdag na tanong. Kumpirmahin pa rin ang kasalukuyang kondisyon bago bumiyahe.')}</p>{/if}</td>{/each}</tr>
-              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Review', 'Suriin')}</th>{#each comparedOutlets as outlet (outlet.id)}<td class="px-4 py-4"><a href={`/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`} class="inline-flex min-h-[44px] items-center rounded-lg border border-[#597928]/35 px-3 py-2 text-xs font-semibold text-[#486320] transition-colors hover:bg-[#486320]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Review outlet', 'Suriin ang outlet')}</a></td>{/each}</tr>
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Review', 'Suriin')}</th>{#each comparedOutlets as outlet (outlet.id)}<td class="px-4 py-4"><a href={outletDetailHref(outlet, harvest, lang)} class="inline-flex min-h-[44px] items-center rounded-lg border border-[#597928]/35 px-3 py-2 text-xs font-semibold text-[#486320] transition-colors hover:bg-[#486320]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Review outlet', 'Suriin ang outlet')}</a></td>{/each}</tr>
             </tbody>
           </table>
         </div>

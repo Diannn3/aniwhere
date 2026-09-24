@@ -1,12 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generatedAt": null,
   "provider": "openrouteservice",
   "providerBase": "https://api.heigit.org/openrouteservice/v2",
   "profile": "driving-car",
+  "generationMode": "not_generated",
   "status": "not_generated",
-  "note": "No road-routing claims are bundled until this artifact is generated with a valid ORS API key.",
+  "attribution": "Routing data © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors",
+  "inputFingerprint": "1ada48d440b74c496e3b19d672302307c1b9eb0fc157d4e622fdc9a60cea5334",
+  "note": "No road-routing claims are bundled until this artifact is generated with a valid private routing credential.",
   "origins": {},
   "outlets": {},
-  "cells": {}
+  "cells": {},
+  "geometryRunId": null
 }

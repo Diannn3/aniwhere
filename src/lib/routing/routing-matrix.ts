@@ -1,4 +1,4 @@
-import matrixArtifact from '../../generated/routing-matrix.json';
+import matrixArtifact from '../../generated/routing-matrix.json' with { type: 'json' };
 
 export type RouteCellStatus = 'routed' | 'unavailable';
 
@@ -7,21 +7,37 @@ export interface RouteGeometry {
   coordinates: Array<[number, number]>;
 }
 
+export type RouteMetricSource = 'matrix' | 'directions';
+export type RouteGeometryStatus = 'not_requested' | 'ready' | 'unavailable';
+
 export interface RouteMatrixCell {
   status: RouteCellStatus;
   distanceMeters?: number;
   durationSeconds?: number;
+  metricSource?: RouteMetricSource;
+  geometryStatus?: RouteGeometryStatus;
+  geometryPath?: string;
   geometry?: RouteGeometry;
 }
 
 export interface RouteMatrixArtifact {
-  schemaVersion: 1;
+  schemaVersion: 2;
   generatedAt: string | null;
   provider: 'openrouteservice';
   providerBase: string;
   profile: 'driving-car';
+  generationMode: 'not_generated' | 'metrics' | 'metrics_and_geometry';
   status: 'ready' | 'not_generated' | 'partial';
+  attribution: string;
+  inputFingerprint: string;
+  geometryRunId?: string | null;
   note?: string;
+  engine?: {
+    version?: string;
+    buildDate?: string;
+    graphDate?: string;
+    osmDate?: string;
+  };
   origins: Record<string, { name: string; lat: number; lng: number }>;
   outlets: Record<string, { name: string; lat: number; lng: number }>;
   cells: Record<string, Record<string, RouteMatrixCell>>;
@@ -31,11 +47,16 @@ export interface OutletRouteEstimate {
   source: 'road' | 'straight_line';
   straightLineDistanceKm: number;
   roadDistanceKm: number | null;
+  roadDurationSeconds: number | null;
   roadDurationMinutes: number | null;
   geometry?: RouteGeometry;
+  geometryStatus: RouteGeometryStatus | null;
+  geometryPath: string | null;
+  metricSource: RouteMetricSource | null;
   provider: 'openrouteservice' | null;
   profile: 'driving-car' | null;
   generatedAt: string | null;
+  attribution: string | null;
 }
 
 const artifact = matrixArtifact as RouteMatrixArtifact;
@@ -48,15 +69,16 @@ export function getRoutingMatrixArtifact(): RouteMatrixArtifact {
   return artifact;
 }
 
-export function getOutletRouteEstimate(
+export function getOutletRouteEstimateFromArtifact(
+  artifactInput: RouteMatrixArtifact,
   originId: string,
   outletId: string,
   straightLineDistanceKm: number
 ): OutletRouteEstimate {
-  const cell = artifact.cells?.[originId]?.[outletId];
+  const cell = artifactInput.cells?.[originId]?.[outletId];
 
   if (
-    artifact.status !== 'not_generated' &&
+    artifactInput.status !== 'not_generated' &&
     cell?.status === 'routed' &&
     finitePositive(cell.distanceMeters) &&
     finitePositive(cell.durationSeconds)
@@ -65,11 +87,17 @@ export function getOutletRouteEstimate(
       source: 'road',
       straightLineDistanceKm,
       roadDistanceKm: Math.round((cell.distanceMeters / 1000) * 10) / 10,
-      roadDurationMinutes: Math.max(1, Math.round(cell.durationSeconds / 60)),
+      roadDurationSeconds: cell.durationSeconds,
+      roadDurationMinutes: Math.round(cell.durationSeconds / 60),
       geometry: cell.geometry,
-      provider: artifact.provider,
-      profile: artifact.profile,
-      generatedAt: artifact.generatedAt,
+      geometryStatus:
+        cell.geometryStatus ?? (cell.geometry || cell.geometryPath ? 'ready' : 'not_requested'),
+      geometryPath: cell.geometryPath ?? null,
+      metricSource: cell.metricSource ?? 'matrix',
+      provider: artifactInput.provider,
+      profile: artifactInput.profile,
+      generatedAt: artifactInput.generatedAt,
+      attribution: artifactInput.attribution,
     };
   }
 
@@ -77,11 +105,24 @@ export function getOutletRouteEstimate(
     source: 'straight_line',
     straightLineDistanceKm,
     roadDistanceKm: null,
+    roadDurationSeconds: null,
     roadDurationMinutes: null,
+    geometryStatus: null,
+    geometryPath: null,
+    metricSource: null,
     provider: null,
     profile: null,
     generatedAt: null,
+    attribution: null,
   };
+}
+
+export function getOutletRouteEstimate(
+  originId: string,
+  outletId: string,
+  straightLineDistanceKm: number
+): OutletRouteEstimate {
+  return getOutletRouteEstimateFromArtifact(artifact, originId, outletId, straightLineDistanceKm);
 }
 
 export type RouteDistanceBasis = 'road' | 'straight_line';
@@ -116,6 +157,18 @@ export function distanceForSorting(route: OutletRouteEstimate): number {
   return route.roadDistanceKm ?? route.straightLineDistanceKm;
 }
 
+export function formatEstimatedDriveDuration(route: OutletRouteEstimate): string | null {
+  const seconds = route.roadDurationSeconds;
+  if (seconds === null) return null;
+  if (seconds === 0) return '0 min';
+  if (seconds < 60) return '<1 min';
+  return `~${Math.round(seconds / 60)} min`;
+}
+
+export function hasRoadRoutingDataForArtifact(artifactInput: RouteMatrixArtifact): boolean {
+  return artifactInput.status === 'ready' || artifactInput.status === 'partial';
+}
+
 export function hasRoadRoutingData(): boolean {
-  return artifact.status === 'ready' || artifact.status === 'partial';
+  return hasRoadRoutingDataForArtifact(artifact);
 }

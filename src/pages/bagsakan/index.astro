@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BagsakanWorkspace from '../../components/bagsakan/BagsakanWorkspace.svelte';
+
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
+---
+
+<BaseLayout
+  title={lang === 'fil' ? 'AniWhere — Iyong bagsakan' : 'AniWhere — Your bagsakan'}
+  description={lang === 'fil' ? 'Itala ang pangangailangan sa pagbili sa device na ito.' : 'Record your buying needs on this device.'}
+  currentPath="/bagsakan"
+  lang={lang}
+>
+  <BagsakanWorkspace client:load initialLang={lang} />
+</BaseLayout>
