@@ -377,9 +377,6 @@
         <p>1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &middot; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}</p>
         <p>{lang === 'fil' ? 'Pumili ng outlet upang makita ang ruta at ebidensya sa ibaba.' : 'Select an outlet to explore route details and view evidence below.'}</p>
       </div>
-      <a class="docket-compare" href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}>
-        {lang === 'fil' ? 'Ihambing' : 'Compare'} {comparedIds.length || ''}
-      </a>
     </div>
 
     <!-- Collapsible Quick Harvest Editor -->
@@ -450,10 +447,7 @@
     {/if}
   </div>
 
-  <div id="discovery-filters" class="discovery-filters flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center">
-    
-    <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:flex-col lg:items-stretch lg:overflow-visible">
+  <div id="discovery-filters" class="discovery-filters border-y border-[#20251E]/20 bg-[#FFFDF8]">
       <!-- One view switch remains available in both views at every width. -->
       <div
         class="map-view-switch inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
@@ -493,11 +487,9 @@
         </button>
       </div>
 
-      <div class="h-4 w-px bg-[#20251E]/15 hidden sm:block shrink-0"></div>
-
-      <!-- Filter Pills (Horizontally scrollable on mobile) -->
+      <!-- Fit filters remain available without covering the map or results. -->
       <div
-        class="flex items-center gap-1.5 shrink-0 lg:grid lg:grid-cols-2"
+        class="discovery-status-filters"
         role="group"
         aria-label={lang === 'fil' ? 'I-filter ayon sa pagkakatugma' : 'Filter by fit status'}
       >
@@ -564,10 +556,8 @@
           {lang === 'fil' ? 'Hindi tugma' : "Doesn't match"} ({statusCounts.no_match})
         </button>
       </div>
-    </div>
-
-    <!-- Right: Sort By Dropdown -->
-    <div class="flex items-center justify-between gap-2 shrink-0 lg:border-t lg:border-[#20251E]/15 lg:pt-3">
+    <!-- Sort stays alongside the filters and wraps below them when needed. -->
+    <div class="discovery-sort-controls flex items-center justify-between gap-2">
       <div class="flex items-center gap-1.5 text-xs text-[#4A5245]">
         <label for="sort-by-select" class="font-semibold">{lang === 'fil' ? 'Ayusin:' : 'Sort:'}</label>
         <select

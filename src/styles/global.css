@@ -265,28 +265,23 @@
   .discovery-map .map-fallback-shell,
   .discovery-map .live-map { height: clamp(570px, 60.5vh, 720px); min-height: 570px; }
   .discovery-docket { position: relative; z-index: 1; width: auto; margin: 16px 28px 12px; padding: 17px 21px 16px; border: 1px solid #65695c; border-radius: 5px; box-shadow: 0 12px 22px -16px #20251e; }
-  .discovery-docket > .flex { align-items: flex-start; }
-  .discovery-docket h1 { font-size: 29px; line-height: 1.15; }
-  .discovery-docket > .flex button { font-size: 0; width: 44px; min-width: 44px; padding: 0; border: 0; }
+  .discovery-docket > .flex { align-items: center; }
+  .discovery-docket h1 { font-size: 26px; line-height: 1.15; }
+  .discovery-docket > .flex button { min-width: 44px; font-size: 14px; }
   .discovery-docket > .flex button svg { width: 19px; height: 19px; }
   .docket-harvest { display: block; margin-top: 6px; font-size: 19px; font-weight: 400; line-height: 1.3; white-space: normal; }
-  .docket-summary { margin-top: 20px; border-top: 1px solid #aab19c; }
-  .docket-summary h2 { display: flex; justify-content: space-between; margin: 13px 0 12px; font: 700 18px/1.25 "Outfit Variable", sans-serif; }
-  .docket-key { display: grid; gap: 8px; padding-bottom: 20px; }
+  .docket-summary { margin-top: 12px; padding-top: 12px; border-top: 1px solid #aab19c; }
+  .docket-summary > h2, .docket-route { display: none; }
+  .docket-key { display: flex; flex-wrap: wrap; gap: 8px 20px; }
   .docket-key span { display: flex; align-items: center; gap: 14px; font-size: 14px; }
   .docket-key i { display: inline-block; width: 23px; height: 23px; flex: none; border-radius: 50%; }
   .key-match { background: #597928; } .key-partial { background: #91ac67; } .key-confirm { background: #6e3511; }
-  .docket-route { border-top: 1px solid #aab19c; padding-bottom: 14px; }
-  .docket-route p { margin: 3px 0; font-size: 14px; line-height: 1.45; }
-  .docket-compare { display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 6px; background: #486320; color: #fffdf8; font: 700 18px "Outfit Variable", sans-serif; }
-  .discovery-filters { position: relative; z-index: 1; width: auto; margin: 0 28px 12px; padding: 12px 0; }
-  .discovery-docket:has(form) { width: min(780px, calc(100vw - 52px)); }
-  .discovery-page > p:not(.sr-only) { display: none; }
+  .discovery-filters { margin: 0 28px 12px; }
+  .discovery-docket:has(form) { width: auto; }
   .discovery-map .map-status-bar { display: none; }
   .discovery-map .route-card { right: 190px; left: auto; bottom: 35px; width: 300px; }
   .map-view-switch { position: static; display: inline-flex; flex: none; gap: 3px; padding: 3px; border: 1px solid #747965; border-radius: 9999px; background: #fffdf8; }
   .map-view-switch button { min-width: 88px; min-height: 44px; border-radius: 9999px; font-weight: 700; }
-  .discovery-map > div:last-child { display: none; }
   .discovery-outlets { order: 1; display: grid; grid-template-columns: 1fr; gap: 8px; padding: 17px 28px 25px; border-top: 1px solid #758068; }
   .discovery-outlets { width: 100%; }
   .ledger-heading { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px 4px; }
@@ -323,6 +318,23 @@
   .ledger-heading { display: flex; justify-content: space-between; gap: 12px; }
   .ledger-heading h2 { font-weight: 700; }
   .ledger-entry { padding: 16px; }
+}
+.discovery-docket > .flex { flex-wrap: wrap; }
+.discovery-docket > .flex > div:first-child { min-width: 0; flex: 1 1 180px; }
+.discovery-filters { position: relative; display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; padding: 12px 0; }
+.discovery-status-filters { order: 1; display: flex; flex: 1 1 560px; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.discovery-sort-controls { order: 2; min-width: 0; }
+.discovery-sort-controls > div { min-width: 0; flex-wrap: wrap; }
+.discovery-sort-controls select { max-width: 100%; }
+.map-view-switch { order: 3; margin-left: auto; }
+@media (max-width: 1199px) {
+  .discovery-filters { margin: 12px 0; }
+}
+@media (max-width: 1023px) {
+  .map-view-switch { order: 0; width: 100%; margin-left: 0; }
+  .map-view-switch button { flex: 1; }
+  .discovery-status-filters { flex-basis: 100%; }
+  .discovery-sort-controls { flex-basis: 100%; }
 }
 .discovery-workspace[data-view="map"] .discovery-outlets,
 .discovery-workspace[data-view="list"] .discovery-map { display: none !important; }
