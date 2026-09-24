@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
-  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
+  import { getClientMarketOutlets, subscribeClientMarketOutlets } from '../../lib/data/client-market';
+  import { outletDetailHref } from '../../lib/data/outlet-links';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -40,6 +41,7 @@
   let isEditingHarvest = $state(false);
   let filtersOpen = $state(false);
   let compareNotice = $state('');
+  let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
 
   // Editable harvest draft
   let editCrop = $state(initialQuery.harvest.crop);
@@ -86,6 +88,18 @@
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }));
 
+  onMount(() => {
+    marketOutlets = getClientMarketOutlets();
+    return subscribeClientMarketOutlets((outlets) => {
+      marketOutlets = outlets;
+      if (selectedOutletId && !outlets.some((outlet) => outlet.id === selectedOutletId)) {
+        selectedOutletId = undefined;
+        syncDiscoveryUrl();
+      }
+      comparedIds = comparedIds.filter((id) => outlets.some((outlet) => outlet.id === id));
+    });
+  });
+
   const originCoords = $derived(
     LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) ||
     LAGUNA_MUNICIPALITIES[0]
@@ -102,7 +116,7 @@
 
   // Evaluate all outlets against current harvest query
   const processedOutlets = $derived<ProcessedOutlet[]>(
-    CURRENT_OUTLETS.map((outlet) => {
+    marketOutlets.map((outlet) => {
       const fit = evaluateFit(outlet, harvest);
       const distanceKm = calculateStraightLineDistanceKm(
         originCoords.lat,
@@ -312,7 +326,8 @@
     return 'border-[#8C9388]';
   }
 
-  function priceLabelFor(fit: FitResult): string {
+  function priceLabelFor(fit: FitResult, local: boolean): string {
+    if (local) return lang === 'fil' ? 'Presyo sa demo sa device na ito' : 'Local demo price on this device';
     if (fit.evidenceKind === 'demo') {
       return lang === 'fil' ? 'Presyo' : 'Price';
     }
@@ -709,6 +724,9 @@
               <p class="text-xs text-[#4A5245] font-medium mt-0.5">
                 {item.outlet.municipality}, Laguna &bull; <span class="capitalize">{item.outlet.category}</span>
               </p>
+              {#if item.outlet.isLocalBagsakan}
+                <p class="mt-1 text-xs font-semibold text-[#6E3511]">{lang === 'fil' ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device'}</p>
+              {/if}
             </div>
 
             <!-- Decision quantities stay visible even when no price exists. -->
@@ -754,7 +772,7 @@
               <details class="group border-y border-[#20251E]/15 bg-[#FFFDF8]">
                 <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 sm:px-3.5">
                   <span>
-                    <span class="block text-[11px] text-[#596052]">{priceLabelFor(item.fit)}</span>
+                    <span class="block text-[11px] text-[#596052]">{priceLabelFor(item.fit, Boolean(item.outlet.isLocalBagsakan))}</span>
                     <span class="font-tabular text-sm font-bold text-[#20251E]">₱{item.fit.samplePricePerKg} / kg</span>
                   </span>
                   <span class="flex items-center gap-1.5 text-[11px] font-bold text-[#486320]">
@@ -807,7 +825,7 @@
 
               <!-- View Details Link -->
               <a
-                href={`/places/${item.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', item.outlet.id, lang)}`}
+                href={outletDetailHref(item.outlet, harvest, lang)}
                 class="almanac-button premium-control inline-flex min-h-11 items-center gap-1 bg-[#486320] px-4 py-2 text-xs text-[#FFFDF8] transition-colors hover:bg-[#3A5219]"
               >
                 <span>{t('viewDetails', lang)}</span>

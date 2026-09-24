@@ -1,14 +1,15 @@
 ﻿<script lang="ts">
   import { onMount } from 'svelte';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
-  import { CURRENT_OUTLETS } from '../../lib/data/current-market';
+  import { getClientMarketOutlets, subscribeClientMarketOutlets } from '../../lib/data/client-market';
+  import { outletDetailHref } from '../../lib/data/outlet-links';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { getSavedOutletIds, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
   import { getCropLabel } from '../../lib/domain/crops';
   import { parseDiscoverQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
-  import type { HarvestQuery } from '../../lib/domain/types';
+  import type { HarvestQuery, Outlet } from '../../lib/domain/types';
   import { t } from '../../content/translations';
 
   interface Props {
@@ -19,6 +20,7 @@
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let savedIds = $state<string[]>([]);
+  let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
   let confirmClearAll = $state(false);
   let harvest = $state<HarvestQuery>({
     crop: 'tomato',
@@ -40,11 +42,17 @@
     harvest = next;
   }));
 
+  onMount(() => {
+    marketOutlets = getClientMarketOutlets();
+    return subscribeClientMarketOutlets((outlets) => { marketOutlets = outlets; });
+  });
+
   const isFil = $derived(lang === 'fil');
 
   const savedOutlets = $derived(
-    CURRENT_OUTLETS.filter((outlet) => savedIds.includes(outlet.id))
+    marketOutlets.filter((outlet) => savedIds.includes(outlet.id))
   );
+  const missingSavedIds = $derived(savedIds.filter((id) => !marketOutlets.some((outlet) => outlet.id === id)));
 
   const originMun = $derived(
     LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]
@@ -72,6 +80,11 @@
     savedIds.forEach((id) => toggleSavedOutlet(id));
     savedIds = [];
     confirmClearAll = false;
+  }
+
+  function removeMissingSaved() {
+    missingSavedIds.forEach((id) => toggleSavedOutlet(id));
+    savedIds = getSavedOutletIds();
   }
 
   const compareAllUrl = $derived(
@@ -116,6 +129,13 @@
   </header>
 
 
+  {#if missingSavedIds.length > 0}
+    <section class="mt-6 border border-[#6E3511]/30 bg-[#FCECD8]/45 p-4 text-sm text-[#20251E]" aria-label={isFil ? 'Hindi na available na naka-save' : 'Unavailable saved places'}>
+      <p>{isFil ? 'May naka-save na lugar na hindi na available sa device na ito. Maaaring nabura ang lokal na Bagsakan entry.' : 'A saved place is no longer available on this device. Its local Bagsakan entry may have been removed.'}</p>
+      <button type="button" onclick={removeMissingSaved} class="mt-3 min-h-11 rounded-lg border border-[#6E3511]/40 px-4 py-2 font-semibold text-[#6E3511]">{isFil ? 'Alisin ang hindi na available' : 'Remove unavailable saved place'}</button>
+    </section>
+  {/if}
+
   {#if savedOutlets.length === 0}
     <section class="mt-8 border-y border-[#20251E]/25 bg-[#FCECD8]/20 px-4 py-10 sm:px-8 sm:py-14" aria-labelledby="saved-empty-title">
       <h2 id="saved-empty-title" class="font-serif text-2xl font-bold text-[#20251E] sm:text-3xl">{t('noSavedTitle', lang)}</h2>
@@ -139,7 +159,7 @@
         {#each savedOutlets as outlet, index (outlet.id)}
           {@const fit = evaluateFit(outlet, harvest)}
           {@const dist = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-          {@const detailHref = `/places/${outlet.slug}?${serializeDiscoverQuery(harvest, 'list', outlet.id, lang)}`}
+          {@const detailHref = outletDetailHref(outlet, harvest, lang)}
           {@const compareHref = `/compare?places=${encodeURIComponent(outlet.id)}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}
 
           <li class="border-b border-[#20251E]/25">
@@ -156,6 +176,9 @@
                     <p class="mt-1 text-sm text-[#4A5245]">
                       {outlet.municipality}, Laguna · <span class="capitalize">{outlet.category}</span>
                     </p>
+                    {#if outlet.isLocalBagsakan}
+                      <p class="mt-1 text-xs font-semibold text-[#6E3511]">{isFil ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device'}</p>
+                    {/if}
                     <p class="mt-3 text-sm font-bold text-[#20251E]">
                       {isFil ? fit.statusLabelFil : fit.statusLabel}
                     </p>
