@@ -352,7 +352,15 @@
       <strong>{lang === 'fil' ? 'Offline na mapa' : 'Offline map'}</strong>
       <span>{lang === 'fil' ? 'Hindi nag-load ang interaktibong mapa. Gamit muna ang ligtas na guhit-mapa.' : 'The interactive map did not load. Using the resilient map instead.'}</span>
     </div>
-    <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {onSelect} />
+    <ResilientLagunaMap
+      {items}
+      {harvest}
+      {selectedId}
+      {lang}
+      {onSelect}
+      routeOverride={selectedRoute}
+      routeRequestState={effectiveRouteRequestState}
+    />
   </div>
 {:else}
   <div class="live-map-shell" class:is-ready={liveReady}>

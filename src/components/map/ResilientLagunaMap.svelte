@@ -4,6 +4,7 @@
   import { todayInManila } from '../../lib/state/url-state';
   import { outletDetailHref } from '../../lib/data/outlet-links';
   import { t } from '../../content/translations';
+  import { formatEstimatedDriveDuration, type OutletRouteEstimate } from '../../lib/routing/routing-matrix';
 
   interface OutletWithFit {
     outlet: Outlet;
@@ -23,6 +24,8 @@
     isDetailView = false,
     lang = 'en',
     onSelect = () => {},
+    routeOverride = undefined,
+    routeRequestState = 'idle',
   }: {
     items?: OutletWithFit[];
     harvest?: HarvestQuery;
@@ -30,6 +33,8 @@
     isDetailView?: boolean;
     lang?: 'en' | 'fil';
     onSelect?: (id: string) => void;
+    routeOverride?: OutletRouteEstimate;
+    routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   } = $props();
 
   // Laguna Bounding Box
@@ -69,6 +74,10 @@
 
   const selectedPos = $derived(
     selectedItem ? project(selectedItem.outlet.lat, selectedItem.outlet.lng) : null
+  );
+
+  const selectedRoadRoute = $derived(
+    routeOverride?.source === 'road' ? routeOverride : undefined
   );
 
   const routeMidpoint = $derived(
@@ -246,7 +255,9 @@
               fill="#20251E"
               text-anchor="middle"
             >
-              {selectedItem?.distanceKm} km
+              {selectedRoadRoute?.roadDistanceKm !== null && selectedRoadRoute?.roadDistanceKm !== undefined
+                ? `${selectedRoadRoute.roadDistanceKm.toFixed(1)} km road`
+                : `${selectedItem?.distanceKm} km`}
             </text>
           </g>
         </g>
@@ -276,7 +287,11 @@
             class="cursor-pointer shadow-sm"
             tabindex="0"
             role="button"
-            aria-label={`${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
+            aria-label={`${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${
+              item.outlet.id === selectedId && selectedRoadRoute?.roadDistanceKm !== null && selectedRoadRoute?.roadDistanceKm !== undefined
+                ? `${selectedRoadRoute.roadDistanceKm.toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
+                : `${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`
+            }`}
             onclick={(e) => {
               e.stopPropagation();
               onSelect(item.outlet.id);
@@ -363,9 +378,18 @@
                 {lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}
               </span>
               <span class="text-[11px] text-[#596052] font-medium">
-                {lang === 'fil'
-                  ? `${selectedItem.distanceKm} km tuwid · mula sa sentro ng ${originMun.name.split(',')[0]}`
-                  : `${selectedItem.distanceKm} km straight-line · from ${originMun.name.split(',')[0]} municipality center`}
+                {#if selectedRoadRoute?.roadDistanceKm !== null && selectedRoadRoute?.roadDistanceKm !== undefined}
+                  {selectedRoadRoute.roadDistanceKm.toFixed(1)} km {lang === 'fil' ? 'sa kalsada' : 'by road'}
+                  · {formatEstimatedDriveDuration(selectedRoadRoute) ?? '—'}
+                {:else if routeRequestState === 'loading'}
+                  {lang === 'fil'
+                    ? `Kinukuha ang ruta · ${selectedItem.distanceKm} km tuwid muna`
+                    : `Fetching road route · ${selectedItem.distanceKm} km straight-line for now`}
+                {:else}
+                  {lang === 'fil'
+                    ? `${selectedItem.distanceKm} km tuwid · mula sa sentro ng ${originMun.name.split(',')[0]}`
+                    : `${selectedItem.distanceKm} km straight-line · from ${originMun.name.split(',')[0]} municipality center`}
+                {/if}
               </span>
             </div>
 
@@ -450,7 +474,9 @@
     </div>
 
     <span class="text-[10px] text-[#596052] italic">
-      {lang === 'fil' ? 'Tuwid na konteksto lamang' : 'Straight-line context only'}
+      {selectedRoadRoute
+        ? (lang === 'fil' ? 'May road estimate · ilustratibong guhit lamang' : 'Road estimate available · line is illustrative')
+        : (lang === 'fil' ? 'Tuwid na konteksto lamang' : 'Straight-line context only')}
     </span>
   </div>
 
