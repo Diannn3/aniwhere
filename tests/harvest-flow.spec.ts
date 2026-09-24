@@ -186,11 +186,11 @@ test('explains the three-place comparison limit instead of silently blocking the
   await page.goto(discoverPath);
 
   const cards = page.locator('article[id^="outlet-card-"]');
-  await cards.nth(0).getByRole('checkbox').check();
-  await cards.nth(1).getByRole('checkbox').check();
-  await cards.nth(2).getByRole('checkbox').check();
+  await cards.nth(0).locator('.ledger-select-surface').click();
+  await cards.nth(1).locator('.ledger-select-surface').click();
+  await cards.nth(2).locator('.ledger-select-surface').click();
 
-  const fourth = cards.nth(3).getByRole('checkbox');
+  const fourth = cards.nth(3).locator('.ledger-select-surface');
   await expect(fourth).toHaveAttribute('aria-disabled', 'true');
   const dock = page.getByLabel('Comparison dock');
   await expect(dock.getByText(/3 of 3 places selected/i)).toBeVisible();
@@ -233,8 +233,8 @@ test('comparison never preselects outlets and preserves harvest context when emp
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
-  await outletCard(page, 'Kusina Verde Processing House').getByRole('checkbox').check();
-  await outletCard(page, 'Sariwa sa Los Baños Market Collective').getByRole('checkbox').check();
+  await outletCard(page, 'Kusina Verde Processing House').locator('.ledger-select-surface').click();
+  await outletCard(page, 'Sariwa sa Los Baños Market Collective').locator('.ledger-select-surface').click();
 
   const dock = page.getByRole('complementary', { name: 'Comparison dock' });
   await expect(dock).toContainText(/2 of 3 places selected/i);

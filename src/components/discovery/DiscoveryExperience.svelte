@@ -637,9 +637,9 @@
           <article
             id={`outlet-card-${item.outlet.id}`}
             aria-current={selectedOutletId === item.outlet.id ? 'true' : undefined}
-            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''}`}
+            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''} ${item.isCompared ? 'is-compared' : ''}`}
           >
-            <button type="button" class="ledger-number" onclick={() => handleSelectPin(item.outlet.id)} aria-label={`${lang === 'fil' ? 'Piliin' : 'Select'} ${item.outlet.name} ${lang === 'fil' ? 'sa mapa' : 'on map'}`}>{index + 1}</button>
+            <span class="ledger-number" aria-hidden="true">{index + 1}</span>
             <!-- Card Header: Fit Badge + Category + Distance -->
             <div class="flex flex-wrap items-center justify-between gap-2">
               <!-- Fit Status Badge -->
@@ -795,18 +795,13 @@
             {/if}
 
             <!-- Card Actions Footer -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
-              <!-- Add to compare checkbox -->
-              <label class="flex min-h-11 items-center gap-2 rounded-lg px-1 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={item.isCompared}
-                  aria-disabled={!item.isCompared && comparedIds.length >= 3}
-                  onchange={() => handleToggleCompare(item.outlet.id)}
-                  class="rounded text-[#486320] focus:ring-[#597928] w-4 h-4 cursor-pointer"
-                />
-                <span>{item.isCompared ? (lang === 'fil' ? 'Nasa paghahambing' : 'In comparison') : t('addToCompare', lang)}</span>
-              </label>
+            <div class="ledger-actions flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
+              <span class="ledger-select-indicator inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-[#4A5245]" aria-hidden="true">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  {#if item.isCompared}<path d="m4 10 4 4 8-8" />{:else}<path d="M10 4v12M4 10h12" />{/if}
+                </svg>
+                <span>{item.isCompared ? (lang === 'fil' ? 'Napili para ihambing' : 'Selected to compare') : t('addToCompare', lang)}</span>
+              </span>
 
               <!-- View Details Link -->
               <a
@@ -819,6 +814,17 @@
                 </svg>
               </a>
             </div>
+
+            <button
+              type="button"
+              class="ledger-select-surface"
+              onclick={() => handleToggleCompare(item.outlet.id)}
+              aria-pressed={item.isCompared}
+              aria-disabled={!item.isCompared && comparedIds.length >= 3}
+              aria-label={item.isCompared
+                ? `${lang === 'fil' ? 'Alisin ang' : 'Remove'} ${item.outlet.name} ${lang === 'fil' ? 'sa paghahambing' : 'from compare'}`
+                : `${lang === 'fil' ? 'Idagdag ang' : 'Add'} ${item.outlet.name} ${lang === 'fil' ? 'sa paghahambing' : 'to compare'}`}
+            ></button>
 
           </article>
         {/each}
@@ -939,5 +945,8 @@
   .legend-water { height: 12px; background: #698f9c; }
   .legend-land { height: 12px; background: #b3c494; }
   @media (max-width: 1199px) { .map-legend { right: 12px; top: 100px; } }
-  @media (max-width: 767px) { .map-legend { width: 155px; padding: 9px; font-size: 11px; } .map-legend__rows { gap: 6px; } }
+  @media (max-width: 767px) {
+    .map-legend { position: static; width: auto; margin: 12px; padding: 12px; font-size: 12px; }
+    .map-legend__rows { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  }
 </style>
