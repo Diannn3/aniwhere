@@ -202,3 +202,62 @@ test('comparison adopts road basis only after the local route resolves', async (
   await expect(page.getByText(/Road distance from Los Baños municipality center/).first()).toBeVisible();
 });
 
+
+test('resilient map keeps resolved road metrics when MapLibre fails', async ({ page }) => {
+  const timestamp = new Date().toISOString();
+  const today = todayInManila();
+  await page.evaluate(([key, value]) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [storageKey, {
+    version: 1,
+    profile: {
+      id: profileId,
+      name: 'Offline-map Bagsakan',
+      municipalityId: 'pagsanjan',
+      lat: 14.275,
+      lng: 121.459,
+      locationBasis: 'exact_pin',
+      updatedAt: timestamp,
+    },
+    demands: [{
+      id: 'need-tomato',
+      profileId,
+      cropKey: 'tomato',
+      maxKg: 32,
+      status: 'active',
+      validFrom: today,
+      validUntil: today,
+      updatedAt: timestamp,
+    }],
+  }] as const);
+
+  await page.route('https://unpkg.com/**', (route) => route.abort());
+  await page.route('**/api/route-estimate', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        schemaVersion: 1,
+        provider: 'openrouteservice',
+        profile: 'driving-car',
+        distanceMeters: 30500,
+        durationSeconds: 2280,
+        geometryStatus: 'ready',
+        geometry: {
+          type: 'LineString',
+          coordinates: [[121.241, 14.17], [121.35, 14.22], [121.459, 14.275]],
+        },
+        generatedAt: '2026-09-25T00:00:00Z',
+        attribution: 'Routing © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
+      }),
+    })
+  );
+
+  const params = new URLSearchParams({ ...CANONICAL_HARVEST, place: placeId });
+  await page.goto(`/bagsakan/preview?${params.toString()}`);
+
+  await expect(page.getByText('Offline map')).toBeVisible();
+  await expect(page.getByText('30.5 km road')).toBeVisible();
+  await expect(page.getByText('Road estimate available · line is illustrative')).toBeVisible();
+  await expect(page.getByText(/30\.5 km by road/).first()).toBeVisible();
+});
