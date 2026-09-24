@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { createRoutingClient } from './lib/routing-provider.mjs';
 
 const API_KEY = process.env.ORS_API_KEY;
 if (!API_KEY) {
@@ -38,23 +39,7 @@ const inputFingerprint = createHash('sha256')
   .update(JSON.stringify(fingerprintPayload))
   .digest('hex');
 
-async function ors(path, body) {
-  const response = await fetch(`${BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      Authorization: API_KEY,
-      'Content-Type': 'application/json',
-      Accept: 'application/json, application/geo+json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`ORS ${response.status} ${response.statusText}: ${text.slice(0, 500)}`);
-  }
-  return response.json();
-}
+const ors = createRoutingClient({ baseUrl: BASE, apiKey: API_KEY });
 
 const matrix = await ors(`/matrix/${PROFILE}`, {
   locations,
