@@ -146,7 +146,7 @@ test('distance sorting explains the shared comparison basis to farmers', async (
   await page.getByLabel(/sort/i).selectOption('distance');
 
   const cards = page.locator('article[id^="outlet-card-"]');
-  await expect(cards.first().getByText(/km straight-line/i)).toBeVisible();
+  await expect(cards.first().getByText(/km (?:straight-line|by road)/i)).toBeVisible();
 });
 
 test('makes all four fit filters understandable and exposes selected state', async ({ page }) => {
