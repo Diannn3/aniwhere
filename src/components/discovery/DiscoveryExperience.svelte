@@ -27,7 +27,8 @@
 
   let harvest = $state<HarvestQuery>(initialQuery.harvest);
   let lang = $state<'en' | 'fil'>(initialQuery.lang);
-  let activeMobileView = $state<'list' | 'map'>(initialQuery.view);
+  let activeView = $state<'list' | 'map' | 'auto'>('auto');
+  let mapOpened = $state(false);
   let selectedOutletId = $state<string | undefined>(initialQuery.selectedPlaceId);
 
   // Filters
@@ -38,7 +39,6 @@
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
-  let filtersOpen = $state(false);
   let compareNotice = $state('');
 
   // Editable harvest draft
@@ -54,14 +54,22 @@
   onMount(() => {
     savedIds = getSavedOutletIds();
 
-    // Hydrate client-side query parameters if present in browser
-    if (typeof window !== 'undefined' && window.location.search) {
+    // Static pages cannot know the visitor's URL or viewport until hydration.
+    if (typeof window !== 'undefined') {
       const clientQuery = parseDiscoverQuery(window.location.search);
       harvest = clientQuery.harvest;
       lang = clientQuery.lang;
-      activeMobileView = clientQuery.view;
+      const requestedView = new URLSearchParams(window.location.search).get('view');
+      activeView = requestedView === 'list' || requestedView === 'map'
+        ? requestedView
+        : window.matchMedia('(min-width: 1024px)').matches ? 'map' : 'list';
+      mapOpened = activeView === 'map';
       if (clientQuery.selectedPlaceId) {
         selectedOutletId = clientQuery.selectedPlaceId;
+      }
+      if (requestedView !== 'list' && requestedView !== 'map') {
+        const query = serializeDiscoverQuery(harvest, currentView(), selectedOutletId, lang);
+        window.history.replaceState({}, '', `/discover?${query}`);
       }
       editCrop = clientQuery.harvest.crop;
       editKg = clientQuery.harvest.quantityKg;
@@ -82,9 +90,14 @@
     editVariety = next.details?.variety || '';
     editGrade = next.details?.grade || '';
     editPackaging = next.details?.packaging || '';
-    const newQuery = serializeDiscoverQuery(next, activeMobileView, selectedOutletId, lang);
+    const newQuery = serializeDiscoverQuery(next, currentView(), selectedOutletId, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }));
+
+  function currentView(): 'list' | 'map' {
+    if (activeView !== 'auto') return activeView;
+    return typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches ? 'map' : 'list';
+  }
 
   const originCoords = $derived(
     LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) ||
@@ -241,12 +254,12 @@
     statusFilter = 'all';
     publishHarvestContext(harvest);
 
-    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, undefined, lang);
+    const newQuery = serializeDiscoverQuery(harvest, currentView(), undefined, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
   function syncDiscoveryUrl() {
-    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
+    const newQuery = serializeDiscoverQuery(harvest, currentView(), selectedOutletId, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
@@ -273,7 +286,8 @@
   }
 
   function setView(view: 'list' | 'map') {
-    activeMobileView = view;
+    activeView = view;
+    if (view === 'map') mapOpened = true;
     syncDiscoveryUrl();
     if (view === 'list' && selectedOutletId) {
       scrollSelectedIntoView(selectedOutletId);
@@ -350,7 +364,6 @@
         </svg>
         <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
-    <button type="button" class="docket-filter-toggle" onclick={() => filtersOpen = !filtersOpen} aria-expanded={filtersOpen} aria-controls="discovery-filters">{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</button>
     </div>
     <div class="docket-summary">
       <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
@@ -437,22 +450,22 @@
     {/if}
   </div>
 
-  <div id="discovery-filters" class={`discovery-filters ${filtersOpen ? 'is-open' : ''} flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center`}>
+  <div id="discovery-filters" class="discovery-filters flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center">
     
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:flex-col lg:items-stretch lg:overflow-visible">
-      <!-- Mobile Segmented Toggle -->
+      <!-- One view switch remains available in both views at every width. -->
       <div
-        class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
+        class="map-view-switch inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
         role="group"
         aria-label={lang === 'fil' ? 'Piliin ang listahan o mapa' : 'Choose list or map view'}
       >
         <button
           type="button"
           onclick={() => setView('list')}
-          aria-pressed={activeMobileView === 'list'}
+          aria-pressed={activeView === 'list'}
           class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-            activeMobileView === 'list'
+            activeView === 'list'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -466,9 +479,9 @@
         <button
           type="button"
           onclick={() => setView('map')}
-          aria-pressed={activeMobileView === 'map'}
-          class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-            activeMobileView === 'map'
+          aria-pressed={activeView === 'map'}
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+            activeView === 'map'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -596,10 +609,10 @@
   {/if}
 
   <!-- 3. Map-first Field Almanac workspace -->
-  <div class="discovery-workspace grid grid-cols-1 items-start">
+  <div class="discovery-workspace grid grid-cols-1 items-start" data-view={activeView}>
     
     <!-- Ruled outlet evidence index -->
-    <div class={`discovery-outlets ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
+    <div class="discovery-outlets">
       <header class="ledger-heading">
         <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} ({filteredOutlets.length})</h2>
       </header>
@@ -824,18 +837,17 @@
     </div>
 
     <!-- Dominant synchronized map plate -->
-    <div class={`almanac-map discovery-map ${activeMobileView === 'list' ? 'hidden' : 'block'}`}>
-      <div class="map-view-switch" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
-        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class:active={activeMobileView === 'map'}>{lang === 'fil' ? 'Mapa' : 'Map'}</button>
-        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class:active={activeMobileView === 'list'}>{lang === 'fil' ? 'Listahan' : 'List'}</button>
-      </div>
-      <LiveLagunaMap
-        items={filteredOutlets}
-        {harvest}
-        selectedId={selectedOutletId}
-        {lang}
-        onSelect={handleSelectPin}
-      />
+    <div class="almanac-map discovery-map">
+      {#if mapOpened}
+        <LiveLagunaMap
+          items={filteredOutlets}
+          {harvest}
+          selectedId={selectedOutletId}
+          {lang}
+          visible={activeView === 'map'}
+          onSelect={handleSelectPin}
+        />
+      {/if}
       <aside class="map-legend" aria-label={lang === 'fil' ? 'Paliwanag ng mapa' : 'Map legend'}>
         <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'}</h3>
         <div class="map-legend__rows">

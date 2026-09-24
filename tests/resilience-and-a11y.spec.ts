@@ -51,7 +51,7 @@ test('keeps the harvest journey operable with reduced motion enabled', async ({ 
   await fillHomeHarvest(page);
   await page.getByRole('button', { name: /find places to sell/i }).click();
   await page.waitForURL(/\/discover\?/);
-  await expectHarvestQuery(page);
+  await expectHarvestQuery(page, { view: 'map' });
 });
 
 test('keeps invalid-harvest recovery usable with forced colors enabled', async ({ page }) => {

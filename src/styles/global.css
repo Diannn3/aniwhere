@@ -260,16 +260,16 @@
   body > header nav a { font-size: 16px; }
   body:has(.discovery-page) > footer { padding-block: 14px; }
   .discovery-workspace { display: flex; flex-direction: column; }
-  .discovery-map { order: 0; display: block !important; width: 100%; border: 0; border-radius: 0; }
+  .discovery-map { order: 0; width: 100%; border: 0; border-radius: 0; }
   .discovery-map .live-map-shell,
   .discovery-map .map-fallback-shell,
   .discovery-map .live-map { height: clamp(570px, 60.5vh, 720px); min-height: 570px; }
-  .discovery-docket { position: absolute; z-index: 20; top: 26px; left: 26px; width: 362px; padding: 17px 21px 16px; border: 1px solid #65695c; border-radius: 5px; box-shadow: 0 12px 22px -16px #20251e; }
+  .discovery-docket { position: relative; z-index: 1; width: auto; margin: 16px 28px 12px; padding: 17px 21px 16px; border: 1px solid #65695c; border-radius: 5px; box-shadow: 0 12px 22px -16px #20251e; }
   .discovery-docket > .flex { align-items: flex-start; }
   .discovery-docket h1 { font-size: 29px; line-height: 1.15; }
   .discovery-docket > .flex button { font-size: 0; width: 44px; min-width: 44px; padding: 0; border: 0; }
   .discovery-docket > .flex button svg { width: 19px; height: 19px; }
-  .docket-harvest { display: block; margin-top: 6px; font-size: 19px; font-weight: 400; line-height: 1.3; white-space: nowrap; }
+  .docket-harvest { display: block; margin-top: 6px; font-size: 19px; font-weight: 400; line-height: 1.3; white-space: normal; }
   .docket-summary { margin-top: 20px; border-top: 1px solid #aab19c; }
   .docket-summary h2 { display: flex; justify-content: space-between; margin: 13px 0 12px; font: 700 18px/1.25 "Outfit Variable", sans-serif; }
   .docket-key { display: grid; gap: 8px; padding-bottom: 20px; }
@@ -279,18 +279,15 @@
   .docket-route { border-top: 1px solid #aab19c; padding-bottom: 14px; }
   .docket-route p { margin: 3px 0; font-size: 14px; line-height: 1.45; }
   .docket-compare { display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 6px; background: #486320; color: #fffdf8; font: 700 18px "Outfit Variable", sans-serif; }
-  .discovery-filters { position: absolute; z-index: 21; left: 26px; top: 525px; width: 362px; height: 1px; overflow: hidden; padding: 0; opacity: 0; pointer-events: none; }
-  .discovery-filters.is-open, .discovery-filters:focus-within { height: auto; overflow: visible; padding: 16px; opacity: 1; pointer-events: auto; border: 1px solid #aab19c; border-radius: 6px; box-shadow: 0 12px 22px -16px #20251e; }
-  .docket-filter-toggle { position: absolute; top: 10px; right: 86px; width: auto !important; min-width: 0 !important; padding: 3px 4px; font-size: 11px !important; font-weight: 700; color: #486320; }
+  .discovery-filters { position: relative; z-index: 1; width: auto; margin: 0 28px 12px; padding: 12px 0; }
   .discovery-docket:has(form) { width: min(780px, calc(100vw - 52px)); }
   .discovery-page > p:not(.sr-only) { display: none; }
   .discovery-map .map-status-bar { display: none; }
   .discovery-map .route-card { right: 190px; left: auto; bottom: 35px; width: 300px; }
-  .map-view-switch { position: absolute; z-index: 20; top: 26px; right: 26px; display: flex; gap: 3px; padding: 3px; border: 1px solid #747965; border-radius: 5px; background: #fffdf8; }
-  .map-view-switch button { min-width: 96px; min-height: 39px; border-radius: 4px; font-weight: 700; }
-  .map-view-switch button.active { background: #486320; color: #fffdf8; }
+  .map-view-switch { position: static; display: inline-flex; flex: none; gap: 3px; padding: 3px; border: 1px solid #747965; border-radius: 9999px; background: #fffdf8; }
+  .map-view-switch button { min-width: 88px; min-height: 44px; border-radius: 9999px; font-weight: 700; }
   .discovery-map > div:last-child { display: none; }
-  .discovery-outlets { order: 1; display: grid !important; grid-template-columns: 1fr; gap: 8px; padding: 17px 28px 25px; border-top: 1px solid #758068; }
+  .discovery-outlets { order: 1; display: grid; grid-template-columns: 1fr; gap: 8px; padding: 17px 28px 25px; border-top: 1px solid #758068; }
   .discovery-outlets { width: 100%; }
   .ledger-heading { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px 4px; }
   .ledger-heading h2 { font-size: 18px; font-weight: 700; }
@@ -319,15 +316,27 @@
   .discovery-map .map-fallback-note { max-width: 180px; }
 }
 @media (max-width: 1199px) {
-  .docket-summary, .ledger-number, .map-view-switch, .docket-filter-toggle { display: none; }
+  .docket-summary, .ledger-number { display: none; }
   .discovery-workspace { display: flex; flex-direction: column; }
   .discovery-map { order: 0; width: 100%; }
-  .discovery-outlets { order: 1; width: 100%; display: grid !important; gap: 12px; }
-  .discovery-map.hidden { display: none !important; }
+  .discovery-outlets { order: 1; width: 100%; display: grid; gap: 12px; }
   .ledger-heading { display: flex; justify-content: space-between; gap: 12px; }
   .ledger-heading h2 { font-weight: 700; }
   .ledger-entry { padding: 16px; }
 }
+.discovery-workspace[data-view="map"] .discovery-outlets,
+.discovery-workspace[data-view="list"] .discovery-map { display: none !important; }
+@media (min-width: 1024px) {
+  .discovery-workspace[data-view="auto"] .discovery-outlets { display: none !important; }
+}
+@media (max-width: 1023px) {
+  .discovery-workspace[data-view="auto"] .discovery-map { display: none !important; }
+}
+html[data-discover-initial-view="map"] .discovery-workspace[data-view="auto"] .discovery-outlets,
+html[data-discover-initial-view="list"] .discovery-workspace[data-view="auto"] .discovery-map { display: none !important; }
+html[data-discover-initial-view="map"] .discovery-workspace[data-view="auto"] .discovery-map { display: block !important; }
+html[data-discover-initial-view="list"] .discovery-workspace[data-view="auto"] .discovery-outlets { display: grid !important; }
+.discovery-workspace[data-view="auto"] .discovery-map { min-height: 570px; }
 .font-serif {
   font-family: "Outfit Variable", "Outfit", system-ui, sans-serif !important;
 }

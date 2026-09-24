@@ -25,12 +25,14 @@
     harvest,
     selectedId = undefined,
     lang = 'en',
+    visible = true,
     onSelect = () => {},
   }: {
     items?: OutletWithFit[];
     harvest: HarvestQuery;
     selectedId?: string;
     lang?: 'en' | 'fil';
+    visible?: boolean;
     onSelect?: (id: string) => void;
   } = $props();
 
@@ -185,6 +187,12 @@
     harvest.originMunicipality;
     selectedRoute;
     if (liveReady) syncMap();
+  });
+
+  $effect(() => {
+    if (visible && liveReady) {
+      requestAnimationFrame(() => map?.resize?.());
+    }
   });
 
   onMount(() => {

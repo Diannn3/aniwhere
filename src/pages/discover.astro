@@ -18,5 +18,11 @@ const description = isFil
   currentPath="/discover"
   lang={lang}
 >
+  <script is:inline>
+    const requestedView = new URLSearchParams(location.search).get('view');
+    document.documentElement.dataset.discoverInitialView = requestedView === 'map' || requestedView === 'list'
+      ? requestedView
+      : matchMedia('(min-width: 1024px)').matches ? 'map' : 'list';
+  </script>
   <DiscoveryExperience client:load initialQuery={parsedQuery} />
 </BaseLayout>
