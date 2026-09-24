@@ -42,6 +42,7 @@
   let contactCloseButton: HTMLButtonElement | null = $state(null);
   let resolvedRoute = $state<OutletRouteEstimate | undefined>();
   let routeRequestState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
+  let routeClientReady = $state(false);
 
   onMount(() => {
     saved = isOutletSaved(outlet.id);
@@ -50,6 +51,7 @@
     if (parsed.lang) {
       lang = parsed.lang;
     }
+    routeClientReady = true;
   });
 
   onMount(() => subscribeHarvestContext((next) => {
@@ -71,6 +73,7 @@
   const routeEstimate = $derived(resolvedRoute ?? immediateRoute.route);
 
   $effect(() => {
+    if (!routeClientReady) return;
     const originId = harvest.originMunicipality;
     const straightLineDistanceKm = distanceKm;
     const immediate = getImmediateOutletRoute(originId, outlet, straightLineDistanceKm);
