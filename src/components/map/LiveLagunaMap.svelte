@@ -2,7 +2,10 @@
   import { onMount } from 'svelte';
   import type { FitResult, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import {
+    formatEstimatedDriveDuration,
+    getOutletRouteEstimate,
+  } from '../../lib/routing/routing-matrix';
   import type { OutletRouteEstimate, RouteGeometry } from '../../lib/routing/routing-matrix';
   import { loadRouteGeometry } from '../../lib/routing/route-geometry';
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
@@ -343,10 +346,15 @@
             </div>
             <div>
               <dt>{lang === 'fil' ? 'Tinatayang biyahe' : 'Estimated drive'}</dt>
-              <dd>~{selectedRoute.roadDurationMinutes} min</dd>
+              <dd>{formatEstimatedDriveDuration(selectedRoute) ?? '—'}</dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate from the municipality reference point, not the exact farm. Confirm the receiving schedule before travel.'}</p>
+          <p>{lang === 'fil' ? 'Tantya ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid o live traffic ETA. Kumpirmahin ang iskedyul bago bumiyahe.' : 'OpenRouteService estimate from the municipality reference point, not the exact farm or a live-traffic ETA. Confirm the receiving schedule before travel.'}</p>
+          {#if geometryLoadState === 'loading'}
+            <p>{lang === 'fil' ? 'Nilo-load ang guhit ng ruta sa kalsada…' : 'Loading the road-route line…'}</p>
+          {:else if geometryLoadState === 'unavailable' || selectedRoute.geometryStatus !== 'ready'}
+            <p>{lang === 'fil' ? 'Hindi available ang guhit ng ruta; tuwid na konteksto lamang ang ipinapakita sa mapa.' : 'Road-route line unavailable; the map shows straight-line geographic context only.'}</p>
+          {/if}
         {:else}
           <dl>
             <div>
