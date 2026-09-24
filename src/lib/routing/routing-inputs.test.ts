@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
@@ -18,6 +19,15 @@ interface RoutingPointsManifest {
 const manifest = JSON.parse(
   readFileSync(new URL('../../../scripts/routing-points.json', import.meta.url), 'utf8')
 ) as RoutingPointsManifest;
+const artifact = JSON.parse(
+  readFileSync(new URL('../../generated/routing-matrix.json', import.meta.url), 'utf8')
+) as {
+  schemaVersion: number;
+  provider: string;
+  providerBase: string;
+  profile: string;
+  inputFingerprint: string;
+};
 
 function compact(points: RoutingPoint[]) {
   return points
@@ -32,6 +42,19 @@ describe('routing generation inputs', () => {
 
   it('covers every current demo outlet exactly', () => {
     expect(compact(manifest.outlets)).toEqual(compact(DEMO_PLACES));
+  });
+
+  it('keeps the checked-in artifact fingerprint aligned with current routing inputs', () => {
+    const payload = {
+      schemaVersion: artifact.schemaVersion,
+      provider: artifact.provider,
+      providerBase: artifact.providerBase,
+      profile: artifact.profile,
+      origins: compact(manifest.origins),
+      outlets: compact(manifest.outlets),
+    };
+    const fingerprint = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+    expect(artifact.inputFingerprint).toBe(fingerprint);
   });
 
   it('contains no duplicate routing IDs', () => {

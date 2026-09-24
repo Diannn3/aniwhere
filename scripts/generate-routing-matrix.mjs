@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -20,6 +21,22 @@ const outlets = routingPoints.outlets.map(({ id, name, lat, lng }) => [id, name,
 const locations = [...origins, ...outlets].map(([, , lat, lng]) => [lng, lat]);
 const sourceIndexes = origins.map((_, index) => index);
 const destinationIndexes = outlets.map((_, index) => origins.length + index);
+
+const fingerprintPayload = {
+  schemaVersion: 2,
+  provider: 'openrouteservice',
+  providerBase: BASE,
+  profile: PROFILE,
+  origins: origins
+    .map(([id, , lat, lng]) => ({ id, lat, lng }))
+    .sort((a, b) => a.id.localeCompare(b.id)),
+  outlets: outlets
+    .map(([id, , lat, lng]) => ({ id, lat, lng }))
+    .sort((a, b) => a.id.localeCompare(b.id)),
+};
+const inputFingerprint = createHash('sha256')
+  .update(JSON.stringify(fingerprintPayload))
+  .digest('hex');
 
 async function ors(path, body) {
   const response = await fetch(`${BASE}${path}`, {
@@ -49,12 +66,15 @@ const matrix = await ors(`/matrix/${PROFILE}`, {
 
 const generatedAt = new Date().toISOString();
 const artifact = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedAt,
   provider: 'openrouteservice',
   providerBase: BASE,
   profile: PROFILE,
+  generationMode: WITH_GEOMETRY ? 'metrics_and_geometry' : 'metrics',
   status: 'ready',
+  attribution: 'Routing data © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
+  inputFingerprint,
   note: WITH_GEOMETRY
     ? 'Road matrix and route geometries generated from OpenRouteService.'
     : 'Road matrix generated from OpenRouteService. Geometry was not requested.',
@@ -73,8 +93,14 @@ for (let oi = 0; oi < origins.length; oi += 1) {
 
     artifact.cells[originId][outletId] =
       typeof distanceMeters === 'number' && typeof durationSeconds === 'number'
-        ? { status: 'routed', distanceMeters, durationSeconds }
-        : { status: 'unavailable' };
+        ? {
+            status: 'routed',
+            distanceMeters,
+            durationSeconds,
+            metricSource: 'matrix',
+            geometryStatus: WITH_GEOMETRY ? 'unavailable' : 'not_requested',
+          }
+        : { status: 'unavailable', geometryStatus: WITH_GEOMETRY ? 'unavailable' : 'not_requested' };
   }
 }
 
@@ -92,6 +118,18 @@ if (WITH_GEOMETRY) {
         const geometry = geojson.features?.[0]?.geometry;
         if (geometry?.type === 'LineString' && Array.isArray(geometry.coordinates)) {
           cell.geometry = geometry;
+          cell.geometryStatus = 'ready';
+          const summary = geojson.features?.[0]?.properties?.summary;
+          if (
+            typeof summary?.distance === 'number' &&
+            Number.isFinite(summary.distance) &&
+            typeof summary?.duration === 'number' &&
+            Number.isFinite(summary.duration)
+          ) {
+            cell.distanceMeters = summary.distance;
+            cell.durationSeconds = summary.duration;
+            cell.metricSource = 'directions';
+          }
         }
       } catch (error) {
         console.warn(`Geometry unavailable for ${originId} -> ${outletId}: ${error.message}`);
