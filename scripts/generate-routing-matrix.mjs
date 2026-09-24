@@ -1,4 +1,4 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createRoutingClient } from './lib/routing-provider.mjs';
 import {
@@ -53,7 +53,7 @@ assertMatrixResponse(matrix, origins.length, outlets.length);
 
 const generatedAt = new Date().toISOString();
 const geometryRunId = WITH_GEOMETRY
-  ? `${generatedAt.replace(/\D/g, '').slice(0, 14)}-${inputFingerprint.slice(0, 12)}`
+  ? `${generatedAt.replace(/\D/g, '').slice(0, 17)}-${inputFingerprint.slice(0, 12)}`
   : null;
 const artifact = {
   schemaVersion: 2,
@@ -95,52 +95,73 @@ for (let oi = 0; oi < origins.length; oi += 1) {
   }
 }
 
-if (WITH_GEOMETRY) {
-  const geometryDirectory = resolve('public/generated/routes', geometryRunId);
-  await mkdir(geometryDirectory, { recursive: true });
-  console.log(`Fetching route geometry for ${origins.length * outlets.length} demo origin/outlet pairs at a conservative rate...`);
-  for (const [originId, , originLat, originLng] of origins) {
-    for (const [outletId, , outletLat, outletLng] of outlets) {
-      const cell = artifact.cells[originId][outletId];
-      if (cell.status !== 'routed') continue;
-      try {
-        const geojson = await ors(`/directions/${PROFILE}/geojson`, {
-          coordinates: [[originLng, originLat], [outletLng, outletLat]],
-          instructions: false,
-        });
-        const feature = geojson.features?.[0];
-        const geometry = feature?.geometry;
-        const summary = feature?.properties?.summary;
-        const validSummary =
-          typeof summary?.distance === 'number' &&
-          Number.isFinite(summary.distance) &&
-          summary.distance >= 0 &&
-          typeof summary?.duration === 'number' &&
-          Number.isFinite(summary.duration) &&
-          summary.duration >= 0;
+let publishedGeometryDirectory = null;
 
-        if (validateRouteGeometry(geometry) && validSummary) {
-          const geometryPath = `/generated/routes/${geometryRunId}/${originId}--${outletId}.geojson`;
-          const geometryFile = resolve('public', geometryPath.slice(1));
-          await writeJsonAtomic(geometryFile, geometry, (candidate) => {
-            if (!validateRouteGeometry(candidate)) {
-              throw new Error(`Invalid route geometry for ${originId} -> ${outletId}.`);
-            }
+if (WITH_GEOMETRY) {
+  const routesRoot = resolve('public/generated/routes');
+  const geometryDirectory = resolve(routesRoot, geometryRunId);
+  const stagingGeometryDirectory = resolve(routesRoot, `.tmp-${geometryRunId}-${process.pid}`);
+  await mkdir(routesRoot, { recursive: true });
+  await rm(stagingGeometryDirectory, { recursive: true, force: true });
+  await mkdir(stagingGeometryDirectory);
+
+  let staged = false;
+  try {
+    console.log(`Fetching route geometry for ${origins.length * outlets.length} demo origin/outlet pairs at a conservative rate...`);
+    for (const [originId, , originLat, originLng] of origins) {
+      for (const [outletId, , outletLat, outletLng] of outlets) {
+        const cell = artifact.cells[originId][outletId];
+        if (cell.status !== 'routed') continue;
+        try {
+          const geojson = await ors(`/directions/${PROFILE}/geojson`, {
+            coordinates: [[originLng, originLat], [outletLng, outletLat]],
+            instructions: false,
           });
-          cell.geometryPath = geometryPath;
-          cell.geometryStatus = 'ready';
-          cell.distanceMeters = summary.distance;
-          cell.durationSeconds = summary.duration;
-          cell.metricSource = 'directions';
-        } else {
+          const feature = geojson.features?.[0];
+          const geometry = feature?.geometry;
+          const summary = feature?.properties?.summary;
+          const validSummary =
+            typeof summary?.distance === 'number' &&
+            Number.isFinite(summary.distance) &&
+            summary.distance >= 0 &&
+            typeof summary?.duration === 'number' &&
+            Number.isFinite(summary.duration) &&
+            summary.duration >= 0;
+
+          if (validateRouteGeometry(geometry) && validSummary) {
+            const geometryPath = `/generated/routes/${geometryRunId}/${originId}--${outletId}.geojson`;
+            const geometryFile = resolve(stagingGeometryDirectory, `${originId}--${outletId}.geojson`);
+            await writeJsonAtomic(geometryFile, geometry, (candidate) => {
+              if (!validateRouteGeometry(candidate)) {
+                throw new Error(`Invalid route geometry for ${originId} -> ${outletId}.`);
+              }
+            });
+            cell.geometryPath = geometryPath;
+            cell.geometryStatus = 'ready';
+            cell.distanceMeters = summary.distance;
+            cell.durationSeconds = summary.duration;
+            cell.metricSource = 'directions';
+          } else {
+            artifact.status = 'partial';
+            console.warn(`Geometry response invalid for ${originId} -> ${outletId}; keeping Matrix metrics.`);
+          }
+        } catch (error) {
+          console.warn(`Geometry unavailable for ${originId} -> ${outletId}: ${error.message}`);
           artifact.status = 'partial';
-          console.warn(`Geometry response invalid for ${originId} -> ${outletId}; keeping Matrix metrics.`);
         }
-      } catch (error) {
-        console.warn(`Geometry unavailable for ${originId} -> ${outletId}: ${error.message}`);
-        artifact.status = 'partial';
+        await new Promise((resolveDelay) => setTimeout(resolveDelay, 1600));
       }
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 1600));
+    }
+
+    const expectedOriginIds = origins.map(([id]) => id);
+    const expectedOutletIds = outlets.map(([id]) => id);
+    validateRoutingArtifact(artifact, expectedOriginIds, expectedOutletIds);
+    await rename(stagingGeometryDirectory, geometryDirectory);
+    staged = true;
+    publishedGeometryDirectory = geometryDirectory;
+  } finally {
+    if (!staged) {
+      await rm(stagingGeometryDirectory, { recursive: true, force: true });
     }
   }
 }
@@ -148,7 +169,14 @@ if (WITH_GEOMETRY) {
 const output = resolve('src/generated/routing-matrix.json');
 const expectedOriginIds = origins.map(([id]) => id);
 const expectedOutletIds = outlets.map(([id]) => id);
-await writeJsonAtomic(output, artifact, (candidate) =>
-  validateRoutingArtifact(candidate, expectedOriginIds, expectedOutletIds)
-);
+try {
+  await writeJsonAtomic(output, artifact, (candidate) =>
+    validateRoutingArtifact(candidate, expectedOriginIds, expectedOutletIds)
+  );
+} catch (error) {
+  if (publishedGeometryDirectory) {
+    await rm(publishedGeometryDirectory, { recursive: true, force: true });
+  }
+  throw error;
+}
 console.log(`Wrote ${output} (${artifact.status}) at ${generatedAt}`);
