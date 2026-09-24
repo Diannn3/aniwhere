@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { validateProfile, type BagsakanDemoProfile } from '../../lib/bagsakan/state';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import PinPicker from './PinPicker.svelte';
@@ -15,6 +16,9 @@
   let latInput = $state(profile ? String(profile.lat) : '');
   let lngInput = $state(profile ? String(profile.lng) : '');
   let locationBasis = $state<'municipality_center' | 'exact_pin'>(profile?.locationBasis ?? 'municipality_center');
+  let showExactPin = $state(profile?.locationBasis === 'exact_pin');
+  let showMap = $state(false);
+  let showCoordinates = $state(false);
   let mapRecenterRequest = $state<{ version: number; lat: number; lng: number } | undefined>(undefined);
   let errors = $state<Record<string, string>>({});
   const isFil = $derived(lang === 'fil');
@@ -49,7 +53,7 @@
     errors = {};
   }
 
-  function save(event: SubmitEvent) {
+  async function save(event: SubmitEvent) {
     event.preventDefault();
     const candidate: BagsakanDemoProfile = {
       id: profile?.id ?? crypto.randomUUID(),
@@ -64,6 +68,11 @@
     if (isFil) errors = Object.fromEntries(Object.entries(errors).map(([key, message]) => [key, errorsFil[key] ?? message]));
     if (Object.keys(errors).length) {
       const first = Object.keys(errors)[0];
+      if (['lat', 'lng', 'locationBasis'].includes(first)) {
+        showExactPin = true;
+        showCoordinates = true;
+      }
+      await tick();
       document.getElementById(`bag-profile-${first === 'locationBasis' ? 'lat' : first}`)?.focus();
       return;
     }
@@ -73,8 +82,8 @@
 
 <form onsubmit={save} novalidate class="space-y-6 rounded-xl border border-[#20251E]/15 bg-white p-4 sm:p-6">
   <div>
-    <h2 class="text-2xl font-bold tracking-tight">{profile ? (isFil ? 'I-edit ang bagsakan' : 'Edit your bagsakan') : (isFil ? 'Ipakilala ang bagsakan' : 'Set up your bagsakan')}</h2>
-    <p class="mt-2 text-[#4A5245]">{isFil ? 'Ilagay ang pangalan at lokasyon na makikita sa farmer preview sa device na ito.' : 'Enter the name and location shown in the farmer preview on this device.'}</p>
+    <h2 class="text-2xl font-bold tracking-tight">{isFil ? 'Saan ka matatagpuan?' : 'Where can farmers find you?'}</h2>
+    <p class="mt-2 text-[#4A5245]">{isFil ? 'Pangalan at bayan lang muna. Sentro ng bayan ang gagamiting lokasyon maliban kung maglalagay ka ng eksaktong pin.' : 'Start with a name and municipality. We use the municipality center unless you add an exact pin.'}</p>
   </div>
   {#if Object.keys(errors).length}
     <div role="alert" class="rounded-lg border border-[#6E3511]/40 bg-[#FCECD8] p-3 text-[#6E3511]">
@@ -99,15 +108,21 @@
   </div>
   {#if municipality}
     <div class="space-y-3">
-      <p class="font-semibold">{isFil ? 'Pin sa mapa (opsyonal)' : 'Map pin (optional)'}</p>
-      <p class="text-sm text-[#4A5245]">{isFil ? 'Nagsisimula ito sa sentro ng bayan. Gamitin lamang ang eksaktong pin kung alam ang lokasyon.' : 'This starts at the municipality center. Set an exact pin only if you know the location.'}</p>
-      <PinPicker lat={Number(latInput)} lng={Number(lngInput)} {lang} recenterRequest={mapRecenterRequest} onPick={setPin} />
+      <p class="text-[#4A5245]">{isFil ? `Gagamitin muna ang sentro ng ${municipality.name}. Maaari mo itong baguhin kung alam mo ang eksaktong lokasyon.` : `We'll start at the center of ${municipality.name}. You can change it if you know the exact location.`}</p>
+      <button type="button" aria-expanded={showExactPin} aria-controls="bag-exact-pin" onclick={() => { showExactPin = !showExactPin; }} class="min-h-11 rounded-lg border border-[#597928] px-4 font-semibold text-[#365118] hover:bg-[#EBF3DF] focus-visible:outline-2 focus-visible:outline-[#597928]">{showExactPin ? (isFil ? 'Itago ang eksaktong pin' : 'Hide exact pin') : (isFil ? 'Magtakda ng eksaktong pin (opsyonal)' : 'Set exact pin (optional)')}</button>
+    </div>
+    {#if showExactPin}<div id="bag-exact-pin" class="space-y-4 border-t border-[#20251E]/15 pt-4">
+      <p class="font-semibold">{isFil ? 'Eksaktong lokasyon' : 'Exact location'}</p>
+      <button type="button" aria-expanded={showMap} onclick={() => { showMap = !showMap; }} class="min-h-11 rounded-lg border border-[#20251E]/30 px-4 font-semibold hover:bg-[#FCECD8]">{showMap ? (isFil ? 'Itago ang mapa' : 'Hide map') : (isFil ? 'Pumili sa mapa' : 'Choose on map')}</button>
+      {#if showMap}<PinPicker lat={Number(latInput)} lng={Number(lngInput)} {lang} recenterRequest={mapRecenterRequest} onPick={setPin} />{/if}
+      <details bind:open={showCoordinates} class="rounded-lg border border-[#20251E]/20 px-4 py-2"><summary class="min-h-11 cursor-pointer py-2 font-semibold">{isFil ? 'Ilagay ang coordinates sa halip' : 'Enter coordinates instead'}</summary>
       <div class="grid gap-4 sm:grid-cols-2">
         <div><label for="bag-profile-lat" class="mb-1 block font-semibold">{isFil ? 'Latitude ng pin' : 'Pin latitude'}</label><input id="bag-profile-lat" type="number" step="any" bind:value={latInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lat)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lat}<p class="mt-1 text-sm text-[#6E3511]">{errors.lat}</p>{/if}</div>
         <div><label for="bag-profile-lng" class="mb-1 block font-semibold">{isFil ? 'Longitude ng pin' : 'Pin longitude'}</label><input id="bag-profile-lng" type="number" step="any" bind:value={lngInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lng)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lng}<p class="mt-1 text-sm text-[#6E3511]">{errors.lng}</p>{/if}</div>
       </div>
+      </details>
       <div class="flex flex-wrap items-center gap-3"><button type="button" onclick={chooseMunicipality} class="min-h-11 rounded-lg border border-[#20251E]/30 px-4 font-semibold hover:bg-[#FCECD8] focus-visible:outline-2 focus-visible:outline-[#597928]">{isFil ? 'Ibalik sa sentro ng bayan' : 'Reset to municipality center'}</button><span class="text-sm text-[#4A5245]">{locationBasis === 'municipality_center' ? (isFil ? 'Sentro ng bayan ang pin' : 'Municipality center pin') : (isFil ? 'Eksaktong pin ang gagamitin' : 'Exact pin selected')}</span></div>
-    </div>
+    </div>{/if}
   {/if}
   <div class="flex flex-wrap gap-3">
     <button type="submit" class="min-h-11 rounded-lg bg-[#486320] px-5 font-bold text-white hover:bg-[#365118] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#486320]">{profile ? (isFil ? 'I-save ang pagbabago' : 'Save changes') : (isFil ? 'I-save ang bagsakan' : 'Save bagsakan')}</button>
