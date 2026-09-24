@@ -110,10 +110,14 @@
       button.type = 'button';
       button.className = `aniwhere-outlet-marker status-${item.fit.status}`;
       if (item.outlet.id === selectedId) button.classList.add('is-selected');
+      if (item.outlet.isLocalBagsakan) {
+        button.classList.add('is-local-bagsakan');
+        button.title = lang === 'fil' ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device';
+      }
       button.textContent = String(index + 1);
       button.setAttribute(
         'aria-label',
-        `${item.outlet.name}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
+        `${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}, ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm.toFixed(1)} km ${lang === 'fil' ? 'tuwid na layo' : 'straight-line distance'}`
       );
       button.setAttribute('aria-pressed', item.outlet.id === selectedId ? 'true' : 'false');
       button.addEventListener('click', () => onSelect(item.outlet.id));
@@ -284,6 +288,7 @@
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
+          {#if selectedItem.outlet.isLocalBagsakan}<span>{lang === 'fil' ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device'}</span>{/if}
           <span class="route-origin">
             {lang === 'fil'
               ? `Batayang lokasyon: sentro ng ${origin.name}`
@@ -522,6 +527,7 @@
   :global(.aniwhere-outlet-marker.status-partial) { background: #B86A2B; }
   :global(.aniwhere-outlet-marker.status-confirm) { background: #4E7380; }
   :global(.aniwhere-outlet-marker.status-no_match) { background: #6B7167; }
+  :global(.aniwhere-outlet-marker.is-local-bagsakan) { border-style: dashed; border-width: 3px; }
 
   :global(.aniwhere-outlet-marker:hover),
   :global(.aniwhere-outlet-marker:focus-visible),
