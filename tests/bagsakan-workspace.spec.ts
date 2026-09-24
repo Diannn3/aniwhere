@@ -7,6 +7,8 @@ test('a Bagsakan can create, edit, and pause a need that changes farmer fit', as
   await page.goto('/bagsakan');
   await page.locator('#bag-profile-name').fill('Santa Cruz Test Bagsakan');
   await page.locator('#bag-profile-municipalityId').selectOption('santa-cruz');
+  await expect(page.getByText(/We'll start at the center of Santa Cruz/)).toBeVisible();
+  await expect(page.locator('[data-bagsakan-pin-map]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Save bagsakan' }).click();
   await expect(page.getByRole('heading', { name: 'Santa Cruz Test Bagsakan' })).toBeVisible();
 
@@ -14,6 +16,11 @@ test('a Bagsakan can create, edit, and pause a need that changes farmer fit', as
   await page.locator('#bag-demand-maxKg').fill('200');
   await page.getByRole('button', { name: 'Save need' }).click();
   await expect(page.getByText('200 kg maximum')).toBeVisible();
+  await expect(page.getByText('Sample price')).toBeVisible();
+  await expect(page.getByText('Receiving dates')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Preview as farmer' })).toBeHidden();
+  await page.getByText('More options').click();
+  await expect(page.getByRole('link', { name: 'Preview as farmer' })).toBeVisible();
 
   await page.goto(discoverPath);
   const card = outletCard(page, 'Santa Cruz Test Bagsakan');
@@ -40,6 +47,8 @@ test('map clicks move the pin without recentering the camera', async ({ page }) 
   await page.goto('/bagsakan');
   await page.locator('#bag-profile-name').fill('Map Pin Test Bagsakan');
   await page.locator('#bag-profile-municipalityId').selectOption('santa-cruz');
+  await page.getByRole('button', { name: 'Set exact pin (optional)' }).click();
+  await page.getByRole('button', { name: 'Choose on map' }).click();
 
   await expect(page.getByText('Click or tap the map to place the pin. You can also use the coordinates below.'))
     .toBeVisible({ timeout: 20_000 });
@@ -83,6 +92,8 @@ test('pin coordinates can be set without dragging and reset to municipality cent
   await page.goto('/bagsakan');
   await page.locator('#bag-profile-name').fill('Pinned Test Bagsakan');
   await page.locator('#bag-profile-municipalityId').selectOption('santa-cruz');
+  await page.getByRole('button', { name: 'Set exact pin (optional)' }).click();
+  await page.getByText('Enter coordinates instead').click();
   await page.locator('#bag-profile-lat').fill('14.285');
   await page.locator('#bag-profile-lng').fill('121.42');
   await expect(page.getByText('Exact pin selected')).toBeVisible();
@@ -90,6 +101,7 @@ test('pin coordinates can be set without dragging and reset to municipality cent
   await expect(page.getByText(/Santa Cruz, Laguna · Exact pin/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Edit bagsakan' }).click();
+  await page.getByText('Enter coordinates instead').click();
   await page.getByRole('button', { name: 'Reset to municipality center' }).click();
   await expect(page.locator('#bag-profile-lat')).toHaveValue('14.281');
   await expect(page.locator('#bag-profile-lng')).toHaveValue('121.417');
@@ -101,5 +113,16 @@ test('buyer compatibility route shows the same local Bagsakan flow in Filipino',
   await page.goto('/buyer?lang=fil');
   await expect(page.getByRole('heading', { name: 'Iyong bagsakan' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fil');
-  await expect(page.getByText(/hindi inilalathala sa live buyer network/i)).toBeVisible();
+  await expect(page.getByText(/hindi ito live na anunsyo/i)).toBeVisible();
+});
+
+test('mobile home exposes Bagsakan setup without changing farmer navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/?lang=fil');
+  await page.getByRole('link', { name: 'Pamahalaan ang bagsakan' }).click();
+  await expect(page).toHaveURL(/\/bagsakan\?lang=fil/);
+  await expect(page.getByRole('heading', { name: 'Saan ka matatagpuan?' })).toBeVisible();
+  await expect(page.locator('[data-bagsakan-pin-map]')).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Nabigasyon sa mobile' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });

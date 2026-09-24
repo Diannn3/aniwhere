@@ -96,7 +96,7 @@ const auditTargets: AuditTarget[] = [
     name: 'Bagsakan workspace',
     path: '/bagsakan',
     prepare: async (page) => {
-      await expect(page.getByRole('heading', { name: 'Set up your bagsakan' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Where can farmers find you?' })).toBeVisible();
     },
   },
   {

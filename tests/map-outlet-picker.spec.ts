@@ -131,7 +131,7 @@ test('Filipino map picker remains readable and touchable at 200% text on a 320px
   await expect(picker).toContainText('Mga posibleng outlet');
   await picker.getByRole('button', { name: 'Ipakita lahat' }).click();
   await expect(picker).toContainText('Bahagi ng ani mo');
-  await expect(picker).toContainText('tuwid na layo');
+  await expect(picker).toContainText(/sa kalsada|tuwid na layo/);
 
   const controls = [
     picker.locator('[data-outlet-id="demo-market"] .map-picker__select'),
