@@ -18,7 +18,7 @@ const {
 } = Astro.props;
 
 const isFil = lang === 'fil';
-const showAni = import.meta.env.PUBLIC_ANI_ENABLED !== 'false' && !currentPath.startsWith('/buyer');
+const showAni = import.meta.env.PUBLIC_ANI_ENABLED !== 'false' && !currentPath.startsWith('/buyer') && !currentPath.startsWith('/bagsakan');
 const farmerNav = [
   { href: '/discover', label: isFil ? 'Maghanap' : 'Discover' },
   { href: '/saved', label: isFil ? 'Nai-save' : 'Saved' },
@@ -110,22 +110,22 @@ const farmerContextHref = (path: string) => {
             >
               <img src="/ani/ani-avatar.webp" alt="" aria-hidden="true" class="h-8 w-8 rounded-full object-cover" />
             </button>}
-          <p class="hidden border-r border-[#20251E]/20 pr-3 text-xs text-[#6E3511] lg:block" data-i18n-en="Demo — sample data" data-i18n-fil="Demo — halimbawang datos">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'}</p>
+          <p class="hidden border-r border-[#20251E]/20 pr-3 text-xs text-[#6E3511] sm:block" data-i18n-en="Demo — sample data" data-i18n-fil="Demo — halimbawang datos">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'}</p>
           <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" data-aria-en="Select language" data-aria-fil="Piliin ang wika" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
             <a href={languageHref('en')} data-language-target="en" class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
             <a href={languageHref('fil')} data-language-target="fil" class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
           </div>
           <a
-            href={`/buyer${lang === 'fil' ? '?lang=fil' : ''}`}
-            data-route-href="/buyer"
+            href={`/bagsakan${lang === 'fil' ? '?lang=fil' : ''}`}
+            data-route-href="/bagsakan"
             class={`hidden min-h-10 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors sm:inline-flex ${
-              isActive('/buyer')
+              isActive('/bagsakan') || isActive('/buyer')
                 ? 'border-[#597928] bg-[#486320] text-[#FFFDF8]'
                 : 'border-[#20251E]/15 text-[#4A5245] hover:border-[#597928] hover:text-[#20251E]'
             }`}
           >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span data-i18n-en="For buyers" data-i18n-fil="Para sa mamimili">{isFil ? 'Para sa mamimili' : 'For buyers'}</span>
+            <span data-i18n-en="For bagsakan" data-i18n-fil="Para sa bagsakan">{isFil ? 'Para sa bagsakan' : 'For bagsakan'}</span>
           </a>
         </div>
       </div>
@@ -136,13 +136,12 @@ const farmerContextHref = (path: string) => {
     </main>
 
     <nav data-ani-background class="fixed inset-x-0 bottom-0 z-40 border-t border-[#20251E]/10 bg-[#FFFDF8]/95 px-4 py-2 backdrop-blur-md md:hidden" data-aria-en="Mobile navigation" data-aria-fil="Nabigasyon sa mobile" aria-label={isFil ? 'Nabigasyon sa mobile' : 'Mobile navigation'}>
-      <div class="mx-auto grid max-w-md grid-cols-5 gap-1">
+      <div class="mx-auto grid max-w-md grid-cols-4 gap-1">
         {[
           { href: '/', label: isFil ? 'Ani ko' : 'Harvest', icon: 'home' },
           { href: '/saved', label: isFil ? 'Nai-save' : 'Saved', icon: 'saved' },
           { href: '/discover', label: isFil ? 'Maghanap' : 'Discover', icon: 'search' },
           { href: '/compare', label: isFil ? 'Ihambing' : 'Compare', icon: 'compare' },
-          { href: '/buyer', label: isFil ? 'Mamimili' : 'Buyers', icon: 'buyer' },
         ].map((item) => (
           <a
             href={farmerContextHref(item.href)}
@@ -156,8 +155,7 @@ const farmerContextHref = (path: string) => {
             {item.icon === 'search' && <span class="grid h-12 w-12 place-items-center rounded-full bg-[#486320] text-[#FFFDF8] shadow-[0_6px_16px_-8px_rgba(32,37,30,.7)]"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg></span>}
             {item.icon === 'saved' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>}
             {item.icon === 'compare' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v18M17 3v18M3 7h8M13 17h8"/><path d="m8 4 3 3-3 3M16 14l-3 3 3 3"/></svg>}
-            {item.icon === 'buyer' && <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
-            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : item.href === '/saved' ? 'Saved' : item.href === '/compare' ? 'Compare' : 'Buyers'} data-i18n-fil={item.href === '/' ? 'Ani ko' : item.href === '/discover' ? 'Maghanap' : item.href === '/saved' ? 'Nai-save' : item.href === '/compare' ? 'Ihambing' : 'Mamimili'}>{item.label}</span>
+            <span data-i18n-en={item.href === '/' ? 'Harvest' : item.href === '/discover' ? 'Discover' : item.href === '/saved' ? 'Saved' : 'Compare'} data-i18n-fil={item.href === '/' ? 'Ani ko' : item.href === '/discover' ? 'Maghanap' : item.href === '/saved' ? 'Nai-save' : 'Ihambing'}>{item.label}</span>
           </a>
         ))}
       </div>
@@ -169,6 +167,7 @@ const farmerContextHref = (path: string) => {
       <div class="mx-auto flex max-w-[92rem] flex-col items-center justify-between gap-4 text-center text-xs text-[#4A5245] md:flex-row md:text-left">
         <BrandMark size="sm" />
         <p class="max-w-xl" data-i18n-en="Prepare the trip. Confirm price, capacity, and receiving terms before travelling." data-i18n-fil="Ihanda ang biyahe. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.">{isFil ? 'Ihanda ang biyahe. Kumpirmahin ang presyo, kapasidad, at kondisyon bago bumiyahe.' : 'Prepare the trip. Confirm price, capacity, and receiving terms before travelling.'}</p>
+        <a href={`/bagsakan${lang === 'fil' ? '?lang=fil' : ''}`} class="inline-flex min-h-11 items-center font-semibold text-[#486320] underline underline-offset-4" data-i18n-en="For Bagsakan" data-i18n-fil="Para sa Bagsakan">{isFil ? 'Para sa Bagsakan' : 'For Bagsakan'}</a>
       </div>
     </footer>
 

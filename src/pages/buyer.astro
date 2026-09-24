@@ -1,17 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import BuyerWorkspace from '../components/buyer/BuyerWorkspace.svelte';
+import BagsakanWorkspace from '../components/bagsakan/BagsakanWorkspace.svelte';
 
-const lang = (Astro.url.searchParams.get('lang') as 'en' | 'fil') || 'en';
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
 const isFil = lang === 'fil';
 
 const title = isFil
-  ? 'AniWhere — Mga Alok sa Pagbili'
-  : 'AniWhere — Your Buying Offers';
+  ? 'AniWhere — Iyong bagsakan'
+  : 'AniWhere — Your bagsakan';
 
 const description = isFil
-  ? 'Pamamahala ng mga alok sa pagbili ng ani para sa mga buyer sa Laguna.'
-  : 'Manage crop buying offers for agricultural buyers in Laguna.';
+  ? 'Itala ang pangangailangan sa pagbili sa device na ito.'
+  : 'Record your buying needs on this device.';
 ---
 
 <BaseLayout
@@ -20,5 +20,5 @@ const description = isFil
   currentPath="/buyer"
   lang={lang}
 >
-  <BuyerWorkspace client:load initialLang={lang} />
+  <BagsakanWorkspace client:load initialLang={lang} />
 </BaseLayout>
