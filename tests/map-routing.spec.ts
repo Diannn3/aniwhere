@@ -1,8 +1,24 @@
 import { expect, test } from '@playwright/test';
 import { todayInManila } from '../src/lib/state/url-state';
+import { CURRENT_OUTLETS } from '../src/lib/data/current-market';
+import { LAGUNA_MUNICIPALITIES } from '../src/content/municipalities';
+import { calculateStraightLineDistanceKm } from '../src/lib/domain/distance';
+import { getOutletRouteEstimate, sharedDistanceBasis } from '../src/lib/routing/routing-matrix';
 
 const mapPath =
   `/discover?crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=map&place=demo-market&lang=en`;
+
+function routeFor(outletId: string) {
+  const origin = LAGUNA_MUNICIPALITIES.find((item) => item.id === 'los-banos')!;
+  const outlet = CURRENT_OUTLETS.find((item) => item.id === outletId)!;
+  const straightLine = calculateStraightLineDistanceKm(
+    origin.lat,
+    origin.lng,
+    outlet.lat,
+    outlet.lng
+  );
+  return getOutletRouteEstimate(origin.id, outlet.id, straightLine);
+}
 
 test('live map fails over to the resilient SVG map when MapLibre cannot load', async ({ page }) => {
   await page.route('https://unpkg.com/**', (route) => route.abort());
@@ -13,25 +29,51 @@ test('live map fails over to the resilient SVG map when MapLibre cannot load', a
   await expect(page.getByText('Laguna Market Corridor')).toBeVisible();
 });
 
-test('default build never invents road distance or drive time', async ({ page }) => {
+test('comparison uses one truthful distance basis for the current artifact', async ({ page }) => {
+  const routes = ['demo-processor', 'demo-market', 'demo-msme-confirm'].map(routeFor);
+  const basis = sharedDistanceBasis(routes);
+
   await page.goto(
     `/compare?places=demo-processor,demo-market,demo-msme-confirm&crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`
   );
 
-  await expect(page.getByText(/Straight-line from Los Baños municipality center; used consistently across all selected places\./).first()).toBeVisible();
-  await expect(page.getByText(/All selected places have road estimates/)).toHaveCount(0);
-  await expect(page.getByText(/min drive/)).toHaveCount(0);
+  if (basis === 'road') {
+    await expect(page.getByText(/All selected places have road estimates/).first()).toBeVisible();
+    await expect(page.getByText(/estimated drive/).first()).toBeVisible();
+  } else {
+    await expect(page.getByText(/Straight-line from Los Baños municipality center; used consistently across all selected places\./).first()).toBeVisible();
+    await expect(page.getByText(/All selected places have road estimates/)).toHaveCount(0);
+  }
 });
 
 
-test('outlet detail labels municipality reference distance without implying exact farm routing', async ({ page }) => {
+test('outlet detail matches the current route artifact without implying exact farm routing', async ({ page }) => {
+  const route = routeFor('demo-market');
   await page.goto(
     `/places/demo-market?crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`
   );
 
   await expect(page.getByText(/Reference point:/).first()).toBeVisible();
   await expect(page.getByText(/Los Baños municipality center/).first()).toBeVisible();
-  await expect(page.getByText('Road route unavailable.').first()).toBeVisible();
+  if (route.source === 'road') {
+    await expect(page.getByText(/estimated drive/).first()).toBeVisible();
+    await expect(page.getByText(/live-traffic ETA/).first()).toBeVisible();
+  } else {
+    await expect(page.getByText('Road route unavailable.').first()).toBeVisible();
+  }
+});
+
+test('Nagcarlan richer-data outlet obeys the same route truth contract', async ({ page }) => {
+  const route = routeFor('demo-nagcarlan-kitchen');
+  await page.goto(
+    `/places/demo-nagcarlan-kitchen?crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`
+  );
+
+  if (route.source === 'road') {
+    await expect(page.getByText(/estimated drive/).first()).toBeVisible();
+  } else {
+    await expect(page.getByText('Road route unavailable.').first()).toBeVisible();
+  }
 });
 
 
