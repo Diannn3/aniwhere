@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import LocalBagsakanPreview from '../../components/bagsakan/LocalBagsakanPreview.svelte';
+
+const lang = Astro.url.searchParams.get('lang') === 'fil' ? 'fil' : 'en';
+---
+
+<BaseLayout
+  title={lang === 'fil' ? 'AniWhere — Preview ng Bagsakan' : 'AniWhere — Bagsakan Preview'}
+  description={lang === 'fil' ? 'Suriin ang demo Bagsakan entry na naka-save sa browser na ito.' : 'Review a demo Bagsakan entry saved in this browser.'}
+  currentPath="/bagsakan/preview"
+  lang={lang}
+>
+  <LocalBagsakanPreview client:load initialLang={lang} />
+</BaseLayout>
