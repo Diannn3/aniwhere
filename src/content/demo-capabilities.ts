@@ -1,6 +1,9 @@
 import type { PlaceCropCapabilityRecord } from '../lib/domain/types';
 import { DEMO_SOURCE_ID } from './demo-sources';
 
+// Fictional demo evidence, not verification of a real buyer.
+const DEMO_EVIDENCE = { verifiedAt: '2026-09-17T08:00:00+08:00', sourceId: DEMO_SOURCE_ID };
+
 export const DEMO_CAPABILITIES: PlaceCropCapabilityRecord[] = [
   {
     id: 'cap-demo-cooperative-tomato',
@@ -101,5 +104,62 @@ export const DEMO_CAPABILITIES: PlaceCropCapabilityRecord[] = [
     conditionsFil: ['Walang kemikal'],
     verifiedAt: '2026-09-17T08:00:00+08:00',
     sourceId: DEMO_SOURCE_ID,
+  },
+  {
+    id: 'cap-demo-cooperative-banana', placeId: 'demo-cooperative', cropKey: 'banana', acceptanceState: 'accepted',
+    conditions: ['Separate bruised fingers before loading'], conditionsFil: ['Ihiwalay ang napisang saging bago ikarga'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-pagsanjan-banana', placeId: 'demo-pagsanjan-hub', cropKey: 'banana', acceptanceState: 'accepted',
+    conditions: ['Deliver by bunch, with cut ends covered'], conditionsFil: ['Ihatid nang buwig, nakatakip ang pinutulang dulo'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-binan-banana', placeId: 'demo-binan-store', cropKey: 'banana', acceptanceState: 'accepted',
+    conditions: ['Small ripe batches only'], conditionsFil: ['Maliit na batch ng hinog na saging lamang'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-nagcarlan-banana', placeId: 'demo-nagcarlan-kitchen', cropKey: 'banana', acceptanceState: 'accepted',
+    conditions: ['Confirm jar production before harvesting'], conditionsFil: ['Kumpirmahin ang iskedyul ng paggawa ng palaman bago mag-ani'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cabuyao-banana', placeId: 'demo-cabuyao-commissary', cropKey: 'banana', acceptanceState: 'excluded',
+    conditions: ['No banana recipe in this sample cycle'], conditionsFil: ['Walang resipe ng saging sa halimbawang siklong ito'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cooperative-papaya', placeId: 'demo-cooperative', cropKey: 'papaya', acceptanceState: 'accepted',
+    conditions: ['Pack mature-green fruit apart from ripe fruit'], conditionsFil: ['Ihiwalay ang hinog sa gulang na berdeng papaya'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-bay-papaya', placeId: 'demo-bay-trading', cropKey: 'papaya', acceptanceState: 'accepted',
+    conditions: ['Cushion fruit in crates to avoid bruising'], conditionsFil: ['Lagyan ng panangga ang prutas sa kahon upang hindi mapasâ'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-nagcarlan-papaya', placeId: 'demo-nagcarlan-kitchen', cropKey: 'papaya', acceptanceState: 'accepted',
+    conditions: ['Confirm ripeness and open kitchen batch'], conditionsFil: ['Kumpirmahin ang pagkahinog at bakanteng batch sa kusina'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-victoria-papaya', placeId: 'demo-victoria-eatery', cropKey: 'papaya', acceptanceState: 'accepted',
+    conditions: ['Only green papaya for the daily menu; ask for the price'],
+    conditionsFil: ['Berdeng papaya lang para sa pang-araw-araw na menu; itanong ang presyo'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cabuyao-papaya', placeId: 'demo-cabuyao-commissary', cropKey: 'papaya', acceptanceState: 'accepted',
+    conditions: ['Ripe papaya only; sample check before delivery'],
+    conditionsFil: ['Hinog na papaya lang; ipasuri ang sample bago maghatid'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-binan-papaya', placeId: 'demo-binan-store', cropKey: 'papaya', acceptanceState: 'excluded',
+    conditions: ['No papaya shelf space in the sample plan'], conditionsFil: ['Walang puwesto para sa papaya sa halimbawang plano'],
+    ...DEMO_EVIDENCE,
   },
 ];
