@@ -100,9 +100,9 @@ export function evaluateFit(
       statusLabel: 'Contact to confirm',
       statusLabelFil: 'Makipag-ugnayan para kumpirmahin',
       reason:
-        'Detailed matching is currently limited to tomatoes, eggplant, and calamansi. Contact to confirm terms.',
+        'Detailed matching is available only for the listed crops. Contact to confirm terms for other crops.',
       reasonFil:
-        'Ang detalyadong pagtutugma ay para lamang sa kamatis, talong, at kalamansi sa ngayon. Makipag-ugnayan para kumpirmahin.',
+        'May detalyadong pagtutugma lamang para sa mga pananim na nakalista. Makipag-ugnayan para kumpirmahin ang ibang ani.',
       reasonCodes: ['unsupported_crop', 'conditions_to_confirm'],
       acceptedKg: null,
       remainingKg: null,
