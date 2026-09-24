@@ -1,16 +1,1026 @@
 {
   "schemaVersion": 2,
-  "generatedAt": null,
+  "generatedAt": "2026-09-24T19:45:03.794Z",
   "provider": "openrouteservice",
   "providerBase": "https://api.heigit.org/openrouteservice/v2",
   "profile": "driving-car",
-  "generationMode": "not_generated",
-  "status": "not_generated",
+  "generationMode": "metrics_and_geometry",
+  "status": "partial",
   "attribution": "Routing data © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors",
   "inputFingerprint": "1ada48d440b74c496e3b19d672302307c1b9eb0fc157d4e622fdc9a60cea5334",
-  "note": "No road-routing claims are bundled until this artifact is generated with a valid private routing credential.",
-  "origins": {},
-  "outlets": {},
-  "cells": {},
-  "geometryRunId": null
+  "geometryRunId": "20260924194503794-1ada48d440b7",
+  "engine": {
+    "version": "9.10.0",
+    "buildDate": "2026-08-13T11:53:14Z",
+    "graphDate": "2026-09-21T10:31:27Z",
+    "osmDate": "2026-09-13T23:59:59Z"
+  },
+  "note": "Road matrix and route geometries generated from OpenRouteService.",
+  "origins": {
+    "los-banos": {
+      "name": "Los Baños, Laguna",
+      "lat": 14.17,
+      "lng": 121.241
+    },
+    "santa-cruz": {
+      "name": "Santa Cruz, Laguna",
+      "lat": 14.281,
+      "lng": 121.417
+    },
+    "calamba": {
+      "name": "Calamba, Laguna",
+      "lat": 14.214,
+      "lng": 121.164
+    },
+    "san-pablo": {
+      "name": "San Pablo, Laguna",
+      "lat": 14.067,
+      "lng": 121.325
+    },
+    "cabuyao": {
+      "name": "Cabuyao, Laguna",
+      "lat": 14.278,
+      "lng": 121.124
+    },
+    "nagcarlan": {
+      "name": "Nagcarlan, Laguna",
+      "lat": 14.135,
+      "lng": 121.417
+    },
+    "pagsanjan": {
+      "name": "Pagsanjan, Laguna",
+      "lat": 14.273,
+      "lng": 121.454
+    },
+    "liliw": {
+      "name": "Liliw, Laguna",
+      "lat": 14.133,
+      "lng": 121.433
+    },
+    "bay": {
+      "name": "Bay, Laguna",
+      "lat": 14.183,
+      "lng": 121.283
+    },
+    "victoria": {
+      "name": "Victoria, Laguna",
+      "lat": 14.233,
+      "lng": 121.333
+    }
+  },
+  "outlets": {
+    "demo-cooperative": {
+      "name": "Ani at Agos Farmers Cooperative",
+      "lat": 14.281,
+      "lng": 121.417
+    },
+    "demo-processor": {
+      "name": "Kusina Verde Processing House",
+      "lat": 14.214,
+      "lng": 121.164
+    },
+    "demo-market": {
+      "name": "Sariwa sa Los Baños Market Collective",
+      "lat": 14.18,
+      "lng": 121.243
+    },
+    "demo-msme-confirm": {
+      "name": "Timpladong Ani Kitchen",
+      "lat": 14.067,
+      "lng": 121.325
+    },
+    "demo-organic-shop": {
+      "name": "Dahon at Gulay Café",
+      "lat": 14.133,
+      "lng": 121.433
+    },
+    "demo-bay-trading": {
+      "name": "Bay Luntian Trading Post",
+      "lat": 14.185,
+      "lng": 121.285
+    },
+    "demo-pagsanjan-hub": {
+      "name": "Pagsanjan Ilog Harvest Hub",
+      "lat": 14.275,
+      "lng": 121.459
+    },
+    "demo-binan-store": {
+      "name": "Biñan Sariwa Corner",
+      "lat": 14.337,
+      "lng": 121.105
+    },
+    "demo-nagcarlan-kitchen": {
+      "name": "Nagcarlan Hinog Kitchen",
+      "lat": 14.137,
+      "lng": 121.417
+    },
+    "demo-cabuyao-commissary": {
+      "name": "Cabuyao Sangkap Commissary",
+      "lat": 14.246,
+      "lng": 121.124
+    },
+    "demo-victoria-eatery": {
+      "name": "Silangan Hapunan Eatery",
+      "lat": 14.23,
+      "lng": 121.33
+    }
+  },
+  "cells": {
+    "los-banos": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 27802.4,
+        "durationSeconds": 2023.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 14413.1,
+        "durationSeconds": 1232.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 1424.5,
+        "durationSeconds": 180.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 21669.8,
+        "durationSeconds": 1698,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 29986.7,
+        "durationSeconds": 2299.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 6306.8,
+        "durationSeconds": 542.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 30488.3,
+        "durationSeconds": 2277.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 29945.1,
+        "durationSeconds": 2113.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 27502.6,
+        "durationSeconds": 2087,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 19286.8,
+        "durationSeconds": 1344.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 18333.9,
+        "durationSeconds": 1383.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/los-banos--demo-victoria-eatery.geojson"
+      }
+    },
+    "santa-cruz": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 0,
+        "durationSeconds": 0,
+        "metricSource": "matrix",
+        "geometryStatus": "unavailable"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 39824.4,
+        "durationSeconds": 2960.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 26806.2,
+        "durationSeconds": 1905.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 32554.1,
+        "durationSeconds": 2335.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 19489.7,
+        "durationSeconds": 1454.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 22327.7,
+        "durationSeconds": 1572.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 6627,
+        "durationSeconds": 643.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 55356.4,
+        "durationSeconds": 3842,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 19751.9,
+        "durationSeconds": 1401.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 44698.1,
+        "durationSeconds": 3072.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 13606.1,
+        "durationSeconds": 1090.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/santa-cruz--demo-victoria-eatery.geojson"
+      }
+    },
+    "calamba": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 39542.9,
+        "durationSeconds": 2921.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 0,
+        "durationSeconds": 0,
+        "metricSource": "matrix",
+        "geometryStatus": "unavailable"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 13165,
+        "durationSeconds": 1077.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 37204,
+        "durationSeconds": 1964.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 41727.2,
+        "durationSeconds": 3196.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 18047.3,
+        "durationSeconds": 1440,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 42228.8,
+        "durationSeconds": 3174.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 18526.4,
+        "durationSeconds": 1267.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 39243.1,
+        "durationSeconds": 2984.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 7868,
+        "durationSeconds": 498.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 30074.4,
+        "durationSeconds": 2280.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/calamba--demo-victoria-eatery.geojson"
+      }
+    },
+    "san-pablo": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 32719.8,
+        "durationSeconds": 2356.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 37270.5,
+        "durationSeconds": 1996.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 20839.3,
+        "durationSeconds": 1601.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 0,
+        "durationSeconds": 0,
+        "metricSource": "matrix",
+        "geometryStatus": "unavailable"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 18796.2,
+        "durationSeconds": 1577.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 16360.9,
+        "durationSeconds": 1267.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 35405.7,
+        "durationSeconds": 2609.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 52905.5,
+        "durationSeconds": 2874.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 16312.1,
+        "durationSeconds": 1364.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 41315,
+        "durationSeconds": 2044.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 23251.3,
+        "durationSeconds": 1716.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/san-pablo--demo-victoria-eatery.geojson"
+      }
+    },
+    "cabuyao": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 48124.9,
+        "durationSeconds": 3283,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 10734.8,
+        "durationSeconds": 738.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 21746.9,
+        "durationSeconds": 1439.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 45312.1,
+        "durationSeconds": 2257.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 50309.2,
+        "durationSeconds": 3558.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 26629.2,
+        "durationSeconds": 1801.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 50810.8,
+        "durationSeconds": 3536.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 7703.2,
+        "durationSeconds": 749.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 47825.1,
+        "durationSeconds": 3346.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 4771.2,
+        "durationSeconds": 293.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 38656.4,
+        "durationSeconds": 2642.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/cabuyao--demo-victoria-eatery.geojson"
+      }
+    },
+    "nagcarlan": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 19885.9,
+        "durationSeconds": 1411.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 39344.9,
+        "durationSeconds": 2988.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 26326.7,
+        "durationSeconds": 1933.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 15995.2,
+        "durationSeconds": 1299.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 2836.3,
+        "durationSeconds": 285,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 21848.2,
+        "durationSeconds": 1600.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 22571.8,
+        "durationSeconds": 1664.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 54876.9,
+        "durationSeconds": 3870.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 256.8,
+        "durationSeconds": 58.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 44218.6,
+        "durationSeconds": 3101.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 18767.3,
+        "durationSeconds": 1356.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/nagcarlan--demo-victoria-eatery.geojson"
+      }
+    },
+    "pagsanjan": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 5562.8,
+        "durationSeconds": 571,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 42097.8,
+        "durationSeconds": 3161.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 29079.6,
+        "durationSeconds": 2106.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 34827.5,
+        "durationSeconds": 2536,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 17783.6,
+        "durationSeconds": 1348.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 24601.2,
+        "durationSeconds": 1773,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 538.3,
+        "durationSeconds": 69.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 57629.9,
+        "durationSeconds": 4042.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 22025.4,
+        "durationSeconds": 1602.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 46971.5,
+        "durationSeconds": 3273.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 15879.5,
+        "durationSeconds": 1291.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/pagsanjan--demo-victoria-eatery.geojson"
+      }
+    },
+    "liliw": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 18988.2,
+        "durationSeconds": 1466.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 42128.1,
+        "durationSeconds": 3250.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 29109.9,
+        "durationSeconds": 2195.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 18778.4,
+        "durationSeconds": 1561.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 0,
+        "durationSeconds": 0,
+        "metricSource": "matrix",
+        "geometryStatus": "unavailable"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 24631.5,
+        "durationSeconds": 1862.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 18321.5,
+        "durationSeconds": 1417.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 57660.2,
+        "durationSeconds": 4132.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 3123.3,
+        "durationSeconds": 361.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 47001.9,
+        "durationSeconds": 3363,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 21002.2,
+        "durationSeconds": 1545.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/liliw--demo-victoria-eatery.geojson"
+      }
+    },
+    "bay": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 22438.7,
+        "durationSeconds": 1603.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 17957.8,
+        "durationSeconds": 1461.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 4939.6,
+        "durationSeconds": 406.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 16306,
+        "durationSeconds": 1278,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 24622.9,
+        "durationSeconds": 1879.6,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 777.7,
+        "durationSeconds": 65.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 25124.5,
+        "durationSeconds": 1857.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 33489.8,
+        "durationSeconds": 2343.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 22138.8,
+        "durationSeconds": 1667,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 22831.5,
+        "durationSeconds": 1573.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 12970.1,
+        "durationSeconds": 963.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/bay--demo-victoria-eatery.geojson"
+      }
+    },
+    "victoria": {
+      "demo-cooperative": {
+        "status": "routed",
+        "distanceMeters": 14132.5,
+        "durationSeconds": 1184.1,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-cooperative.geojson"
+      },
+      "demo-processor": {
+        "status": "routed",
+        "distanceMeters": 31046.1,
+        "durationSeconds": 2419.8,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-processor.geojson"
+      },
+      "demo-market": {
+        "status": "routed",
+        "distanceMeters": 18027.9,
+        "durationSeconds": 1364.5,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-market.geojson"
+      },
+      "demo-msme-confirm": {
+        "status": "routed",
+        "distanceMeters": 23775.8,
+        "durationSeconds": 1794.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-msme-confirm.geojson"
+      },
+      "demo-organic-shop": {
+        "status": "routed",
+        "distanceMeters": 21807.6,
+        "durationSeconds": 1658.9,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-organic-shop.geojson"
+      },
+      "demo-bay-trading": {
+        "status": "routed",
+        "distanceMeters": 13549.5,
+        "durationSeconds": 1031.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-bay-trading.geojson"
+      },
+      "demo-pagsanjan-hub": {
+        "status": "routed",
+        "distanceMeters": 16818.3,
+        "durationSeconds": 1437.3,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-pagsanjan-hub.geojson"
+      },
+      "demo-binan-store": {
+        "status": "routed",
+        "distanceMeters": 46578.2,
+        "durationSeconds": 3301.2,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-binan-store.geojson"
+      },
+      "demo-nagcarlan-kitchen": {
+        "status": "routed",
+        "distanceMeters": 19323.5,
+        "durationSeconds": 1446.4,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-nagcarlan-kitchen.geojson"
+      },
+      "demo-cabuyao-commissary": {
+        "status": "routed",
+        "distanceMeters": 35919.8,
+        "durationSeconds": 2532,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-cabuyao-commissary.geojson"
+      },
+      "demo-victoria-eatery": {
+        "status": "routed",
+        "distanceMeters": 575.2,
+        "durationSeconds": 79.7,
+        "metricSource": "directions",
+        "geometryStatus": "ready",
+        "geometryPath": "/generated/routes/20260924194503794-1ada48d440b7/victoria--demo-victoria-eatery.geojson"
+      }
+    }
+  }
 }
