@@ -292,32 +292,15 @@
           <!-- Pin Inner Core -->
           <circle cx={pos.x} cy={pos.y} r={isSelected ? "4" : "3"} fill="#FFFDF8" pointer-events="none" />
 
-          <!-- Floating Name Label -->
-          <g transform={`translate(${pos.x}, ${pos.y + 16})`} pointer-events="none">
-            <rect
-              x="-48"
-              y="-2"
-              width="96"
-              height="16"
-              rx="4"
-              fill="#FFFDF8"
-              fill-opacity="0.95"
-              stroke="#20251E"
-              stroke-opacity="0.15"
-              stroke-width="0.75"
-            />
-            <text
-              x="0"
-              y="10"
-              font-family="'Source Sans 3', sans-serif"
-              font-size="9"
-              font-weight={isSelected ? "700" : "600"}
-              fill="#20251E"
-              text-anchor="middle"
-            >
-              {item.outlet.name}
-            </text>
-          </g>
+          <!-- The selected pin gets a short locator; the preview carries its full name. -->
+          {#if isSelected}
+            <g transform={`translate(${pos.x}, ${pos.y + 16})`} pointer-events="none">
+              <rect x="-48" y="-2" width="96" height="16" rx="4" fill="#FFFDF8" stroke="#20251E" stroke-opacity="0.15" />
+              <text x="0" y="10" font-family="'Source Sans 3', sans-serif" font-size="9" font-weight="700" fill="#20251E" text-anchor="middle">
+                {item.outlet.municipality}
+              </text>
+            </g>
+          {/if}
         </g>
       {/each}
 

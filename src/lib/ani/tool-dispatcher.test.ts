@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { AniToolDispatcher } from './tool-dispatcher';
 import type { AniToolRequest } from './types';
+import { todayInManila } from '../state/url-state';
 
 const dispatcher = new AniToolDispatcher();
-const harvest = { crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: '2026-09-22' };
+const harvest = { crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: todayInManila() };
 
 const req = (name: AniToolRequest['name'], args: Record<string, unknown> = {}): AniToolRequest => ({ id: 'test', name, args });
 

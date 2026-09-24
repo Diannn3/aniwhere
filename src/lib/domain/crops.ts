@@ -26,6 +26,30 @@ export const SUPPORTED_CROPS: CropMeta[] = [
     labelFil: 'Kalamansi',
     aliases: ['calamansi', 'kalamansi', 'calamondin'],
   },
+  {
+    key: 'banana',
+    labelEn: 'Banana',
+    labelFil: 'Saging',
+    aliases: ['banana', 'bananas', 'saging'],
+  },
+  {
+    key: 'papaya',
+    labelEn: 'Papaya',
+    labelFil: 'Papaya',
+    aliases: ['papaya', 'papayas'],
+  },
+  {
+    key: 'pechay',
+    labelEn: 'Pechay',
+    labelFil: 'Pechay',
+    aliases: ['pechay', 'petsay', 'bok choy', 'bok choi', 'pak choi'],
+  },
+  {
+    key: 'sitaw',
+    labelEn: 'String beans',
+    labelFil: 'Sitaw',
+    aliases: ['sitaw', 'string bean', 'string beans', 'yardlong bean', 'yardlong beans', 'long bean', 'long beans'],
+  },
 ];
 
 export function normalizeCrop(input: string): { key: CropKey; isSupported: boolean } {

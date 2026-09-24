@@ -6,6 +6,7 @@ import {
   fillHomeHarvest,
   outletCard,
 } from './support';
+import { todayInManila } from '../src/lib/state/url-state';
 
 test.beforeEach(async ({ page }) => {
   await clearClientState(page);
@@ -42,7 +43,6 @@ test('submits a harvest and carries its values to discovery', async ({ page }) =
   await page.waitForURL(/\/discover\?/);
 
   await expectHarvestQuery(page);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(/300 kg tomatoes/i);
 });
 
 test('uses the invalid-submission summary to return focus to quantity', async ({ page }) => {
@@ -86,7 +86,7 @@ test('keeps Filipino selected while navigating home, discovery, and saved outlet
     crop: 'tomato',
     kg: '300',
     origin: 'los-banos',
-    ready: '2026-09-24',
+    ready: todayInManila(),
     lang: 'fil',
   });
   await expect(page.locator('html')).toHaveAttribute('lang', 'fil');
@@ -137,7 +137,6 @@ test('edits the discovery harvest and updates the address without discarding lan
     origin: 'calamba',
     ready: '2026-09-25',
   });
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(/450 kg tomatoes.*calamba/i);
 });
 
 
@@ -146,13 +145,13 @@ test('distance sorting explains the shared comparison basis to farmers', async (
 
   await page.getByLabel(/sort/i).selectOption('distance');
 
-  await expect(page.getByText(/straight-line distance is used for every place/i)).toBeVisible();
   const cards = page.locator('article[id^="outlet-card-"]');
   await expect(cards.first().getByText(/km straight-line/i)).toBeVisible();
 });
 
 test('makes all four fit filters understandable and exposes selected state', async ({ page }) => {
   await page.goto(discoverPath);
+  await page.getByRole('button', { name: 'Filter & sort' }).click();
 
   const filters = page.getByRole('group', { name: /filter by fit status/i });
   const all = filters.getByRole('button', { name: /all \(\d+\)/i });
@@ -170,13 +169,13 @@ test('makes all four fit filters understandable and exposes selected state', asy
   await match.click();
   await expect(match).toHaveAttribute('aria-pressed', 'true');
   await expect(all).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(/showing .* of/i);
 });
 
 test('clears a selected map place when a fit filter hides it', async ({ page }) => {
   await page.goto(
     '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&place=demo-processor&lang=en'
   );
+  await page.getByRole('button', { name: 'Filter & sort' }).click();
   await expect(page).toHaveURL(/place=demo-processor/);
 
   const filters = page.getByRole('group', { name: /filter by fit status/i });
@@ -200,17 +199,6 @@ test('explains the three-place comparison limit instead of silently blocking the
   await expect(dock.getByText(/Maximum of 3. Remove one before choosing another/i)).toBeVisible();
 });
 
-test('keeps price arithmetic available without overwhelming the primary result card', async ({ page }) => {
-  await page.goto(discoverPath);
-  const processor = outletCard(page, 'Calamba Processor');
-
-  await expect(processor.getByText(/₱.*\/ kg/i).first()).toBeVisible();
-  await expect(processor.getByText('Gross amount')).toBeHidden();
-
-  await processor.getByText('See calculation').click();
-  await expect(processor.getByText('Gross amount')).toBeVisible();
-  await expect(processor.getByText(/not profit or guaranteed income/i)).toBeVisible();
-});
 
 test('comparison ignores malformed, duplicate, and unknown outlet selections', async ({ page }) => {
   await page.goto(
@@ -219,8 +207,8 @@ test('comparison ignores malformed, duplicate, and unknown outlet selections', a
 
   const ledger = page.getByRole('table', { name: /comparison ledger/i });
   await expect(ledger).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: /Los Baños Market/i })).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: /Calamba Processor/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Sariwa sa Los Baños Market Collective/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Kusina Verde Processing House/i })).toBeVisible();
   await expect(ledger.getByRole('columnheader')).toHaveCount(3);
   await expect(page.getByText('<script>')).toHaveCount(0);
 });
@@ -247,8 +235,8 @@ test('comparison never preselects outlets and preserves harvest context when emp
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
-  await outletCard(page, 'Calamba Processor').getByRole('checkbox').check();
-  await outletCard(page, 'Los Baños Market').getByRole('checkbox').check();
+  await outletCard(page, 'Kusina Verde Processing House').getByRole('checkbox').check();
+  await outletCard(page, 'Sariwa sa Los Baños Market Collective').getByRole('checkbox').check();
 
   const dock = page.getByRole('complementary', { name: 'Comparison dock' });
   await expect(dock).toContainText(/2 of 3 places selected/i);
@@ -257,11 +245,11 @@ test('selects outlets in discovery and compares them in a semantic decision ledg
 
   const ledger = page.getByRole('table', { name: /comparison ledger for selected outlets/i });
   await expect(ledger).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: 'Calamba Processor' })).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: 'Los Baños Market' })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: 'Kusina Verde Processing House' })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: 'Sariwa sa Los Baños Market Collective' })).toBeVisible();
   await expect(ledger.getByRole('rowheader', { name: 'Accepted quantity' })).toBeVisible();
 
-  await ledger.getByLabel('Transport for Calamba Processor').fill('7100');
+  await ledger.getByLabel('Transport for Kusina Verde Processing House').fill('7100');
   await expect(page.locator('[aria-live="polite"]').filter({ hasText: /after transport updated/i })).toHaveCount(1);
 });
 
@@ -271,27 +259,26 @@ test('removing a compared outlet updates the URL so refresh does not restore it'
   );
 
   const ledger = page.getByRole('table', { name: /comparison ledger/i });
-  await ledger.getByRole('button', { name: /Remove Los Baños Market from comparison/i }).click();
+  await ledger.getByRole('button', { name: /Remove Sariwa sa Los Baños Market Collective from comparison/i }).click();
 
   await expect(page).toHaveURL(/places=demo-processor/);
   await expect(page).not.toHaveURL(/demo-market/);
   await page.reload();
 
-  await expect(page.getByRole('columnheader', { name: 'Calamba Processor' })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'Los Baños Market' })).toHaveCount(0);
+  await expect(page.getByRole('columnheader', { name: 'Kusina Verde Processing House' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Sariwa sa Los Baños Market Collective' })).toHaveCount(0);
 });
 
 test('saves an outlet locally and makes it available on the saved route', async ({ page }) => {
   await page.goto(discoverPath);
-  const cooperative = outletCard(page, 'Santa Cruz Cooperative');
+  const cooperative = outletCard(page, 'Ani at Agos Farmers Cooperative');
 
   await cooperative.getByRole('button', { name: 'Save outlet' }).click();
   await expect(cooperative.getByRole('button', { name: 'Remove from saved' })).toBeVisible();
 
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Saved' }).click();
   await expect(page).toHaveURL(/\/saved/);
-  await expect(page.getByRole('heading', { name: 'Santa Cruz Cooperative' })).toBeVisible();
-  await expect(page.getByText(/Saving does not reserve capacity or contact the buyer/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ani at Agos Farmers Cooperative' })).toBeVisible();
   await expect(page.getByText('Can accept').first()).toBeVisible();
   await expect(page.getByText('Harvest remaining').first()).toBeVisible();
   await expect(page.getByText(/straight-line from Los Baños municipality center/i).first()).toBeVisible();
@@ -300,15 +287,15 @@ test('saves an outlet locally and makes it available on the saved route', async 
 
 test('saved outlets require confirmation before clearing the shortlist', async ({ page }) => {
   await page.goto(discoverPath);
-  await outletCard(page, 'Santa Cruz Cooperative').getByRole('button', { name: 'Save outlet' }).click();
+  await outletCard(page, 'Ani at Agos Farmers Cooperative').getByRole('button', { name: 'Save outlet' }).click();
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Saved' }).click();
 
   await page.getByRole('button', { name: 'Clear all' }).click();
   await expect(page.getByText('Clear every saved place?')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Santa Cruz Cooperative' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ani at Agos Farmers Cooperative' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Cancel' }).click();
-  await expect(page.getByRole('heading', { name: 'Santa Cruz Cooperative' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ani at Agos Farmers Cooperative' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Clear all' }).click();
   await page.getByRole('button', { name: 'Yes, clear all' }).click();

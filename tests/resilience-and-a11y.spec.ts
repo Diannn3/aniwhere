@@ -33,7 +33,7 @@ for (const viewport of viewports) {
     }
 
     if (viewport.width <= 390) {
-      await expect(page.getByRole('heading', { name: /compare at a glance/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Kusina Verde Processing House' })).toBeVisible();
       await expect(page.getByRole('table', { name: /comparison ledger/i })).toBeHidden();
       await expect(page.locator('#transport-demo-processor')).toBeHidden();
       await expect(page.locator('#mobile-transport-demo-processor')).toBeVisible();

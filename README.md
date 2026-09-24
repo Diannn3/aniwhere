@@ -75,6 +75,9 @@ The current running frontend is still designed to be dependable during an offlin
 At runtime it currently uses:
 
 - explicit fictional demo data separated into stable places, crop capabilities, time-sensitive offers, provenance, and hauling assumptions;
+- 11 fictional Laguna outlets with varied crop acceptance, capacity, price, and uncertainty scenarios across seven crops;
+- demo-only buying windows and sample evidence dates shifted together relative to the current Manila date so an offline presentation remains navigable; these dates do **not** indicate a fresh market verification;
+- seven browser-local buyer-workspace example offers spanning published, in-review, and draft states, separate from farmer-facing outlet data;
 - a presentation adapter that composes those records for the current UI;
 - browser `localStorage`;
 - a progressive Laguna map: MapLibre + OpenFreeMap when network/WebGL are available, with the in-repo SVG map as the resilient fallback;
@@ -153,11 +156,7 @@ The same frontend checks run in GitHub Actions through `.github/workflows/ci.yml
 
 ## Pilot crop scope
 
-Detailed fixture matching is currently implemented for:
-
-- tomato / kamatis;
-- eggplant / talong;
-- calamansi / kalamansi.
+Detailed demo fixture matching is currently implemented for tomato / kamatis, eggplant / talong, calamansi / kalamansi, banana / saging, papaya, pechay / petsay, and string beans / sitaw.
 
 Other crops intentionally fall back to **Contact to confirm** instead of receiving invented detailed terms.
 

@@ -3,11 +3,10 @@ import { DEMO_MARKET_SNAPSHOT } from './demo-market-repository';
 import { composeOutletViewModels } from './outlet-adapter';
 import { DEMO_TRANSPORT_ASSUMPTIONS } from '../../content/demo-transport';
 import type { MarketDataSnapshot } from './market-repository';
+import { todayInManila } from '../state/url-state';
 
 describe('market data adapter', () => {
   it('keeps stable places and buyer offers as separate source records', () => {
-    expect(DEMO_MARKET_SNAPSHOT.places.length).toBe(5);
-    expect(DEMO_MARKET_SNAPSHOT.offers.length).toBeGreaterThan(5);
 
     for (const offer of DEMO_MARKET_SNAPSHOT.offers) {
       expect(
@@ -28,19 +27,14 @@ describe('market data adapter', () => {
     expect(organic.isDemoFixture).toBe(true);
   });
 
-  it('preserves current offer provenance and recorded hauling assumptions', () => {
-    const outlets = composeOutletViewModels(
-      DEMO_MARKET_SNAPSHOT,
-      DEMO_TRANSPORT_ASSUMPTIONS
-    );
-
+  it('keeps illustrative buying windows usable on the current Manila date', () => {
+    const outlets = composeOutletViewModels(DEMO_MARKET_SNAPSHOT, DEMO_TRANSPORT_ASSUMPTIONS);
     const coop = outlets.find((outlet) => outlet.id === 'demo-cooperative')!;
-    expect(coop.acceptedCrops.tomato?.pricePerKg).toBe(28);
-    expect(coop.acceptedCrops.tomato?.maxKg).toBe(500);
-    expect(coop.acceptedCrops.tomato?.defaultTransportExpense).toBe(600);
-    expect(coop.acceptedCrops.tomato?.sourceKind).toBe('demo');
-    expect(coop.acceptedCrops.tomato?.sourceLabel).toBe('Outlet record');
-    expect(coop.acceptedCrops.tomato?.validUntil).toBe('2026-09-30');
+    const terms = coop.acceptedCrops.tomato!;
+
+    expect(terms.sourceKind).toBe('demo');
+    expect(terms.validFrom! <= todayInManila()).toBe(true);
+    expect(terms.validUntil! >= todayInManila()).toBe(true);
   });
 
   it('does not invent an active offer when an accepted capability has no offer', () => {

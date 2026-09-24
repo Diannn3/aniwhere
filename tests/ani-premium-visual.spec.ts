@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { todayInManila } from '../src/lib/state/url-state';
 
-const discovery = '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en';
-const compare = '/compare?places=demo-processor,demo-market,demo-msme-confirm&crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en';
+const discovery = `/discover?crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`;
+const compare = `/compare?places=demo-processor,demo-market,demo-msme-confirm&crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`;
 
 for (const viewport of [
   { name: '320x568', width: 320, height: 568 },
@@ -20,7 +21,7 @@ for (const viewport of [
 
     await page.goto(discovery);
     await expect(page.getByRole('heading', { name: /300 kg/i })).toBeVisible();
-    await expect(page.getByText('Can accept').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Potential outlets/ }).first()).toBeVisible();
     await page.screenshot({ path: `tests/.artifacts/visual/${viewport.name}-discovery.png`, fullPage: true });
 
     await page.goto(compare);
@@ -123,7 +124,7 @@ test('Ani FAQ action links preserve current harvest context', async ({ page }) =
   await expect(action).toHaveAttribute('href', /crop=tomato/);
   await expect(action).toHaveAttribute('href', /kg=300/);
   await expect(action).toHaveAttribute('href', /origin=los-banos/);
-  await expect(action).toHaveAttribute('href', /ready=2026-09-22/);
+  await expect(action).toHaveAttribute('href', new RegExp(`ready=${todayInManila()}`));
 });
 
 test('Ani shell and discovery do not introduce narrow-screen overflow', async ({ page }) => {
@@ -140,8 +141,8 @@ test('surface audit matrix at mobile width', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const cases = [
-    ['discovery-map', '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=map&lang=en'],
-    ['outlet-detail', '/places/demo-market?crop=tomato&kg=300&origin=los-banos&ready=2026-09-22&view=list&lang=en'],
+    ['discovery-map', `/discover?crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=map&lang=en`],
+    ['outlet-detail', `/places/demo-market?crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&view=list&lang=en`],
     ['saved-empty', '/saved?lang=en'],
     ['buyer', '/buyer?lang=en'],
     ['filipino-home', '/?lang=fil'],
@@ -199,7 +200,7 @@ test('Ani shared harvest state updates the real comparison surface', async ({ pa
 
 test('Ani transport state updates the real comparison ledger', async ({ page }) => {
   await page.goto(compare);
-  const transport = page.getByLabel(/Transport for Calamba Processor/i);
+  const transport = page.getByLabel(/Transport for Kusina Verde Processing House/i);
   await expect(transport).toBeVisible();
 
   await page.evaluate(() => {

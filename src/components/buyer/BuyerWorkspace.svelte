@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { BuyerDemoOffer } from '../../lib/domain/types';
+  import { SUPPORTED_CROPS } from '../../lib/domain/crops';
   import {
     getBuyerOffers,
     saveBuyerOffer,
@@ -38,6 +39,18 @@
   }
 
   const isFil = $derived(lang === 'fil');
+  function offerCropLabel(offer: BuyerDemoOffer): string {
+    const crop = SUPPORTED_CROPS.find((item) => item.key === offer.cropKey);
+    return crop ? (isFil ? crop.labelFil : crop.labelEn) : offer.cropLabel;
+  }
+  function offerDate(value: string): string {
+    return new Intl.DateTimeFormat(isFil ? 'fil-PH' : 'en-PH', {
+      timeZone: 'UTC',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(`${value}T00:00:00Z`));
+  }
   const counts = $derived({
     published: offers.filter((o) => o.status === 'published').length,
     inReview: offers.filter((o) => o.status === 'in_review').length,
@@ -53,7 +66,9 @@
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const matchCrop = o.cropLabel.toLowerCase().includes(q) || o.cropKey.toLowerCase().includes(q);
+        const matchCrop = o.cropLabel.toLowerCase().includes(q) ||
+          o.cropKey.toLowerCase().includes(q) ||
+          offerCropLabel(o).toLowerCase().includes(q);
         const matchLocation = o.location?.toLowerCase().includes(q) || false;
         return matchCrop || matchLocation;
       }
@@ -264,10 +279,10 @@
                   <!-- Crop -->
                   <td class="py-5 px-6">
                     <div class="flex items-center gap-3">
-                      <span aria-hidden="true" class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF3DF] text-sm font-bold text-[#47661E]">{offer.cropLabel.slice(0, 1)}</span>
+                      <span aria-hidden="true" class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF3DF] text-sm font-bold text-[#47661E]">{offerCropLabel(offer).slice(0, 1)}</span>
                       <div>
                         <div class="font-bold text-base text-[#20251E]">
-                          {offer.cropLabel}
+                          {offerCropLabel(offer)}
                         </div>
                         {#if offer.location}
                           <div class="text-xs text-[#596052] flex items-center gap-1 mt-0.5">
@@ -329,13 +344,7 @@
 
                   <!-- Last Updated -->
                   <td class="py-4 px-6 text-xs text-[#596052]">
-                    {#if offer.status === 'published'}
-                      <span>Offer &middot; 17 Sep 2026</span>
-                    {:else if offer.status === 'in_review'}
-                      <span>Offer in review</span>
-                    {:else}
-                      <span>&mdash;</span>
-                    {/if}
+                    <span>{offerDate(offer.updatedAt)}</span>
                   </td>
 
                   <!-- Actions -->
@@ -345,7 +354,7 @@
                         type="button"
                         onclick={() => openEditModal(offer)}
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#4A5245] hover:text-[#20251E] hover:bg-[#FCECD8]/50 border border-[#20251E]/15 transition-colors flex items-center gap-1.5 min-h-11 focus-visible:outline-2 focus-visible:outline-[#597928]"
-                        aria-label={`Edit offer for ${offer.cropLabel}`}
+                        aria-label={`${isFil ? 'I-edit ang alok para sa' : 'Edit offer for'} ${offerCropLabel(offer)}`}
                       >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -356,7 +365,7 @@
                         type="button"
                         onclick={() => confirmDelete(offer)}
                         class="p-1.5 rounded-lg text-[#596052] hover:text-[#9B1C1C] hover:bg-[#FDE8E8] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#597928]"
-                        aria-label={`Delete offer for ${offer.cropLabel}`}
+                        aria-label={`${isFil ? 'Alisin ang alok para sa' : 'Delete offer for'} ${offerCropLabel(offer)}`}
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -391,7 +400,7 @@
                 <!-- Text Details -->
                 <div class="min-w-0 flex-1">
                   <div class="font-bold text-base text-[#20251E] truncate">
-                    {offer.cropLabel}
+                    {offerCropLabel(offer)}
                   </div>
                   <div class="text-xs font-semibold text-[#4A5245] mt-0.5">
                     {offer.quantityKg} kg
@@ -404,11 +413,11 @@
                   </div>
                   <div class="text-xs text-[#596052] mt-0.5 truncate">
                     {#if offer.status === 'published'}
-                      {isFil ? 'Alok · 17 Sep 2026' : 'Offer · 17 Sep 2026'}
+                      {isFil ? 'Alok' : 'Offer'} · {offerDate(offer.updatedAt)}
                     {:else if offer.status === 'in_review'}
-                      {isFil ? 'Alok na sinusuri' : 'Offer in review'}
+                      {isFil ? 'Alok na sinusuri' : 'Offer in review'} · {offerDate(offer.updatedAt)}
                     {:else}
-                      {isFil ? 'Panloob na burador' : 'Internal draft'}
+                      {isFil ? 'Panloob na burador' : 'Internal draft'} · {offerDate(offer.updatedAt)}
                     {/if}
                   </div>
                 </div>
@@ -434,7 +443,7 @@
                   type="button"
                   onclick={() => confirmDelete(offer)}
                   class="min-w-11 min-h-11 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#9B1C1C] transition-colors focus-visible:outline-2 focus-visible:outline-[#597928]"
-                  aria-label={isFil ? `Alisin ang alok para sa ${offer.cropLabel}` : `Delete offer for ${offer.cropLabel}`}
+                  aria-label={isFil ? `Alisin ang alok para sa ${offerCropLabel(offer)}` : `Delete offer for ${offerCropLabel(offer)}`}
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

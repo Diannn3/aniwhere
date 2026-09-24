@@ -1,4 +1,4 @@
-export type CropKey = 'tomato' | 'eggplant' | 'calamansi' | 'other';
+export type CropKey = 'tomato' | 'eggplant' | 'calamansi' | 'banana' | 'papaya' | 'pechay' | 'sitaw' | 'other';
 
 export type FitStatus = 'match' | 'partial' | 'confirm' | 'no_match';
 
