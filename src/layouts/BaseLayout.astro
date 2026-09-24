@@ -99,6 +99,7 @@ const farmerContextHref = (path: string) => {
         <div class="flex items-center gap-2 sm:gap-3">
           {showAni && <button
               id="ani-mobile-trigger"
+              data-ani-open
               type="button"
               class="grid h-11 w-11 place-items-center rounded-xl border border-[#20251E]/15 bg-white shadow-[0_10px_28px_-20px_rgba(32,37,30,.55)] md:hidden"
               data-aria-en="Ask Ani"
@@ -111,6 +112,18 @@ const farmerContextHref = (path: string) => {
               <img src="/ani/ani-avatar.webp" alt="" aria-hidden="true" class="h-8 w-8 rounded-full object-cover" />
             </button>}
           <p class="hidden border-r border-[#20251E]/20 pr-3 text-xs text-[#6E3511] lg:block" data-i18n-en="Demo — sample data" data-i18n-fil="Demo — halimbawang datos">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'}</p>
+          {showAni && <button
+              id="ani-desktop-trigger"
+              data-ani-open
+              type="button"
+              class="hidden min-h-10 items-center justify-center rounded-lg border border-[#597928]/35 bg-[#486320] px-3 py-2 text-xs font-semibold text-[#FFFDF8] transition-colors hover:bg-[#3A5219] md:inline-flex"
+              data-aria-en="Ask Ani"
+              data-aria-fil="Tanungin si Ani"
+              aria-label={isFil ? 'Tanungin si Ani' : 'Ask Ani'}
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="ani-panel"
+            >{isFil ? 'Tanungin si Ani' : 'Ask Ani'}</button>}
           <div class="inline-flex items-center rounded-lg border border-[#20251E]/15 bg-[#FFFDF8] p-1 text-xs font-bold" role="group" data-aria-en="Select language" data-aria-fil="Piliin ang wika" aria-label={isFil ? 'Piliin ang wika' : 'Select language'}>
             <a href={languageHref('en')} data-language-target="en" class={`rounded-md px-2 py-1 transition-colors ${lang === 'en' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
             <a href={languageHref('fil')} data-language-target="fil" class={`rounded-md px-2 py-1 transition-colors ${lang === 'fil' ? 'bg-[#20251E] text-[#FFFDF8]' : 'text-[#4A5245] hover:bg-[#FCECD8]'}`} aria-current={lang === 'fil' ? 'true' : undefined}>FIL</a>
@@ -230,9 +243,10 @@ const farmerContextHref = (path: string) => {
           element.classList.toggle('hover:bg-[#FCECD8]', !selected);
         });
 
-        const aniMobileTrigger = document.getElementById('ani-mobile-trigger');
-        aniMobileTrigger?.addEventListener('click', () => {
-          window.dispatchEvent(new CustomEvent('aniwhere:open-ani'));
+        document.querySelectorAll('button[data-ani-open]').forEach((aniTrigger) => {
+          aniTrigger.addEventListener('click', () => {
+            window.dispatchEvent(new CustomEvent('aniwhere:open-ani', { detail: aniTrigger }));
+          });
         });
 
         const harvestContextKeys = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging'];

@@ -49,6 +49,20 @@ test('Ani shell is keyboard closable and restores focus', async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
+test('desktop Ani launcher stays in the header clear of outlet actions and restores focus', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(discovery);
+  const trigger = page.locator('#ani-desktop-trigger');
+  await expect(trigger).toBeVisible();
+  await expect(page.locator('.ani-assistant > .ani-trigger')).toBeHidden();
+
+  await trigger.click();
+  const dialog = page.getByRole('dialog', { name: 'Ani' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Close Ani' }).click();
+  await expect(trigger).toBeFocused();
+});
+
 test('Ani shows the live home harvest draft before the farmer submits discovery', async ({ page }) => {
   await page.goto('/');
   await page.locator('#harvest-quantity').fill('450');

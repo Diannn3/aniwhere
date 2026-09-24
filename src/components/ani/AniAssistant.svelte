@@ -15,6 +15,7 @@
   let { initialLang = 'en' }: { initialLang?: 'en' | 'fil' } = $props();
   let lang = $state<'en' | 'fil'>(initialLang);
   let open = $state(false);
+  let returnFocusTo: HTMLElement | null = null;
   let messages = $state<AniMessage[]>([]);
   let input = $state('');
   let notice = $state('');
@@ -74,7 +75,7 @@
         closeAni();
       }
     };
-    const handleOpenRequest = () => void openAni();
+    const handleOpenRequest = (event: Event) => void openAni((event as CustomEvent<HTMLElement>).detail);
     window.addEventListener('keydown', handleWindowKeydown);
     window.addEventListener('aniwhere:open-ani', handleOpenRequest);
     return () => {
@@ -128,13 +129,14 @@
     return `${target.pathname}${target.search}`;
   }
 
-  async function openAni() {
+  async function openAni(source?: HTMLElement) {
     if (open) return;
+    returnFocusTo = source ?? trigger;
     open = true;
     choices = [];
     activeFaq = null;
     selectedTopic = 'all';
-    document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'true');
+    document.querySelectorAll('[data-ani-open]').forEach((element) => element.setAttribute('aria-expanded', 'true'));
     document.documentElement.style.overflow = 'hidden';
     setBackgroundInert(true);
     notice = '';
@@ -146,13 +148,14 @@
     open = false;
     choices = [];
     activeFaq = null;
-    document.getElementById('ani-mobile-trigger')?.setAttribute('aria-expanded', 'false');
+    document.querySelectorAll('[data-ani-open]').forEach((element) => element.setAttribute('aria-expanded', 'false'));
     document.documentElement.style.overflow = '';
     setBackgroundInert(false);
     notice = '';
     requestAnimationFrame(() => {
-      const mobileTrigger = document.getElementById('ani-mobile-trigger') as HTMLButtonElement | null;
-      if (mobileTrigger && mobileTrigger.offsetParent !== null) mobileTrigger.focus();
+      const target = returnFocusTo;
+      returnFocusTo = null;
+      if (target?.isConnected && target.offsetParent !== null) target.focus();
       else trigger?.focus();
     });
   }
@@ -225,7 +228,7 @@
 </script>
 
 <div class="ani-assistant" data-open={open}>
-  <button bind:this={trigger} type="button" class="ani-trigger" aria-label={isFil() ? 'Tanungin si Ani' : 'Ask Ani'} aria-haspopup="dialog" aria-expanded={open} aria-controls="ani-panel" onclick={openAni}>
+  <button bind:this={trigger} type="button" class="ani-trigger" aria-label={isFil() ? 'Tanungin si Ani' : 'Ask Ani'} aria-haspopup="dialog" aria-expanded={open} aria-controls="ani-panel" onclick={() => openAni(trigger)}>
     <span aria-hidden="true"><AniAvatar state={open ? 'attentive' : 'idle'} size="sm" /></span>
     <span class="ani-trigger__label">{isFil() ? 'Tanungin si Ani' : 'Ask Ani'}</span>
   </button>
@@ -362,6 +365,7 @@
 <style>
   .ani-assistant { position: fixed; z-index: 55; right: max(1rem, env(safe-area-inset-right)); bottom: calc(5.5rem + env(safe-area-inset-bottom)); font-family: "Atkinson Hyperlegible Next Variable", system-ui, sans-serif; }
   .ani-trigger { min-height: 3.25rem; display:flex; align-items:center; gap:.55rem; padding:.35rem .9rem .35rem .4rem; border:1px solid rgba(32,37,30,.14); border-radius:999px; background:#FFFDF8; color:#20251E; font-weight:700; box-shadow:0 12px 32px -20px rgba(32,37,30,.5); transition:transform 220ms var(--ease-settle), box-shadow 220ms var(--ease-out), border-color 140ms ease; }
+  @media (min-width: 768px) { .ani-assistant > .ani-trigger { display:none; } }
   .ani-trigger:hover { transform:translateY(-2px); border-color:rgba(89,121,40,.4); box-shadow:0 24px 56px -28px rgba(32,37,30,.75); }
   .ani-trigger:focus-visible,.icon-button:focus-visible,.send-button:focus-visible,.faq-suggestion:focus-visible,.faq-choice:focus-visible,.faq-action:focus-visible,.topic-list button:focus-visible,input:focus-visible { outline:3px solid #597928; outline-offset:3px; }
   .ani-panel { position:fixed; z-index:2; right:max(1rem,env(safe-area-inset-right)); bottom:calc(1rem + env(safe-area-inset-bottom)); width:min(27rem,calc(100vw - 2rem)); max-height:min(44rem,calc(100dvh - 2rem)); display:flex; flex-direction:column; overflow:hidden; border:1px solid rgba(32,37,30,.14); border-radius:1rem; background:#FFFDF8; color:#20251E; box-shadow:0 24px 64px -30px rgba(32,37,30,.5); animation:panel-in 360ms var(--ease-settle) both; }
