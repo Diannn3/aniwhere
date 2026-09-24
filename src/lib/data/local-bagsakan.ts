@@ -112,5 +112,6 @@ export function composeLocalBagsakanOutlets(
     ...outlet,
     sourceLabel: LOCAL_BAGSAKAN_SOURCE_LABEL,
     isLocalBagsakan: true,
+    localLocationBasis: profile.locationBasis,
   }));
 }

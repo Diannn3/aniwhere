@@ -43,8 +43,11 @@ export interface RouteMatrixArtifact {
   cells: Record<string, Record<string, RouteMatrixCell>>;
 }
 
+export type RouteEvidenceSource = 'static_artifact' | 'runtime_endpoint' | 'none';
+
 export interface OutletRouteEstimate {
   source: 'road' | 'straight_line';
+  routeEvidence: RouteEvidenceSource;
   straightLineDistanceKm: number;
   roadDistanceKm: number | null;
   roadDurationSeconds: number | null;
@@ -85,6 +88,7 @@ export function getOutletRouteEstimateFromArtifact(
   ) {
     return {
       source: 'road',
+      routeEvidence: 'static_artifact',
       straightLineDistanceKm,
       roadDistanceKm: Math.round((cell.distanceMeters / 1000) * 10) / 10,
       roadDurationSeconds: cell.durationSeconds,
@@ -103,6 +107,7 @@ export function getOutletRouteEstimateFromArtifact(
 
   return {
     source: 'straight_line',
+    routeEvidence: 'none',
     straightLineDistanceKm,
     roadDistanceKm: null,
     roadDurationSeconds: null,
