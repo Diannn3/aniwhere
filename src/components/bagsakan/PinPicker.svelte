@@ -3,10 +3,11 @@
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import { loadAniwhereMapStyle, LAGUNA_MAP_BOUNDS, MAP_ATTRIBUTION } from '../../lib/map/map-config';
 
-  let { lat, lng, lang = 'en', onPick }: {
+  let { lat, lng, lang = 'en', recenterVersion = 0, onPick }: {
     lat: number;
     lng: number;
     lang?: 'en' | 'fil';
+    recenterVersion?: number;
     onPick: (lat: number, lng: number) => void;
   } = $props();
 
@@ -14,6 +15,7 @@
   let state = $state<'loading' | 'ready' | 'failed'>('loading');
   let map: any;
   let marker: any;
+  let handledRecenterVersion = 0;
 
   onMount(() => {
     let disposed = false;
@@ -55,13 +57,25 @@
   $effect(() => {
     if (marker && Number.isFinite(lat) && Number.isFinite(lng)) {
       marker.setLngLat([lng, lat]);
-      map?.easeTo?.({ center: [lng, lat], duration: 0 });
     }
+  });
+
+  // Moving the pin and moving the camera are separate interactions.
+  // Map clicks/manual coordinate edits update only the marker so the selected
+  // point visibly moves on screen. Municipality changes/resets opt into a
+  // camera recenter through recenterVersion.
+  $effect(() => {
+    const requestedVersion = recenterVersion;
+    if (requestedVersion === handledRecenterVersion) return;
+    if (!map || state !== 'ready' || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    handledRecenterVersion = requestedVersion;
+    map.easeTo({ center: [lng, lat], duration: 0 });
   });
 </script>
 
 <div class="overflow-hidden rounded-xl border border-[#20251E]/20 bg-[#FCECD8]/45">
-  <div bind:this={container} class="h-56 w-full sm:h-64" aria-label={lang === 'fil' ? 'Mapa para pumili ng lokasyon' : 'Map for choosing a location'}></div>
+  <div bind:this={container} data-bagsakan-pin-map class="h-56 w-full sm:h-64" aria-label={lang === 'fil' ? 'Mapa para pumili ng lokasyon' : 'Map for choosing a location'}></div>
   {#if state === 'loading'}
     <p class="px-4 py-2 text-sm text-[#4A5245]">{lang === 'fil' ? 'Binubuksan ang mapa…' : 'Loading map…'}</p>
   {:else if state === 'failed'}
