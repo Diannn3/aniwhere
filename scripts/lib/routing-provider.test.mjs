@@ -87,6 +87,42 @@ describe('routing provider client', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(3);
   });
 
+  it('retries aborted requests but stops at the configured attempt limit', async () => {
+    const fetchImpl = vi.fn(async (_url, init) => {
+      const error = new Error('aborted');
+      error.name = 'AbortError';
+      expect(init.signal).toBeDefined();
+      throw error;
+    });
+    const sleep = vi.fn(async () => undefined);
+    const request = createRoutingClient({
+      baseUrl: 'https://routing.example',
+      apiKey: 'private-key',
+      fetchImpl,
+      maxAttempts: 2,
+      sleep,
+    });
+
+    await expect(request('/matrix', {})).rejects.toThrow('aborted');
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry forbidden responses', async () => {
+    const fetchImpl = vi.fn(async () => response(403, 'forbidden'));
+    const sleep = vi.fn(async () => undefined);
+    const request = createRoutingClient({
+      baseUrl: 'https://routing.example',
+      apiKey: 'private-key',
+      fetchImpl,
+      sleep,
+    });
+
+    await expect(request('/matrix', {})).rejects.toThrow('403');
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
   it('fails closed on malformed successful JSON instead of retrying', async () => {
     const fetchImpl = vi.fn(async () => response(200, 'not-json'));
     const request = createRoutingClient({
