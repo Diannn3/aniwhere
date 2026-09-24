@@ -7,21 +7,36 @@ export interface RouteGeometry {
   coordinates: Array<[number, number]>;
 }
 
+export type RouteMetricSource = 'matrix' | 'directions';
+export type RouteGeometryStatus = 'not_requested' | 'ready' | 'unavailable';
+
 export interface RouteMatrixCell {
   status: RouteCellStatus;
   distanceMeters?: number;
   durationSeconds?: number;
+  metricSource?: RouteMetricSource;
+  geometryStatus?: RouteGeometryStatus;
+  geometryPath?: string;
   geometry?: RouteGeometry;
 }
 
 export interface RouteMatrixArtifact {
-  schemaVersion: 1;
+  schemaVersion: 2;
   generatedAt: string | null;
   provider: 'openrouteservice';
   providerBase: string;
   profile: 'driving-car';
+  generationMode: 'not_generated' | 'metrics' | 'metrics_and_geometry';
   status: 'ready' | 'not_generated' | 'partial';
+  attribution: string;
+  inputFingerprint: string;
   note?: string;
+  engine?: {
+    version?: string;
+    buildDate?: string;
+    graphDate?: string;
+    osmDate?: string;
+  };
   origins: Record<string, { name: string; lat: number; lng: number }>;
   outlets: Record<string, { name: string; lat: number; lng: number }>;
   cells: Record<string, Record<string, RouteMatrixCell>>;
@@ -34,9 +49,13 @@ export interface OutletRouteEstimate {
   roadDurationSeconds: number | null;
   roadDurationMinutes: number | null;
   geometry?: RouteGeometry;
+  geometryStatus: RouteGeometryStatus | null;
+  geometryPath: string | null;
+  metricSource: RouteMetricSource | null;
   provider: 'openrouteservice' | null;
   profile: 'driving-car' | null;
   generatedAt: string | null;
+  attribution: string | null;
 }
 
 const artifact = matrixArtifact as RouteMatrixArtifact;
@@ -70,9 +89,14 @@ export function getOutletRouteEstimateFromArtifact(
       roadDurationSeconds: cell.durationSeconds,
       roadDurationMinutes: Math.round(cell.durationSeconds / 60),
       geometry: cell.geometry,
+      geometryStatus:
+        cell.geometryStatus ?? (cell.geometry || cell.geometryPath ? 'ready' : 'not_requested'),
+      geometryPath: cell.geometryPath ?? null,
+      metricSource: cell.metricSource ?? 'matrix',
       provider: artifactInput.provider,
       profile: artifactInput.profile,
       generatedAt: artifactInput.generatedAt,
+      attribution: artifactInput.attribution,
     };
   }
 
@@ -82,9 +106,13 @@ export function getOutletRouteEstimateFromArtifact(
     roadDistanceKm: null,
     roadDurationSeconds: null,
     roadDurationMinutes: null,
+    geometryStatus: null,
+    geometryPath: null,
+    metricSource: null,
     provider: null,
     profile: null,
     generatedAt: null,
+    attribution: null,
   };
 }
 

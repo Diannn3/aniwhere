@@ -31,12 +31,15 @@ describe('routing matrix trust boundary', () => {
 
   it('reads validated road evidence from an injected ready artifact', () => {
     const ready: RouteMatrixArtifact = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedAt: '2026-09-25T00:00:00Z',
       provider: 'openrouteservice',
       providerBase: 'https://api.heigit.org/openrouteservice/v2',
       profile: 'driving-car',
+      generationMode: 'metrics',
       status: 'ready',
+      attribution: 'Routing data test attribution',
+      inputFingerprint: 'test-fingerprint',
       origins: { 'los-banos': { name: 'Los Baños, Laguna', lat: 14.17, lng: 121.241 } },
       outlets: { 'demo-market': { name: 'Market', lat: 14.18, lng: 121.243 } },
       cells: {
@@ -56,12 +59,15 @@ describe('routing matrix trust boundary', () => {
 
   it('does not invent a minimum one-minute drive for zero-duration evidence', () => {
     const ready: RouteMatrixArtifact = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedAt: '2026-09-25T00:00:00Z',
       provider: 'openrouteservice',
       providerBase: 'https://api.heigit.org/openrouteservice/v2',
       profile: 'driving-car',
+      generationMode: 'metrics',
       status: 'ready',
+      attribution: 'Routing data test attribution',
+      inputFingerprint: 'test-fingerprint',
       origins: {},
       outlets: {},
       cells: {
@@ -79,12 +85,15 @@ describe('routing matrix trust boundary', () => {
 
   it('keeps an unavailable cell on straight-line fallback even in a partial artifact', () => {
     const partial: RouteMatrixArtifact = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedAt: '2026-09-25T00:00:00Z',
       provider: 'openrouteservice',
       providerBase: 'https://api.heigit.org/openrouteservice/v2',
       profile: 'driving-car',
+      generationMode: 'metrics_and_geometry',
       status: 'partial',
+      attribution: 'Routing data test attribution',
+      inputFingerprint: 'test-fingerprint',
       origins: {},
       outlets: {},
       cells: { 'los-banos': { 'demo-market': { status: 'unavailable' } } },
@@ -110,9 +119,13 @@ describe('routing matrix trust boundary', () => {
       roadDistanceKm: 7,
       roadDurationSeconds: 840,
       roadDurationMinutes: 14,
+      geometryStatus: 'ready',
+      geometryPath: '/generated/routes/a.geojson',
+      metricSource: 'directions',
       provider: 'openrouteservice',
       profile: 'driving-car',
       generatedAt: '2026-09-22T00:00:00Z',
+      attribution: 'Routing data test attribution',
     };
     const roadB: OutletRouteEstimate = {
       source: 'road',
@@ -120,9 +133,13 @@ describe('routing matrix trust boundary', () => {
       roadDistanceKm: 8,
       roadDurationSeconds: 960,
       roadDurationMinutes: 16,
+      geometryStatus: 'ready',
+      geometryPath: '/generated/routes/b.geojson',
+      metricSource: 'directions',
       provider: 'openrouteservice',
       profile: 'driving-car',
       generatedAt: '2026-09-22T00:00:00Z',
+      attribution: 'Routing data test attribution',
     };
 
     const basis = sharedDistanceBasis([roadA, roadB]);
@@ -138,9 +155,13 @@ describe('routing matrix trust boundary', () => {
       roadDistanceKm: 18,
       roadDurationSeconds: 1860,
       roadDurationMinutes: 31,
+      geometryStatus: 'not_requested',
+      geometryPath: null,
+      metricSource: 'matrix',
       provider: 'openrouteservice',
       profile: 'driving-car',
       generatedAt: '2026-09-22T00:00:00Z',
+      attribution: 'Routing data test attribution',
     };
     const fallback: OutletRouteEstimate = {
       source: 'straight_line',
@@ -148,6 +169,9 @@ describe('routing matrix trust boundary', () => {
       roadDistanceKm: null,
       roadDurationSeconds: null,
       roadDurationMinutes: null,
+      geometryStatus: null,
+      geometryPath: null,
+      metricSource: null,
       provider: null,
       profile: null,
       generatedAt: null,
