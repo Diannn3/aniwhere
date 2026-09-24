@@ -31,6 +31,7 @@ export interface OutletRouteEstimate {
   source: 'road' | 'straight_line';
   straightLineDistanceKm: number;
   roadDistanceKm: number | null;
+  roadDurationSeconds: number | null;
   roadDurationMinutes: number | null;
   geometry?: RouteGeometry;
   provider: 'openrouteservice' | null;
@@ -66,7 +67,8 @@ export function getOutletRouteEstimateFromArtifact(
       source: 'road',
       straightLineDistanceKm,
       roadDistanceKm: Math.round((cell.distanceMeters / 1000) * 10) / 10,
-      roadDurationMinutes: Math.max(1, Math.round(cell.durationSeconds / 60)),
+      roadDurationSeconds: cell.durationSeconds,
+      roadDurationMinutes: Math.round(cell.durationSeconds / 60),
       geometry: cell.geometry,
       provider: artifactInput.provider,
       profile: artifactInput.profile,
@@ -78,6 +80,7 @@ export function getOutletRouteEstimateFromArtifact(
     source: 'straight_line',
     straightLineDistanceKm,
     roadDistanceKm: null,
+    roadDurationSeconds: null,
     roadDurationMinutes: null,
     provider: null,
     profile: null,

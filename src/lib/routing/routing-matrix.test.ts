@@ -50,7 +50,31 @@ describe('routing matrix trust boundary', () => {
     expect(hasRoadRoutingDataForArtifact(ready)).toBe(true);
     expect(route.source).toBe('road');
     expect(route.roadDistanceKm).toBe(1.8);
+    expect(route.roadDurationSeconds).toBe(420);
     expect(route.roadDurationMinutes).toBe(7);
+  });
+
+  it('does not invent a minimum one-minute drive for zero-duration evidence', () => {
+    const ready: RouteMatrixArtifact = {
+      schemaVersion: 1,
+      generatedAt: '2026-09-25T00:00:00Z',
+      provider: 'openrouteservice',
+      providerBase: 'https://api.heigit.org/openrouteservice/v2',
+      profile: 'driving-car',
+      status: 'ready',
+      origins: {},
+      outlets: {},
+      cells: {
+        'santa-cruz': {
+          'demo-cooperative': { status: 'routed', distanceMeters: 0, durationSeconds: 0 },
+        },
+      },
+    };
+
+    const route = getOutletRouteEstimateFromArtifact(ready, 'santa-cruz', 'demo-cooperative', 0);
+    expect(route.source).toBe('road');
+    expect(route.roadDurationSeconds).toBe(0);
+    expect(route.roadDurationMinutes).toBe(0);
   });
 
   it('keeps an unavailable cell on straight-line fallback even in a partial artifact', () => {
@@ -84,6 +108,7 @@ describe('routing matrix trust boundary', () => {
       source: 'road',
       straightLineDistanceKm: 5,
       roadDistanceKm: 7,
+      roadDurationSeconds: 840,
       roadDurationMinutes: 14,
       provider: 'openrouteservice',
       profile: 'driving-car',
@@ -93,6 +118,7 @@ describe('routing matrix trust boundary', () => {
       source: 'road',
       straightLineDistanceKm: 6,
       roadDistanceKm: 8,
+      roadDurationSeconds: 960,
       roadDurationMinutes: 16,
       provider: 'openrouteservice',
       profile: 'driving-car',
@@ -110,6 +136,7 @@ describe('routing matrix trust boundary', () => {
       source: 'road',
       straightLineDistanceKm: 12,
       roadDistanceKm: 18,
+      roadDurationSeconds: 1860,
       roadDurationMinutes: 31,
       provider: 'openrouteservice',
       profile: 'driving-car',
@@ -119,6 +146,7 @@ describe('routing matrix trust boundary', () => {
       source: 'straight_line',
       straightLineDistanceKm: 13,
       roadDistanceKm: null,
+      roadDurationSeconds: null,
       roadDurationMinutes: null,
       provider: null,
       profile: null,
