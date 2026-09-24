@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { todayInManila } from '../src/lib/state/url-state';
 
 export type HarvestQuery = {
   crop: string;
@@ -13,7 +14,7 @@ export const CANONICAL_HARVEST = {
   crop: 'tomato',
   kg: '300',
   origin: 'los-banos',
-  ready: '2026-09-24',
+  ready: todayInManila(),
   view: 'list',
   lang: 'en',
 } satisfies HarvestQuery;

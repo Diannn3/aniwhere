@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { evaluateFit } from './match';
 import { DEMO_OUTLETS } from '../../content/demo-outlets';
 import { normalizeCrop } from './crops';
+import { todayInManila } from '../state/url-state';
 import type { Outlet } from './types';
 
 describe('Deterministic Harvest Matching', () => {
@@ -9,10 +10,10 @@ describe('Deterministic Harvest Matching', () => {
     crop: 'tomato',
     quantityKg: 300,
     originMunicipality: 'los-banos',
-    readyDate: '2026-09-18',
+    readyDate: todayInManila(),
   };
 
-  it('300 kg tomatoes at Santa Cruz Cooperative yields exact match and P7,800 after transport', () => {
+  it('300 kg tomatoes at the cooperative yields exact match and P7,800 after transport', () => {
     const coop = DEMO_OUTLETS.find((o) => o.id === 'demo-cooperative')!;
     const result = evaluateFit(coop, query300, 600);
 
@@ -26,7 +27,7 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.evidenceKind).toBe('demo');
   });
 
-  it('300 kg tomatoes at Calamba Processor yields exact match and P9,300 after transport', () => {
+  it('300 kg tomatoes at the processor yields exact match and P9,300 after transport', () => {
     const proc = DEMO_OUTLETS.find((o) => o.id === 'demo-processor')!;
     const result = evaluateFit(proc, query300, 300);
 
@@ -39,7 +40,7 @@ describe('Deterministic Harvest Matching', () => {
     expect(result.afterTransportPay).toBe(9300);
   });
 
-  it('300 kg tomatoes at Los Baños Market yields partial match and computes only accepted quantity', () => {
+  it('300 kg tomatoes at the market yields partial match and computes only accepted quantity', () => {
     const market = DEMO_OUTLETS.find((o) => o.id === 'demo-market')!;
     const result = evaluateFit(market, query300, 300);
 
@@ -117,7 +118,7 @@ describe('Deterministic Harvest Matching', () => {
       },
     };
 
-    const result = evaluateFit(future, query300);
+    const result = evaluateFit(future, { ...query300, readyDate: '2026-09-18' });
     expect(result.status).toBe('confirm');
     expect(result.reasonCodes).toContain('offer_future');
     expect(result.unknowns).toContain('Alternative current intake');
@@ -137,7 +138,7 @@ describe('Deterministic Harvest Matching', () => {
       },
     };
 
-    const result = evaluateFit(expired, query300);
+    const result = evaluateFit(expired, { ...query300, readyDate: '2026-09-18' });
     expect(result.status).toBe('confirm');
     expect(result.reasonCodes).toContain('offer_expired_for_harvest');
     expect(result.acceptedKg).toBeNull();
@@ -163,12 +164,14 @@ describe('Deterministic Harvest Matching', () => {
         ...coop.acceptedCrops,
         tomato: {
           ...coop.acceptedCrops.tomato!,
+          validFrom: '2026-09-17',
+          validUntil: '2026-09-30',
           receivingWeekdays: [1],
         },
       },
     };
 
-    const result = evaluateFit(mondayOnly, query300);
+    const result = evaluateFit(mondayOnly, { ...query300, readyDate: '2026-09-18' });
     expect(result.status).toBe('no_match');
     expect(result.reasonCodes).toContain('receiving_day_incompatible');
   });
