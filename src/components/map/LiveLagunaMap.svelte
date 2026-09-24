@@ -378,7 +378,12 @@
     </div>
 
     {#if selectedItem && selectedRoute}
-      <aside class="route-card" aria-live="polite">
+      <aside
+        class="route-card"
+        aria-live="polite"
+        data-route-kind={selectedRoute.source === 'road' && activeRouteGeometry() ? 'road' : 'straight_line'}
+        data-route-points={activeRouteGeometry()?.coordinates.length ?? 2}
+      >
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
