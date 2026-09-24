@@ -8,14 +8,15 @@ const FORBIDDEN = [
   { label: 'PUBLIC_ORS_*', pattern: /PUBLIC_ORS(?:_|[A-Z])/i },
 ];
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const privateKey = process.env.ORS_API_KEY?.trim();
 if (privateKey) {
   FORBIDDEN.push({
     label: 'literal ORS_API_KEY value',
-    pattern: new RegExp(privateKey.replace(/[.*+?^$\{\}()|[\]\\]/g, '\\const FORBIDDEN = [
-  { label: 'ORS_API_KEY', pattern: /ORS_API_KEY/i },
-  { label: 'PUBLIC_ORS_*', pattern: /PUBLIC_ORS(?:_|[A-Z])/i },
-];')),
+    pattern: new RegExp(escapeRegExp(privateKey)),
   });
 }
 
