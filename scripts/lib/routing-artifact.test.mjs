@@ -1,0 +1,131 @@
+import { describe, expect, it } from 'vitest';
+import {
+  assertMatrixResponse,
+  createInputFingerprint,
+  validateRouteGeometry,
+  validateRoutingArtifact,
+} from './routing-artifact.mjs';
+
+const points = {
+  origins: [{ id: 'los-banos', name: 'Los Baños', lat: 14.17, lng: 121.241 }],
+  outlets: [{ id: 'demo-market', name: 'Market', lat: 14.18, lng: 121.243 }],
+};
+
+function artifact() {
+  return {
+    schemaVersion: 2,
+    generatedAt: '2026-09-25T00:00:00Z',
+    provider: 'openrouteservice',
+    providerBase: 'https://api.heigit.org/openrouteservice/v2',
+    profile: 'driving-car',
+    generationMode: 'metrics',
+    status: 'ready',
+    attribution: 'test',
+    inputFingerprint: 'a'.repeat(64),
+    origins: {
+      'los-banos': { name: 'Los Baños', lat: 14.17, lng: 121.241 },
+    },
+    outlets: {
+      'demo-market': { name: 'Market', lat: 14.18, lng: 121.243 },
+    },
+    cells: {
+      'los-banos': {
+        'demo-market': {
+          status: 'routed',
+          distanceMeters: 1500,
+          durationSeconds: 300,
+          metricSource: 'matrix',
+          geometryStatus: 'not_requested',
+        },
+      },
+    },
+  };
+}
+
+describe('routing artifact validation', () => {
+  it('fingerprints routing points independently of input ordering', () => {
+    const args = {
+      provider: 'openrouteservice',
+      providerBase: 'https://api.heigit.org/openrouteservice/v2',
+      profile: 'driving-car',
+      origins: [
+        { id: 'b', lat: 2, lng: 2 },
+        { id: 'a', lat: 1, lng: 1 },
+      ],
+      outlets: [
+        { id: 'd', lat: 4, lng: 4 },
+        { id: 'c', lat: 3, lng: 3 },
+      ],
+    };
+    const reversed = {
+      ...args,
+      origins: [...args.origins].reverse(),
+      outlets: [...args.outlets].reverse(),
+    };
+
+    expect(createInputFingerprint(args)).toBe(createInputFingerprint(reversed));
+    expect(createInputFingerprint(args)).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('accepts routed and explicitly unavailable matrix cells', () => {
+    expect(() =>
+      assertMatrixResponse(
+        { distances: [[1200, null]], durations: [[300, null]] },
+        1,
+        2
+      )
+    ).not.toThrow();
+  });
+
+  it('rejects inconsistent matrix cells and dimensions', () => {
+    expect(() =>
+      assertMatrixResponse({ distances: [[1200]], durations: [[null]] }, 1, 1)
+    ).toThrow('inconsistent metrics');
+    expect(() =>
+      assertMatrixResponse({ distances: [[]], durations: [[]] }, 1, 1)
+    ).toThrow('destination count');
+  });
+
+  it('accepts only finite LineString coordinates', () => {
+    expect(
+      validateRouteGeometry({
+        type: 'LineString',
+        coordinates: [
+          [121.241, 14.17],
+          [121.243, 14.18],
+        ],
+      })
+    ).toBe(true);
+    expect(validateRouteGeometry({ type: 'Point', coordinates: [121, 14] })).toBe(false);
+    expect(
+      validateRouteGeometry({
+        type: 'LineString',
+        coordinates: [[999, 14], [121, 14]],
+      })
+    ).toBe(false);
+  });
+
+  it('requires complete expected route coverage', () => {
+    expect(() =>
+      validateRoutingArtifact(artifact(), ['los-banos'], ['demo-market'])
+    ).not.toThrow();
+
+    const missing = artifact();
+    delete missing.cells['los-banos']['demo-market'];
+    expect(() =>
+      validateRoutingArtifact(missing, ['los-banos'], ['demo-market'])
+    ).toThrow('incomplete outlet coverage');
+  });
+
+  it('allows a not-generated placeholder without fabricated cells', () => {
+    const placeholder = {
+      ...artifact(),
+      status: 'not_generated',
+      generationMode: 'not_generated',
+      origins: {},
+      outlets: {},
+      cells: {},
+    };
+    expect(validateRoutingArtifact(placeholder, ['los-banos'], ['demo-market'])).toBe(placeholder);
+  });
+});
