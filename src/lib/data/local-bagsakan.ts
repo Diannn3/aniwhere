@@ -19,8 +19,8 @@ function requirementsFor(demand: BagsakanDemoDemand): StructuredRequirement[] {
     { field: 'packaging', label: 'Packaging', labelFil: 'Packaging' },
   ] as const;
   return fields.flatMap(({ field, label, labelFil }) => {
-    const value = demand[field]?.trim();
-    return value ? [{ field, acceptedValues: [value], label, labelFil }] : [];
+    const value = demand[field];
+    return value?.trim() ? [{ field, acceptedValues: [value], label, labelFil }] : [];
   });
 }
 
@@ -32,8 +32,8 @@ function conditionsFor(demand: BagsakanDemoDemand): { en: string[]; fil: string[
     fil.push(`Oras ng pagtanggap: ${demand.receivingStartTime}–${demand.receivingEndTime}. Kumpirmahin bago bumiyahe.`);
   }
   if (demand.notes?.trim()) {
-    en.push(demand.notes.trim());
-    fil.push(demand.notes.trim());
+    en.push(demand.notes);
+    fil.push(demand.notes);
   }
   return { en, fil };
 }

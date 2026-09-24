@@ -56,6 +56,15 @@ describe('local Bagsakan market adapter', () => {
     expect(result.sourceLabel).toBe(LOCAL_BAGSAKAN_SOURCE_LABEL);
   });
 
+  it('preserves entered requirement text without trimming it', () => {
+    const [outlet] = composeLocalBagsakanOutlets({
+      ...state,
+      demands: [{ ...state.demands[0], variety: ' Roma ', notes: '  Call before travel.  ' }],
+    });
+    expect(outlet.acceptedCrops.tomato?.requirements?.[0].acceptedValues).toEqual([' Roma ']);
+    expect(outlet.acceptedCrops.tomato?.conditions[0]).toContain('  Call before travel.  ');
+  });
+
   it('keeps the profile after its first saved need and removes it after the last need', () => {
     expect(composeLocalBagsakanOutlets({ ...state, demands: [] })).toEqual([]);
     expect(composeLocalBagsakanOutlets(state)).toHaveLength(1);
