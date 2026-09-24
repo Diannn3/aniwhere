@@ -458,7 +458,7 @@
           type="button"
           onclick={() => setView('list')}
           aria-pressed={activeView === 'list'}
-          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 cursor-pointer ${
             activeView === 'list'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
@@ -474,7 +474,7 @@
           type="button"
           onclick={() => setView('map')}
           aria-pressed={activeView === 'map'}
-          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 cursor-pointer ${
             activeView === 'map'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'

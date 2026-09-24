@@ -330,6 +330,7 @@ body:has(.discovery-page) > header > div > :is(nav, div:last-child) { min-width:
 .discovery-sort-controls > div { min-width: 0; flex-wrap: wrap; }
 .discovery-sort-controls select { max-width: 100%; }
 .map-view-switch { order: 3; margin-left: auto; }
+.map-view-switch button { transition: none; }
 .map-view-switch button[aria-pressed="true"] { background: #486320; color: #fffdf8; }
 .map-view-switch button[aria-pressed="false"] { background: transparent; color: #20251e; }
 @media (max-width: 1199px) {
