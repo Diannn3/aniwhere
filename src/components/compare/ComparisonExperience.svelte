@@ -11,9 +11,10 @@
   import {
     distanceForBasis,
     formatEstimatedDriveDuration,
-    getOutletRouteEstimate,
     sharedDistanceBasis,
+    type OutletRouteEstimate,
   } from '../../lib/routing/routing-matrix';
+  import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
   import { parseCompareQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
@@ -42,6 +43,8 @@
   let harvest = $state<HarvestQuery>({ crop: 'tomato', quantityKg: 300, originMunicipality: 'los-banos', readyDate: todayInManila() });
   let transportDrafts = $state<Record<string, string>>({});
   let transportAnnouncement = $state('');
+  let resolvedRoutes = $state<Record<string, OutletRouteEstimate>>({});
+  let routeLoadingIds = $state<string[]>([]);
 
   onMount(() => {
     marketOutlets = getClientMarketOutlets();
@@ -91,14 +94,41 @@
   const cropName = $derived(getCropLabel(harvest.crop, lang));
   const originMun = $derived(LAGUNA_MUNICIPALITIES.find((m) => m.id === harvest.originMunicipality) || LAGUNA_MUNICIPALITIES[0]);
   const comparedOutlets = $derived(selectedIds.map((id) => marketOutlets.find((o) => o.id === id || o.slug === id)).filter((o): o is Outlet => Boolean(o)).slice(0, 3));
+
+  function routeFor(outlet: Outlet): OutletRouteEstimate {
+    const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng);
+    return resolvedRoutes[outlet.id] ??
+      getImmediateOutletRoute(harvest.originMunicipality, outlet, distance).route;
+  }
+
   const comparisonDistanceBasis = $derived(
-    sharedDistanceBasis(
-      comparedOutlets.map((outlet) => {
-        const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng);
-        return getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance);
-      })
-    )
+    sharedDistanceBasis(comparedOutlets.map(routeFor))
   );
+
+  $effect(() => {
+    const originId = harvest.originMunicipality;
+    const localOutlets = comparedOutlets.filter((outlet) => outlet.isLocalBagsakan);
+    if (localOutlets.length === 0) {
+      resolvedRoutes = {};
+      routeLoadingIds = [];
+      return;
+    }
+
+    const controller = new AbortController();
+    routeLoadingIds = localOutlets.map((outlet) => outlet.id);
+    for (const outlet of localOutlets) {
+      const distance = calculateStraightLineDistanceKm(
+        originMun.lat, originMun.lng, outlet.lat, outlet.lng
+      );
+      void resolveOutletRoute(originId, outlet, distance, { signal: controller.signal })
+        .then((result) => {
+          if (controller.signal.aborted) return;
+          resolvedRoutes = { ...resolvedRoutes, [outlet.id]: result.route };
+          routeLoadingIds = routeLoadingIds.filter((id) => id !== outlet.id);
+        });
+    }
+    return () => controller.abort();
+  });
 
   function copy(en: string, fil: string) { return isFil ? fil : en; }
   function formatPeso(value: number | null) { return value === null ? copy('Not calculated', 'Hindi nakalkula') : `₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}`; }
@@ -174,6 +204,15 @@
       <a href={`/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`} class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#597928]/35 bg-[#FFFDF8] px-4 py-2 text-sm font-semibold text-[#486320] transition-colors hover:bg-[#FCECD8]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]">{copy('Edit harvest context', 'Baguhin ang konteksto ng ani')}</a>
     </header>
 
+    {#if routeLoadingIds.length > 0}
+      <p class="rounded-lg border border-[#4E7380]/25 bg-[#4E7380]/8 px-4 py-3 text-sm text-[#2A4B56]" role="status" aria-live="polite">
+        {copy(
+          'Fetching comparable road estimates. Straight-line distance stays in use until every selected place has road evidence.',
+          'Kinukuha ang maihahambing na rutang pangkalsada. Tuwid na layo muna ang gamit hanggang may road evidence ang lahat ng napiling lugar.'
+        )}
+      </p>
+    {/if}
+
     <section aria-label={copy('Harvest context', 'Konteksto ng ani')} class="border-y border-[#20251E]/20 bg-[#FCECD8]/35">
       <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4 sm:gap-x-0">
         <div class="min-w-0 border-b border-[#20251E]/10 py-3 pr-3 sm:border-b-0 sm:px-4 sm:first:pl-0"><p class="text-xs font-semibold text-[#596052]">{copy('Harvest', 'Ani')}</p><p class="mt-1 font-semibold text-[#20251E]">{cropName}</p></div>
@@ -219,7 +258,7 @@
             {@const transport = parsedTransport(outlet, recordedTransport)}
             {@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}
             {@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}
-            {@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}
+            {@const route = routeFor(outlet)}
             {@const unknowns = isFil ? fit.unknownsFil : fit.unknowns}
             {@const questions = isFil ? fit.conditionsToConfirmFil : fit.conditionsToConfirm}
             <article class="min-w-0 border-t-2 border-[#20251E] bg-white px-4 pb-5 pt-4">
@@ -361,7 +400,7 @@
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Gross amount', 'Kabuuang halaga')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const transport = parsedTransport(outlet, outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}<td class="px-4 py-4 font-semibold tabular-nums text-[#20251E]">{formatPeso(fit.grossPay)}</td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Transport amount used', 'Halagang biyahe na gagamitin')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const value = transportValue(outlet, recordedTransport)}<td class="px-4 py-4 align-top"><label class="mb-2 block font-semibold text-[#20251E]" for={`transport-${outlet.id}`}>{copy('Transport for', 'Biyahe para sa')} {outlet.name}</label><div class="relative max-w-[200px]"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#4A5245]">₱</span><input id={`transport-${outlet.id}`} type="number" min="0" step="50" inputmode="decimal" value={value} placeholder={copy('Not entered', 'Wala pang halaga')} oninput={(event) => handleTransportChange(outlet, recordedTransport, (event.currentTarget as HTMLInputElement).value)} class={`min-h-11 w-full rounded-lg border bg-[#FFFDF8] py-2 pl-7 pr-3 text-base font-semibold tabular-nums text-[#20251E] outline-none transition-shadow focus:ring-2 focus:ring-[#597928] ${hasTransportDraft(outlet.id) ? 'border-[#597928]' : 'border-[#20251E]/35'}`} /></div><p class="mt-2 text-sm leading-5 text-[#4A5245]">{transportProvenance(outlet, recordedTransport)}</p></td>{/each}</tr>
               <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('After transport amount', 'Matapos ang halagang biyahe')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const recordedTransport = outlet.acceptedCrops[harvest.crop]?.defaultTransportExpense ?? null}{@const transport = parsedTransport(outlet, recordedTransport)}{@const fit = evaluateFit(outlet, harvest, transport ?? undefined)}{@const afterTransport = transport === null ? null : fit.afterTransportPay}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{formatPeso(afterTransport)}</p><p class="mt-1 text-xs leading-4 text-[#4A5245]">{transport === null ? copy('Enter transport to calculate.', 'Maglagay ng gastos upang makalkula.') : copy('Not profit or guaranteed income.', 'Hindi ito tubo o garantisadong kita.')}</p></td>{/each}</tr>
-              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}{@const route = getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distance)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km</p><p class="mt-1 text-xs text-[#4A5245]">{comparisonDistanceBasis === 'road'
+              <tr><th scope="row" class="ledger-metric border-r border-[#20251E]/12 bg-[#FFFDF8] px-4 py-4 font-semibold text-[#20251E]">{copy('Distance', 'Layo')}</th>{#each comparedOutlets as outlet (outlet.id)}{@const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng)}{@const route = routeFor(outlet)}<td class="px-4 py-4"><p class="font-semibold tabular-nums text-[#20251E]">{distanceForBasis(route, comparisonDistanceBasis).toFixed(1)} km</p><p class="mt-1 text-xs text-[#4A5245]">{comparisonDistanceBasis === 'road'
   ? copy(
       `Road distance from ${originMun.name.split(',')[0]} municipality center · ${formatEstimatedDriveDuration(route) ?? 'duration unavailable'} estimated drive · not live traffic`,
       `Layo sa kalsada mula sa sentro ng ${originMun.name.split(',')[0]} · ${formatEstimatedDriveDuration(route) ?? 'walang tantyang oras'} tantyang biyahe · hindi live traffic`,
