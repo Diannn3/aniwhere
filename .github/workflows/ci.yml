@@ -45,9 +45,13 @@ jobs:
         run: pnpm check
 
       - name: Production build
+        env:
+          ORS_API_KEY: ci-routing-secret-sentinel-never-bundle
         run: pnpm build
 
       - name: Routing secret scan
+        env:
+          ORS_API_KEY: ci-routing-secret-sentinel-never-bundle
         run: pnpm routing:secrets
 
 

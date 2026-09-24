@@ -8,6 +8,17 @@ const FORBIDDEN = [
   { label: 'PUBLIC_ORS_*', pattern: /PUBLIC_ORS(?:_|[A-Z])/i },
 ];
 
+const privateKey = process.env.ORS_API_KEY?.trim();
+if (privateKey) {
+  FORBIDDEN.push({
+    label: 'literal ORS_API_KEY value',
+    pattern: new RegExp(privateKey.replace(/[.*+?^$\{\}()|[\]\\]/g, '\\const FORBIDDEN = [
+  { label: 'ORS_API_KEY', pattern: /ORS_API_KEY/i },
+  { label: 'PUBLIC_ORS_*', pattern: /PUBLIC_ORS(?:_|[A-Z])/i },
+];')),
+  });
+}
+
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -35,4 +46,4 @@ if (violations.length) {
   process.exit(1);
 }
 
-console.log('Routing secret scan passed: no ORS secret environment markers are bundled.');
+console.log('Routing secret scan passed: no ORS secret markers or configured key value are bundled.');
