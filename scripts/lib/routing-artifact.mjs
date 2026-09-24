@@ -135,7 +135,28 @@ export function validateRoutingArtifact(artifact, expectedOrigins, expectedOutle
         if (!finiteNonNegative(cell.distanceMeters) || !finiteNonNegative(cell.durationSeconds)) {
           throw new Error(`Routed cell ${originId} -> ${outletId} has invalid metrics.`);
         }
-      } else if (cell?.status !== 'unavailable') {
+        if (!['matrix', 'directions'].includes(cell.metricSource)) {
+          throw new Error(`Routed cell ${originId} -> ${outletId} has no metric provenance.`);
+        }
+        if (!['not_requested', 'ready', 'unavailable'].includes(cell.geometryStatus)) {
+          throw new Error(`Routed cell ${originId} -> ${outletId} has invalid geometry state.`);
+        }
+        if (cell.geometryStatus === 'ready') {
+          if (
+            cell.metricSource !== 'directions' ||
+            typeof cell.geometryPath !== 'string' ||
+            !/^\/generated\/routes\/[a-z0-9-]+\/[a-z0-9-]+--[a-z0-9-]+\.geojson$/.test(cell.geometryPath)
+          ) {
+            throw new Error(`Routed cell ${originId} -> ${outletId} has inconsistent geometry provenance.`);
+          }
+        } else if (cell.geometryPath) {
+          throw new Error(`Routed cell ${originId} -> ${outletId} exposes an unvalidated geometry path.`);
+        }
+      } else if (cell?.status === 'unavailable') {
+        if (cell.distanceMeters !== undefined || cell.durationSeconds !== undefined || cell.geometryPath) {
+          throw new Error(`Unavailable cell ${originId} -> ${outletId} contains routed evidence.`);
+        }
+      } else {
         throw new Error(`Cell ${originId} -> ${outletId} has an invalid status.`);
       }
     }

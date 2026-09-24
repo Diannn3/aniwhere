@@ -131,6 +131,17 @@ describe('routing artifact validation', () => {
     ).toThrow('incomplete outlet coverage');
   });
 
+  it('rejects a ready geometry path without Directions metric provenance', () => {
+    const inconsistent = artifact();
+    const cell = inconsistent.cells['los-banos']['demo-market'];
+    cell.geometryStatus = 'ready';
+    cell.geometryPath =
+      '/generated/routes/20260925-abcdef123456/los-banos--demo-market.geojson';
+    expect(() =>
+      validateRoutingArtifact(inconsistent, ['los-banos'], ['demo-market'])
+    ).toThrow('inconsistent geometry provenance');
+  });
+
   it('allows a not-generated placeholder without fabricated cells', () => {
     const placeholder = {
       ...artifact(),
