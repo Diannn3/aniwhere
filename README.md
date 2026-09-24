@@ -185,3 +185,12 @@ The UI reference audit remains under:
 [ui-reference-audit-2026-09-17](./ui-reference-audit-2026-09-17/)
 
 These are historical/design artifacts; the current source tree and current implementation report take precedence for implementation status.
+
+## Team & Contributors
+
+**Team Walang Ani Buseng** &middot; UPLB TTBDO NextGen Agri Hackathon 2026
+
+- **Aedrian F. Ponce** ([@Diannn3](https://github.com/Diannn3))
+- **Kalinaw Lukas Aom C. Bebis** ([@klnwlks](https://github.com/klnwlks))
+- **Jazz Avo M. Abadier** ([@avoabadier](https://github.com/avoabadier))
+- **Mentor**: Asst. Prof. Allen L. Nazareno
