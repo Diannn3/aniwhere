@@ -60,22 +60,23 @@ test('map clicks move the pin without recentering the camera', async ({ page }) 
     return box.x + box.width / 2;
   };
 
-  const clickAt = async (xRatio: number) => {
+  const clickAt = async (xRatio: number, yRatio: number) => {
     const targetX = mapBox.x + mapBox.width * xRatio;
-    await canvas.click({ position: { x: mapBox.width * xRatio, y: mapBox.height * 0.5 } });
+    await canvas.click({ position: { x: mapBox.width * xRatio, y: mapBox.height * yRatio } });
     await expect.poll(async () => Math.abs((await markerCenterX()) - targetX)).toBeLessThan(45);
   };
 
-  await clickAt(0.28);
+  await clickAt(0.28, 0.38);
   await expect(page.getByText('Exact pin selected')).toBeVisible();
   const firstLat = await page.locator('#bag-profile-lat').inputValue();
   const firstLng = await page.locator('#bag-profile-lng').inputValue();
-  expect(firstLat).not.toBe('14.281');
-  expect(firstLng).not.toBe('121.417');
+  expect([firstLat, firstLng]).not.toEqual(['14.281', '121.417']);
 
-  await clickAt(0.72);
-  await expect.poll(() => page.locator('#bag-profile-lat').inputValue()).not.toBe(firstLat);
-  await expect.poll(() => page.locator('#bag-profile-lng').inputValue()).not.toBe(firstLng);
+  await clickAt(0.72, 0.62);
+  await expect.poll(async () => [
+    await page.locator('#bag-profile-lat').inputValue(),
+    await page.locator('#bag-profile-lng').inputValue(),
+  ]).not.toEqual([firstLat, firstLng]);
 });
 
 test('pin coordinates can be set without dragging and reset to municipality center', async ({ page }) => {
