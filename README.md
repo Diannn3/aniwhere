@@ -41,7 +41,9 @@ Implemented routes include:
 - `/places/[slug]` — outlet detail
 - `/saved` — locally saved outlets
 - `/compare` — compare up to three outlets
-- `/buyer` — local-only buyer workspace demo
+- `/bagsakan` — local-only receiving-place profile and buying needs
+- `/bagsakan/preview` — same-device farmer preview of a local Bagsakan entry
+- `/buyer` — compatibility route for the Bagsakan workspace
 - `/404` — recovery page
 
 ## Trust model
@@ -77,7 +79,7 @@ At runtime it currently uses:
 - explicit fictional demo data separated into stable places, crop capabilities, time-sensitive offers, provenance, and hauling assumptions;
 - 11 fictional Laguna outlets with varied crop acceptance, capacity, price, and uncertainty scenarios across seven crops;
 - demo-only buying windows and sample evidence dates shifted together relative to the current Manila date so an offline presentation remains navigable; these dates do **not** indicate a fresh market verification;
-- seven browser-local buyer-workspace example offers spanning published, in-review, and draft states, separate from farmer-facing outlet data;
+- one browser-local Bagsakan profile with editable dated buying needs; its demo entries appear in farmer discovery, saved places, comparison, map, and preview on the same device;
 - a presentation adapter that composes those records for the current UI;
 - browser `localStorage`;
 - a progressive Laguna map: MapLibre + OpenFreeMap when network/WebGL are available, with the in-repo SVG map as the resilient fallback;
@@ -94,6 +96,8 @@ It does **not** currently use:
 - payments, reservations, or checkout.
 
 The app labels demo evidence as demo data. Generated or fixture business names, capacities, prices, contacts, and transport costs must not be represented as real market facts.
+
+The Bagsakan workspace saves only on this device. Its entries are not published to a live buyer network, and its optional price is a demo price rather than a verified buyer quote. The older buyer-demo browser key is left untouched but is not imported into this flow.
 
 Runtime data mode is explicit through `PUBLIC_DATA_MODE`. This branch supports `demo`; requesting `pilot` fails closed until a reviewed pilot repository adapter is actually implemented, preventing fictional fixtures from silently appearing as live pilot data.
 
@@ -151,7 +155,9 @@ ORS_API_KEY=... pnpm routing:generate
 ORS_API_KEY=... pnpm routing:generate:geometry
 ```
 
-Routing inputs are checked against the current municipality and demo-place data and fingerprinted into the generated artifact. Generation validates the full matrix before atomic replacement. The ORS key is never sent to the browser, and CI scans the production bundle for ORS secret markers. Without a reviewed generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
+Routing inputs are checked against the current municipality and checked-in demo-place data and fingerprinted into the generated artifact. Generation validates the complete matrix before atomic replacement. The ORS key is never sent to the browser, and CI scans the production bundle for ORS secret markers. Without a reviewed generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
+
+A same-device Bagsakan is intentionally not part of the static road matrix because its coordinates can be created or moved at runtime. It therefore keeps the labelled straight-line fallback until a future secure runtime-routing path is deliberately implemented.
 
 See [docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md](./docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md).
 

@@ -164,7 +164,9 @@
   );
 
   const priceLabel = $derived(
-    fitResult.evidenceKind === 'demo'
+    outlet.isLocalBagsakan
+      ? (isFil ? 'Presyo sa lokal na demo' : 'Local demo price')
+      : fitResult.evidenceKind === 'demo'
       ? (isFil ? 'Presyo' : 'Price')
       : fitResult.evidenceKind === 'buyer_offer'
         ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
@@ -240,6 +242,10 @@
       </a>
     </div>
   </div>
+
+  {#if outlet.isLocalBagsakan}
+    <p class="border border-[#6E3511]/25 bg-[#FCECD8]/55 px-4 py-3 text-sm leading-5 text-[#6E3511]">{isFil ? 'Demo bagsakan entry sa device na ito. Hindi ito live o beripikadong alok; kumpirmahin ang kapasidad, presyo, at oras bago bumiyahe.' : 'Demo Bagsakan entry on this device. This is not a live or verified offer; confirm capacity, price, and hours before travel.'}</p>
+  {/if}
 
   <!-- Hero Facility Card (Anti-Vibecode: Direct H1, No Kicker) -->
   <header class="outlet-intro almanac-entry p-6 sm:p-8 space-y-6">
@@ -676,7 +682,9 @@
       </div>
 
       <p class="text-xs text-[#4A5245]">
-        {isFil
+        {outlet.isLocalBagsakan
+          ? (isFil ? 'Demo template lamang ito. Walang live contact channel para sa lokal na Bagsakan entry.' : 'This is a demo template only. The local Bagsakan entry has no live contact channel.')
+          : isFil
           ? 'Maaari mong kopyahin ang template na ito para i-text o ipadala sa intake coordinator bago ibiyahe ang ani:'
           : 'Copy this ready-made template to text or message the intake coordinator before hauling:'}
       </p>

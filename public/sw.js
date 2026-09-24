@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'aniwhere-core-';
-const CACHE_NAME = `${CACHE_PREFIX}v3`;
-const CORE_ROUTES = ['/', '/discover', '/saved', '/compare', '/manifest.webmanifest', '/favicon.svg', '/ani/ani-avatar.webp'];
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CORE_ROUTES = ['/', '/discover', '/saved', '/compare', '/bagsakan', '/bagsakan/preview', '/buyer', '/manifest.webmanifest', '/favicon.svg', '/ani/ani-avatar.webp'];
 
 async function cacheCore() {
   const cache = await caches.open(CACHE_NAME);

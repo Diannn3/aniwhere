@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { Outlet, HarvestQuery, FitResult } from '../../lib/domain/types';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
-  import { serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
+  import { todayInManila } from '../../lib/state/url-state';
+  import { outletDetailHref } from '../../lib/data/outlet-links';
   import { t } from '../../content/translations';
 
   interface OutletWithFit {
@@ -275,7 +276,7 @@
             class="cursor-pointer shadow-sm"
             tabindex="0"
             role="button"
-            aria-label={`${item.outlet.name}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
+            aria-label={`${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
             onclick={(e) => {
               e.stopPropagation();
               onSelect(item.outlet.id);
@@ -371,6 +372,9 @@
             <h3 class="font-serif text-base font-bold text-[#20251E] leading-tight">
               {selectedItem.outlet.name}
             </h3>
+            {#if selectedItem.outlet.isLocalBagsakan}
+              <p class="text-[11px] font-semibold text-[#6E3511]">{lang === 'fil' ? 'Demo bagsakan sa device na ito' : 'Demo Bagsakan on this device'}</p>
+            {/if}
             <p class="text-[11px] text-[#4A5245]">
               {selectedItem.outlet.municipality}, Laguna &bull; <span class="capitalize">{selectedItem.outlet.category}</span>
             </p>
@@ -412,7 +416,7 @@
 
         <!-- P1.1: 44px Height Standard for Primary CTA Button -->
         <a
-          href={`/places/${selectedItem.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', selectedItem.outlet.id, lang)}`}
+          href={outletDetailHref(selectedItem.outlet, harvest, lang)}
           class="min-h-[44px] px-5 py-2.5 rounded-full text-xs font-bold bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] transition-colors shadow-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
         >
           <span>{t('viewDetails', lang)}</span>
