@@ -215,7 +215,7 @@
                 bind:value={customCropLabel}
                 aria-invalid={!!errors.crop}
                 aria-describedby={errors.crop ? 'offer-crop-error' : undefined}
-                placeholder={isFil ? 'Hal. Sitaw, Luya, Mais' : 'e.g. String beans, Ginger, Corn'}
+                placeholder={isFil ? 'Hal. Luya, Mais' : 'e.g. Ginger, Corn'}
                 class="mt-2 w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
               />
             {/if}
