@@ -450,7 +450,7 @@
     </div>
 
     <span class="text-[10px] text-[#596052] italic">
-      {lang === 'fil' ? 'Tantyang distansya lamang' : 'Approximate road corridor'}
+      {lang === 'fil' ? 'Tuwid na konteksto lamang' : 'Straight-line context only'}
     </span>
   </div>
 

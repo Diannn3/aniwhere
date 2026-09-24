@@ -1,5 +1,15 @@
-import { writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { createRoutingClient } from './lib/routing-provider.mjs';
+import {
+  assertMatrixResponse,
+  assertRoutingPoints,
+  createInputFingerprint,
+  extractEngineMetadata,
+  validateRouteGeometry,
+  validateRoutingArtifact,
+  writeJsonAtomic,
+} from './lib/routing-artifact.mjs';
 
 const API_KEY = process.env.ORS_API_KEY;
 if (!API_KEY) {
@@ -11,48 +21,26 @@ const BASE = process.env.ORS_BASE_URL || 'https://api.heigit.org/openrouteservic
 const PROFILE = 'driving-car';
 const WITH_GEOMETRY = process.argv.includes('--geometry');
 
-const origins = [
-  ['los-banos', 'Los Baños, Laguna', 14.170, 121.241],
-  ['santa-cruz', 'Santa Cruz, Laguna', 14.281, 121.417],
-  ['calamba', 'Calamba, Laguna', 14.214, 121.164],
-  ['san-pablo', 'San Pablo, Laguna', 14.067, 121.325],
-  ['cabuyao', 'Cabuyao, Laguna', 14.278, 121.124],
-  ['nagcarlan', 'Nagcarlan, Laguna', 14.135, 121.417],
-  ['pagsanjan', 'Pagsanjan, Laguna', 14.273, 121.454],
-  ['liliw', 'Liliw, Laguna', 14.133, 121.433],
-  ['bay', 'Bay, Laguna', 14.183, 121.283],
-  ['victoria', 'Victoria, Laguna', 14.233, 121.333],
-];
+const pointsPath = resolve('scripts/routing-points.json');
+const routingPoints = JSON.parse(await readFile(pointsPath, 'utf8'));
+assertRoutingPoints(routingPoints.origins, routingPoints.outlets);
 
-const outlets = [
-  ['demo-cooperative', 'Demo Cooperative', 14.281, 121.417],
-  ['demo-processor', 'Demo Processor', 14.214, 121.164],
-  ['demo-market', 'Demo Market', 14.180, 121.243],
-  ['demo-msme-confirm', 'Demo MSME (Confirm Capacity)', 14.067, 121.325],
-  ['demo-organic-shop', 'Demo Organic Shop', 14.133, 121.433],
-];
+const origins = routingPoints.origins.map(({ id, name, lat, lng }) => [id, name, lat, lng]);
+const outlets = routingPoints.outlets.map(({ id, name, lat, lng }) => [id, name, lat, lng]);
 
 const locations = [...origins, ...outlets].map(([, , lat, lng]) => [lng, lat]);
 const sourceIndexes = origins.map((_, index) => index);
 const destinationIndexes = outlets.map((_, index) => origins.length + index);
 
-async function ors(path, body) {
-  const response = await fetch(`${BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      Authorization: API_KEY,
-      'Content-Type': 'application/json',
-      Accept: 'application/json, application/geo+json',
-    },
-    body: JSON.stringify(body),
-  });
+const inputFingerprint = createInputFingerprint({
+  provider: 'openrouteservice',
+  providerBase: BASE,
+  profile: PROFILE,
+  origins: routingPoints.origins,
+  outlets: routingPoints.outlets,
+});
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`ORS ${response.status} ${response.statusText}: ${text.slice(0, 500)}`);
-  }
-  return response.json();
-}
+const ors = createRoutingClient({ baseUrl: BASE, apiKey: API_KEY });
 
 const matrix = await ors(`/matrix/${PROFILE}`, {
   locations,
@@ -62,14 +50,24 @@ const matrix = await ors(`/matrix/${PROFILE}`, {
   units: 'm',
 });
 
+assertMatrixResponse(matrix, origins.length, outlets.length);
+
 const generatedAt = new Date().toISOString();
+const geometryRunId = WITH_GEOMETRY
+  ? `${generatedAt.replace(/\D/g, '').slice(0, 17)}-${inputFingerprint.slice(0, 12)}`
+  : null;
 const artifact = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedAt,
   provider: 'openrouteservice',
   providerBase: BASE,
   profile: PROFILE,
+  generationMode: WITH_GEOMETRY ? 'metrics_and_geometry' : 'metrics',
   status: 'ready',
+  attribution: 'Routing data © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
+  inputFingerprint,
+  geometryRunId,
+  engine: extractEngineMetadata(matrix),
   note: WITH_GEOMETRY
     ? 'Road matrix and route geometries generated from OpenRouteService.'
     : 'Road matrix generated from OpenRouteService. Geometry was not requested.',
@@ -88,35 +86,99 @@ for (let oi = 0; oi < origins.length; oi += 1) {
 
     artifact.cells[originId][outletId] =
       typeof distanceMeters === 'number' && typeof durationSeconds === 'number'
-        ? { status: 'routed', distanceMeters, durationSeconds }
-        : { status: 'unavailable' };
+        ? {
+            status: 'routed',
+            distanceMeters,
+            durationSeconds,
+            metricSource: 'matrix',
+            geometryStatus: WITH_GEOMETRY ? 'unavailable' : 'not_requested',
+          }
+        : { status: 'unavailable', geometryStatus: WITH_GEOMETRY ? 'unavailable' : 'not_requested' };
   }
 }
 
+let publishedGeometryDirectory = null;
+
 if (WITH_GEOMETRY) {
-  console.log('Fetching route geometry for 50 demo origin/outlet pairs at a conservative rate...');
-  for (const [originId, , originLat, originLng] of origins) {
-    for (const [outletId, , outletLat, outletLng] of outlets) {
-      const cell = artifact.cells[originId][outletId];
-      if (cell.status !== 'routed') continue;
-      try {
-        const geojson = await ors(`/directions/${PROFILE}/geojson`, {
-          coordinates: [[originLng, originLat], [outletLng, outletLat]],
-          instructions: false,
-        });
-        const geometry = geojson.features?.[0]?.geometry;
-        if (geometry?.type === 'LineString' && Array.isArray(geometry.coordinates)) {
-          cell.geometry = geometry;
+  const routesRoot = resolve('public/generated/routes');
+  const geometryDirectory = resolve(routesRoot, geometryRunId);
+  const stagingGeometryDirectory = resolve(routesRoot, `.tmp-${geometryRunId}-${process.pid}`);
+  await mkdir(routesRoot, { recursive: true });
+  await rm(stagingGeometryDirectory, { recursive: true, force: true });
+  await mkdir(stagingGeometryDirectory);
+
+  let staged = false;
+  try {
+    console.log(`Fetching route geometry for ${origins.length * outlets.length} demo origin/outlet pairs at a conservative rate...`);
+    for (const [originId, , originLat, originLng] of origins) {
+      for (const [outletId, , outletLat, outletLng] of outlets) {
+        const cell = artifact.cells[originId][outletId];
+        if (cell.status !== 'routed') continue;
+        try {
+          const geojson = await ors(`/directions/${PROFILE}/geojson`, {
+            coordinates: [[originLng, originLat], [outletLng, outletLat]],
+            instructions: false,
+          });
+          const feature = geojson.features?.[0];
+          const geometry = feature?.geometry;
+          const summary = feature?.properties?.summary;
+          const validSummary =
+            typeof summary?.distance === 'number' &&
+            Number.isFinite(summary.distance) &&
+            summary.distance >= 0 &&
+            typeof summary?.duration === 'number' &&
+            Number.isFinite(summary.duration) &&
+            summary.duration >= 0;
+
+          if (validateRouteGeometry(geometry) && validSummary) {
+            const geometryPath = `/generated/routes/${geometryRunId}/${originId}--${outletId}.geojson`;
+            const geometryFile = resolve(stagingGeometryDirectory, `${originId}--${outletId}.geojson`);
+            await writeJsonAtomic(geometryFile, geometry, (candidate) => {
+              if (!validateRouteGeometry(candidate)) {
+                throw new Error(`Invalid route geometry for ${originId} -> ${outletId}.`);
+              }
+            });
+            cell.geometryPath = geometryPath;
+            cell.geometryStatus = 'ready';
+            cell.distanceMeters = summary.distance;
+            cell.durationSeconds = summary.duration;
+            cell.metricSource = 'directions';
+          } else {
+            artifact.status = 'partial';
+            console.warn(`Geometry response invalid for ${originId} -> ${outletId}; keeping Matrix metrics.`);
+          }
+        } catch (error) {
+          console.warn(`Geometry unavailable for ${originId} -> ${outletId}: ${error.message}`);
+          artifact.status = 'partial';
         }
-      } catch (error) {
-        console.warn(`Geometry unavailable for ${originId} -> ${outletId}: ${error.message}`);
-        artifact.status = 'partial';
+        await new Promise((resolveDelay) => setTimeout(resolveDelay, 1600));
       }
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 1600));
+    }
+
+    const expectedOriginIds = origins.map(([id]) => id);
+    const expectedOutletIds = outlets.map(([id]) => id);
+    validateRoutingArtifact(artifact, expectedOriginIds, expectedOutletIds);
+    await rename(stagingGeometryDirectory, geometryDirectory);
+    staged = true;
+    publishedGeometryDirectory = geometryDirectory;
+  } finally {
+    if (!staged) {
+      await rm(stagingGeometryDirectory, { recursive: true, force: true });
     }
   }
 }
 
 const output = resolve('src/generated/routing-matrix.json');
-await writeFile(output, JSON.stringify(artifact, null, 2) + '\n', 'utf8');
+const expectedOriginIds = origins.map(([id]) => id);
+const expectedOutletIds = outlets.map(([id]) => id);
+try {
+  await writeJsonAtomic(output, artifact, (candidate) =>
+    validateRoutingArtifact(candidate, expectedOriginIds, expectedOutletIds)
+  );
+} catch (error) {
+  if (publishedGeometryDirectory) {
+    await rm(publishedGeometryDirectory, { recursive: true, force: true });
+  }
+  throw error;
+}
 console.log(`Wrote ${output} (${artifact.status}) at ${generatedAt}`);
