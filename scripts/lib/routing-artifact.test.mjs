@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertMatrixResponse,
+  assertRoutingPoints,
   createInputFingerprint,
   validateRouteGeometry,
   validateRoutingArtifact,
@@ -43,6 +44,19 @@ function artifact() {
 }
 
 describe('routing artifact validation', () => {
+  it('accepts canonical route-safe IDs and coordinates', () => {
+    expect(() => assertRoutingPoints(points.origins, points.outlets)).not.toThrow();
+  });
+
+  it('rejects unsafe IDs before they can become generated file paths', () => {
+    expect(() =>
+      assertRoutingPoints(
+        [{ id: '../escape', name: 'Bad', lat: 14, lng: 121 }],
+        points.outlets
+      )
+    ).toThrow('not safe');
+  });
+
   it('fingerprints routing points independently of input ordering', () => {
     const args = {
       provider: 'openrouteservice',
