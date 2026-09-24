@@ -246,9 +246,13 @@ test('comparison never preselects outlets and preserves harvest context when emp
 
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
+  await page.waitForLoadState('networkidle');
 
-  await outletCard(page, 'Calamba Processor').getByRole('checkbox').check();
-  await outletCard(page, 'Los Baños Market').getByRole('checkbox').check();
+  const calamba = outletCard(page, 'Calamba Processor');
+  const losBanos = outletCard(page, 'Los Baños Market');
+  await calamba.getByRole('heading', { name: 'Calamba Processor' }).click();
+  await expect(calamba.locator('.ledger-select-action')).toHaveAttribute('aria-pressed', 'true');
+  await losBanos.locator('.ledger-select-action').click();
 
   const dock = page.getByRole('complementary', { name: 'Comparison dock' });
   await expect(dock).toContainText(/2 of 3 places selected/i);
@@ -263,6 +267,28 @@ test('selects outlets in discovery and compares them in a semantic decision ledg
 
   await ledger.getByLabel('Transport for Calamba Processor').fill('7100');
   await expect(page.locator('[aria-live="polite"]').filter({ hasText: /after transport updated/i })).toHaveCount(1);
+});
+
+test('map and list controls show only the requested discovery view and preserve the URL state', async ({ page }) => {
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto(discoverPath);
+    await page.waitForLoadState('networkidle');
+    const list = page.locator('.discovery-outlets');
+    const map = page.locator('.discovery-map');
+
+    await expect(list).toBeVisible();
+    await expect(map).toBeHidden();
+    await page.locator('.map-view-switch').getByRole('button', { name: 'Map', exact: true }).click();
+    await expect(map).toBeVisible();
+    await expect(list).toBeHidden();
+    await expect(page).toHaveURL(/view=map/);
+
+    await page.locator('.map-view-switch').getByRole('button', { name: 'List', exact: true }).click();
+    await expect(list).toBeVisible();
+    await expect(map).toBeHidden();
+    await expect(page).toHaveURL(/view=list/);
+  }
 });
 
 test('removing a compared outlet updates the URL so refresh does not restore it', async ({ page }) => {

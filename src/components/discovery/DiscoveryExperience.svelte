@@ -38,7 +38,6 @@
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
-  let filtersOpen = $state(false);
   let compareNotice = $state('');
 
   // Editable harvest draft
@@ -179,6 +178,12 @@
     }
 
     comparedIds = [...comparedIds, id];
+  }
+
+  function handleOutletCardPointer(event: PointerEvent, id: string) {
+    const target = event.target;
+    if (target instanceof Element && target.closest('a, button, input, select, textarea, summary, [role="button"]')) return;
+    handleToggleCompare(id);
   }
 
   function resetHarvestEditDraft() {
@@ -350,7 +355,6 @@
         </svg>
         <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
-    <button type="button" class="docket-filter-toggle" onclick={() => filtersOpen = !filtersOpen} aria-expanded={filtersOpen} aria-controls="discovery-filters">{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</button>
     </div>
     <div class="docket-summary">
       <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
@@ -437,13 +441,13 @@
     {/if}
   </div>
 
-  <div id="discovery-filters" class={`discovery-filters ${filtersOpen ? 'is-open' : ''} flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center`}>
+  <div id="discovery-filters" class="discovery-filters flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center">
     
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:flex-col lg:items-stretch lg:overflow-visible">
-      <!-- Mobile Segmented Toggle -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:overflow-visible">
+      <!-- Keep the map/list switch in the page flow so it cannot cover map controls. -->
       <div
-        class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
+        class="map-view-switch inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
         role="group"
         aria-label={lang === 'fil' ? 'Piliin ang listahan o mapa' : 'Choose list or map view'}
       >
@@ -467,7 +471,7 @@
           type="button"
           onclick={() => setView('map')}
           aria-pressed={activeMobileView === 'map'}
-          class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
             activeMobileView === 'map'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
@@ -484,7 +488,7 @@
 
       <!-- Filter Pills (Horizontally scrollable on mobile) -->
       <div
-        class="flex items-center gap-1.5 shrink-0 lg:grid lg:grid-cols-2"
+        class="flex items-center gap-1.5 shrink-0"
         role="group"
         aria-label={lang === 'fil' ? 'I-filter ayon sa pagkakatugma' : 'Filter by fit status'}
       >
@@ -554,7 +558,7 @@
     </div>
 
     <!-- Right: Sort By Dropdown -->
-    <div class="flex items-center justify-between gap-2 shrink-0 lg:border-t lg:border-[#20251E]/15 lg:pt-3">
+    <div class="flex items-center justify-between gap-2 shrink-0">
       <div class="flex items-center gap-1.5 text-xs text-[#4A5245]">
         <label for="sort-by-select" class="font-semibold">{lang === 'fil' ? 'Ayusin:' : 'Sort:'}</label>
         <select
@@ -602,6 +606,7 @@
     <div class={`discovery-outlets ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
       <header class="ledger-heading">
         <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} ({filteredOutlets.length})</h2>
+        <p class="text-xs text-[#4A5245]">{lang === 'fil' ? 'Piliin ang lugar para paghambingin (hanggang 3).' : 'Select a place to compare (up to 3).'}</p>
       </header>
       
       {#if filteredOutlets.length === 0}
@@ -631,12 +636,13 @@
       {:else}
         <!-- Outlets List -->
         {#each filteredOutlets as item, index (item.outlet.id)}
-          <article
-            id={`outlet-card-${item.outlet.id}`}
-            aria-current={selectedOutletId === item.outlet.id ? 'true' : undefined}
-            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''}`}
-          >
-            <button type="button" class="ledger-number" onclick={() => handleSelectPin(item.outlet.id)} aria-label={`${lang === 'fil' ? 'Piliin' : 'Select'} ${item.outlet.name} ${lang === 'fil' ? 'sa mapa' : 'on map'}`}>{index + 1}</button>
+            <article
+              id={`outlet-card-${item.outlet.id}`}
+              aria-current={selectedOutletId === item.outlet.id ? 'true' : undefined}
+              class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''} ${item.isCompared ? 'is-compared' : ''}`}
+              onpointerup={(event) => handleOutletCardPointer(event, item.outlet.id)}
+            >
+              <button type="button" class="ledger-number" onclick={() => handleSelectPin(item.outlet.id)} aria-label={`${lang === 'fil' ? 'Piliin' : 'Select'} ${item.outlet.name} ${lang === 'fil' ? 'sa mapa' : 'on map'}`}>{index + 1}</button>
             <!-- Card Header: Fit Badge + Category + Distance -->
             <div class="flex flex-wrap items-center justify-between gap-2">
               <!-- Fit Status Badge -->
@@ -793,17 +799,20 @@
 
             <!-- Card Actions Footer -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
-              <!-- Add to compare checkbox -->
-              <label class="flex min-h-11 items-center gap-2 rounded-lg px-1 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={item.isCompared}
-                  aria-disabled={!item.isCompared && comparedIds.length >= 3}
-                  onchange={() => handleToggleCompare(item.outlet.id)}
-                  class="rounded text-[#486320] focus:ring-[#597928] w-4 h-4 cursor-pointer"
-                />
-                <span>{item.isCompared ? (lang === 'fil' ? 'Nasa paghahambing' : 'In comparison') : t('addToCompare', lang)}</span>
-              </label>
+              <button
+                type="button"
+                onclick={() => handleToggleCompare(item.outlet.id)}
+                aria-pressed={item.isCompared}
+                aria-label={item.isCompared
+                  ? `${lang === 'fil' ? 'Alisin sa paghahambing' : 'Remove'} ${item.outlet.name} ${lang === 'fil' ? 'sa listahan ng paghahambing' : 'from compare'}`
+                  : `${lang === 'fil' ? 'Idagdag sa paghahambing' : 'Add'} ${item.outlet.name} ${lang === 'fil' ? 'sa paghahambing' : 'to compare'}`}
+                class={`ledger-select-action inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${item.isCompared ? 'border-[#597928] bg-[#EAF3DE] text-[#3B5B16]' : 'border-[#20251E]/20 bg-[#FFFDF8] text-[#4A5245] hover:border-[#597928]'}`}
+              >
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  {#if item.isCompared}<path d="m4 10 4 4 8-8" />{:else}<path d="M10 4v12M4 10h12" />{/if}
+                </svg>
+                <span>{item.isCompared ? (lang === 'fil' ? 'Nasa paghahambing' : 'Selected') : t('addToCompare', lang)}</span>
+              </button>
 
               <!-- View Details Link -->
               <a
@@ -825,10 +834,6 @@
 
     <!-- Dominant synchronized map plate -->
     <div class={`almanac-map discovery-map ${activeMobileView === 'list' ? 'hidden' : 'block'}`}>
-      <div class="map-view-switch" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
-        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class:active={activeMobileView === 'map'}>{lang === 'fil' ? 'Mapa' : 'Map'}</button>
-        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class:active={activeMobileView === 'list'}>{lang === 'fil' ? 'Listahan' : 'List'}</button>
-      </div>
       <LiveLagunaMap
         items={filteredOutlets}
         {harvest}
