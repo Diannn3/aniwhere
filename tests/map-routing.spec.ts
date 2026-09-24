@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { todayInManila } from '../src/lib/state/url-state';
-import { CURRENT_OUTLETS } from '../src/lib/data/current-market';
+import { DEMO_OUTLETS } from '../src/content/demo-outlets';
 import { LAGUNA_MUNICIPALITIES } from '../src/content/municipalities';
 import { calculateStraightLineDistanceKm } from '../src/lib/domain/distance';
 import { getOutletRouteEstimate, sharedDistanceBasis } from '../src/lib/routing/routing-matrix';
@@ -10,7 +10,7 @@ const mapPath =
 
 function routeFor(outletId: string) {
   const origin = LAGUNA_MUNICIPALITIES.find((item) => item.id === 'los-banos')!;
-  const outlet = CURRENT_OUTLETS.find((item) => item.id === outletId)!;
+  const outlet = DEMO_OUTLETS.find((item) => item.id === outletId)!;
   const straightLine = calculateStraightLineDistanceKm(
     origin.lat,
     origin.lng,
