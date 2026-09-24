@@ -36,6 +36,7 @@
   // Filters
   let statusFilter = $state<'all' | 'match' | 'partial' | 'confirm' | 'no_match'>('all');
   let sortBy = $state<'fit' | 'distance'>('fit');
+  let filtersOpen = $state(false);
 
   // Local state
   let savedIds = $state<string[]>([]);
@@ -44,6 +45,7 @@
   let compareNotice = $state('');
   let mobilePickerInset = $state(0);
   let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
+  let mapStageElement: HTMLElement | undefined = $state();
 
   // Editable harvest draft
   let editCrop = $state(initialQuery.harvest.crop);
@@ -113,6 +115,33 @@
       }
       comparedIds = comparedIds.filter((id) => outlets.some((outlet) => outlet.id === id));
     });
+  });
+
+  function updateMapStageHeight() {
+    if (!mapStageElement || typeof window === 'undefined') return;
+    if (!window.matchMedia('(max-width: 1023px)').matches) {
+      mapStageElement.style.height = '';
+      return;
+    }
+    if (currentView() !== 'map') return;
+    const availableHeight = window.innerHeight - mapStageElement.getBoundingClientRect().top;
+    const height = Math.max(280, Math.min(720, availableHeight));
+    if (Math.abs(mapStageElement.getBoundingClientRect().height - height) > 1) {
+      mapStageElement.style.height = `${Math.round(height)}px`;
+    }
+  }
+
+  onMount(() => {
+    const scheduleUpdate = () => requestAnimationFrame(updateMapStageHeight);
+    const page = document.querySelector('.discovery-page');
+    const observer = new ResizeObserver(scheduleUpdate);
+    if (page) observer.observe(page);
+    window.addEventListener('resize', scheduleUpdate);
+    scheduleUpdate();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+    };
   });
 
   const originCoords = $derived(
@@ -304,6 +333,7 @@
   function setView(view: 'list' | 'map') {
     activeView = view;
     if (view === 'map') mapOpened = true;
+    requestAnimationFrame(updateMapStageHeight);
     syncDiscoveryUrl();
     if (view === 'list' && selectedOutletId) {
       scrollSelectedIntoView(selectedOutletId);
@@ -496,6 +526,18 @@
         </button>
       </div>
 
+      <button
+        type="button"
+        class="discovery-filter-toggle"
+        aria-expanded={filtersOpen}
+        aria-controls="discovery-filter-options"
+        onclick={() => { filtersOpen = !filtersOpen; requestAnimationFrame(updateMapStageHeight); }}
+      >
+        <span>{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</span>
+        {#if statusFilter !== 'all' || sortBy === 'distance'}<span class="discovery-filter-active">{lang === 'fil' ? 'May pinili' : 'Active'}</span>{/if}
+      </button>
+
+      <div id="discovery-filter-options" class={`discovery-filter-options ${filtersOpen ? 'is-open' : ''}`}>
       <!-- Fit filters remain available without covering the map or results. -->
       <div
         class="discovery-status-filters"
@@ -593,6 +635,7 @@
         </button>
       {/if}
     </div>
+      </div>
   </div>
 
   {#if sortBy === 'distance'}
@@ -846,7 +889,7 @@
 
     <!-- The picker and map stay together in Map view. -->
     <div class="almanac-map discovery-map" style={`--map-picker-inset: ${mobilePickerInset}px`}>
-      <div class="discovery-map-stage">
+      <div class="discovery-map-stage" bind:this={mapStageElement}>
         <MapOutletPicker
           items={filteredOutlets}
           {harvest}
@@ -957,6 +1000,8 @@
 </div>
 
 <style>
+  .discovery-filter-toggle { display: none; }
+  .discovery-filter-options { display: contents; }
   .discovery-map { min-width: 0; }
   .discovery-map-stage { position: relative; display: grid; grid-template-columns: minmax(288px, 320px) minmax(0, 1fr); height: clamp(570px, 60.5vh, 720px); min-width: 0; overflow: hidden; }
   .discovery-map-canvas { position: relative; grid-column: 2; grid-row: 1; min-width: 0; height: 100%; overflow: hidden; }
@@ -981,6 +1026,19 @@
     .map-legend__rows { gap: 6px; }
   }
   @media (max-width: 767px) {
+    .discovery-filters { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; padding-block: 8px; }
+    .discovery-filters .map-view-switch { width: auto; margin: 0; }
+    .discovery-filters .map-view-switch button { flex: initial; min-width: 0; padding-inline: 10px; }
+    .discovery-filter-toggle { display: flex; min-width: 0; min-height: 44px; align-items: center; justify-content: space-between; gap: 6px; border: 1px solid rgb(32 37 30 / 0.18); border-radius: 12px; background: #fffdf8; padding: 8px 12px; color: #20251e; font-size: 13px; font-weight: 700; text-align: left; }
+    .discovery-filter-toggle:focus-visible { outline: 3px solid #486320; outline-offset: 2px; }
+    .discovery-filter-active { color: #486320; font-size: 11px; }
+    .discovery-filter-options { display: none; grid-column: 1 / -1; min-width: 0; }
+    .discovery-filter-options.is-open { display: grid; gap: 10px; }
+    .discovery-filter-options .discovery-status-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .discovery-filter-options .discovery-status-filters button { min-width: 0; min-height: 44px; padding-inline: 8px; line-height: 1.25; white-space: normal; }
+    .discovery-filter-options .discovery-sort-controls { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
+    .discovery-filter-options .discovery-sort-controls > div { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: space-between; gap: 8px; }
+    .discovery-filter-options .discovery-sort-controls select { max-width: 70%; min-height: 44px; }
     .map-legend { right: 8px; top: 8px; width: 138px; padding: 8px; font-size: 10px; }
     .map-legend__rows { gap: 5px; }
     .map-legend__rows span { gap: 6px; }

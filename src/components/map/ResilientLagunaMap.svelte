@@ -51,7 +51,8 @@
     const normX = (lng - MIN_LNG) / (MAX_LNG - MIN_LNG);
     const normY = (MAX_LAT - lat) / (MAX_LAT - MIN_LAT); // Invert Y
     const paddingX = 40;
-    const paddingTop = 45;
+    // Keep every outlet hit target clear of the mobile picker and bottom nav.
+    const paddingTop = mobilePickerInset > 0 ? 20 : 45;
     const innerW = SVG_WIDTH - paddingX * 2;
     const visibleSvgHeight = SVG_HEIGHT * (1 - Math.min(mobilePickerInset / 570, 0.88));
     const innerH = Math.min(205, Math.max(50, visibleSvgHeight - paddingTop - 28));

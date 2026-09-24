@@ -92,6 +92,8 @@ test('mobile map pins and the shared outlet picker stay synchronized', async ({ 
   await expect(selectedRow).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.map-picker__selection')).toContainText('Kusina Verde Processing House');
 
+  await page.locator('.map-picker').getByRole('button', { name: 'Collapse' }).click();
+  await page.locator('.discovery-map-stage').scrollIntoViewIfNeeded();
   const processorPin = page.getByRole('group', { name: /Illustrative Laguna outlet map/ })
     .getByRole('button', { name: /Ani at Agos Farmers Cooperative:/i });
   await processorPin.click();
