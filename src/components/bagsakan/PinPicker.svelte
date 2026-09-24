@@ -57,8 +57,14 @@
   });
 
   $effect(() => {
-    if (marker && Number.isFinite(lat) && Number.isFinite(lng)) {
-      marker.setLngLat([lng, lat]);
+    // Read the reactive props before checking the non-reactive MapLibre marker.
+    // Otherwise the first pre-load effect run short-circuits on marker ===
+    // undefined and Svelte never subscribes this effect to later coordinate
+    // changes.
+    const nextLat = lat;
+    const nextLng = lng;
+    if (marker && Number.isFinite(nextLat) && Number.isFinite(nextLng)) {
+      marker.setLngLat([nextLng, nextLat]);
     }
   });
 
