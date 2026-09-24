@@ -138,6 +138,21 @@ pnpm dev
 
 The default example config uses `PUBLIC_DATA_MODE=demo`.
 
+For local Bagsakan road routing in development, set the private key in the shell before starting Astro:
+
+```bash
+ORS_API_KEY=... pnpm dev
+```
+
+On PowerShell:
+
+```powershell
+$env:ORS_API_KEY="..."
+pnpm dev
+```
+
+The dev server exposes a same-origin `/api/route-estimate` bridge; the browser never receives the ORS key. Production serverless deployments should keep `ORS_API_KEY` server-only and set `PUBLIC_RUNTIME_ROUTING_ENDPOINT=/api/route-estimate` at build time.
+
 Verification:
 
 ```bash
@@ -157,7 +172,7 @@ ORS_API_KEY=... pnpm routing:generate:geometry
 
 Routing inputs are checked against the current municipality and checked-in demo-place data and fingerprinted into the generated artifact. Generation validates the complete matrix before atomic replacement. The ORS key is never sent to the browser, and CI scans the production bundle for ORS secret markers. Without a reviewed generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
 
-A same-device Bagsakan is intentionally not part of the static road matrix because its coordinates can be created or moved at runtime. It therefore keeps the labelled straight-line fallback until a future secure runtime-routing path is deliberately implemented.
+A same-device Bagsakan is intentionally not part of the static road matrix because its coordinates can be created or moved at runtime. When the secure runtime route endpoint is configured, AniWhere requests one on-demand ORS Directions route for the selected local Bagsakan and keeps the key server-side. If the endpoint, network, or provider is unavailable, the UI remains on the labelled straight-line fallback.
 
 See [docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md](./docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md).
 
