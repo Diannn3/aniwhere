@@ -115,6 +115,7 @@
     }
 
     const controller = new AbortController();
+    resolvedRoutes = {};
     routeLoadingIds = localOutlets.map((outlet) => outlet.id);
     for (const outlet of localOutlets) {
       const distance = calculateStraightLineDistanceKm(
