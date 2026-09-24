@@ -82,7 +82,7 @@ At runtime it currently uses:
 - browser `localStorage`;
 - a progressive Laguna map: MapLibre + OpenFreeMap when network/WebGL are available, with the in-repo SVG map as the resilient fallback;
 - deterministic Haversine straight-line distance;
-- a fail-closed road-routing matrix contract with an OpenRouteService artifact generator.
+- a fail-closed road-routing matrix contract with a drift-checked 10-origin × 11-outlet OpenRouteService artifact generator.
 
 It does **not** currently use:
 
@@ -142,15 +142,18 @@ pnpm check
 pnpm build
 ```
 
-Optional road-routing artifact generation (ops/CI only):
+Optional road-routing artifact generation (authorized ops only):
 
 ```bash
+pnpm routing:check
 ORS_API_KEY=... pnpm routing:generate
-# Add precomputed road geometry for all demo origin/outlet pairs:
+# Add versioned, lazily loaded road geometry for routed demo pairs:
 ORS_API_KEY=... pnpm routing:generate:geometry
 ```
 
-The ORS key is never sent to the browser. Without a generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
+Routing inputs are checked against the current municipality and demo-place data and fingerprinted into the generated artifact. Generation validates the full matrix before atomic replacement. The ORS key is never sent to the browser, and CI scans the production bundle for ORS secret markers. Without a reviewed generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
+
+See [docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md](./docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md).
 
 The same frontend checks run in GitHub Actions through `.github/workflows/ci.yml`.
 
