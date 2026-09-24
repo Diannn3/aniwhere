@@ -7,10 +7,9 @@
 
 ## Status
 
-The routing pipeline has been generalized and hardened, but the checked-in artifact remains deliberately
-`not_generated` until an authorized developer runs the generator with a private OpenRouteService key.
+The routing pipeline has been generalized and hardened. PR #14 committed the reviewed 10 × 11 OpenRouteService artifact and 106 route geometries. The current artifact is `partial` only because four co-located zero-distance pairs intentionally have Matrix metrics without synthetic polylines.
 
-No road distance or driving time is fabricated when that artifact is absent.
+Missing or invalid routing evidence still fails closed; AniWhere never fabricates a driving distance or duration.
 
 ## Current routing inputs
 
@@ -196,13 +195,10 @@ crossings, and distance/time remain plausible planning estimates.
 
 ## Bagsakan routing boundary
 
-The new same-device Bagsakan flow is preserved by the reconciliation merge. A local Bagsakan can be created
-or moved at runtime, so it is intentionally **not** part of the checked-in 10 × 11 static matrix. Its
-farmer-facing route context therefore stays on labelled straight-line distance. A future exact/runtime
-routing path must be designed separately with secure rate limiting and location-privacy controls.
+The same-device Bagsakan remains intentionally outside the checked-in 10 × 11 matrix because its coordinates can be created or moved at runtime.
+
+The runtime-routing layer now resolves a selected local Bagsakan through a same-origin server endpoint that keeps `ORS_API_KEY` server-side, restricts origins to AniWhere's municipality references, restricts destinations to the Laguna map bounds, rate-limits requests, and falls back to Haversine when unavailable. Static outlets continue using the reviewed artifact with no runtime provider request.
 
 ## Remaining boundary
 
-Until a reviewed generated artifact is committed, the checked-in demo outlets also continue showing
-straight-line distance and `Road route unavailable`. That is intentional fail-closed behavior, not a
-reason to synthesize driving distance.
+Runtime Bagsakan road routing is operational on `pnpm dev` when `ORS_API_KEY` is supplied in the server process. Production remains fail-closed until the serverless route adapter is deployed with a rotated server-side ORS key and `PUBLIC_RUNTIME_ROUTING_ENDPOINT` points the frontend at that endpoint.
