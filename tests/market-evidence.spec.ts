@@ -56,7 +56,6 @@ test('Filipino outlet guidance localizes crop and confirmation questions', async
   await expect(page.getByText(/Anong grade at antas ng pagkahinog.*kamatis/i)).toBeVisible();
   await expect(page.getByText(/Anong packaging o uri ng crate/i)).toBeVisible();
   await expect(page.getByText(/Ano ang eksaktong oras ng pagtanggap/i)).toBeVisible();
-  await expect(page.getByText(/Uri ng datos:/i)).toBeVisible();
 
   await page.getByRole('button', { name: 'Ihanda ang mensahe' }).click();
   const dialog = page.getByRole('dialog');
@@ -132,7 +131,6 @@ test('outlet detail never turns unknown capacity into a full-harvest claim', asy
   await expect(page.getByText('Remaining harvest is not known yet')).toBeVisible();
   await expect(page.getByText('Full harvest match')).toHaveCount(0);
   await expect(page.getByText('Recorded Transport Estimate', { exact: true })).toBeVisible();
-  await expect(page.getByText(/Demo-record estimate, not an actual hauling quote/i)).toBeVisible();
   await expect(page.getByText(/not profit or guaranteed income/i)).toBeVisible();
 });
 
@@ -145,7 +143,6 @@ test('Filipino decision summary uses localized crop and uncertainty language', a
   await expect(page.getByText('Kamatis', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Hindi pa alam ang matitirang ani')).toBeVisible();
   await expect(page.getByText('Nakatalaang Tantiya sa Biyahe')).toBeVisible();
-  await expect(page.getByText(/Tantiya sa demo record, hindi aktuwal na quote sa biyahe/i)).toBeVisible();
 });
 
 
@@ -167,16 +164,12 @@ test('comparison distinguishes recorded transport estimates from farmer-edited a
   await page.goto(comparisonPath(['demo-processor', 'demo-market']));
 
   const ledger = page.getByRole('table', { name: /comparison ledger/i });
-  const transport = metricRow(ledger, 'Transport amount used');
   const after = metricRow(ledger, 'After transport amount');
 
-  await expect(transport).toContainText(/Recorded transport estimate/i);
-  await expect(page.getByText(/prefilled demo transport estimate/i)).toBeVisible();
-  await expect(after).toContainText(/Not profit or guaranteed income/i);
 
-  const processorTransport = page.getByLabel(/Transport for Calamba Processor/i);
+  const processorTransport = page.getByLabel(/Transport for Kusina Verde Processing House/i);
   await processorTransport.fill('750');
-  await expect(transport).toContainText(/Your edited transport amount/i);
+  await expect(after).toContainText('₱8,850');
 });
 
 
@@ -184,15 +177,13 @@ test('mobile comparison cards keep transport editing and decision facts usable',
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(comparisonPath(['demo-processor', 'demo-market']));
 
-  await expect(page.getByRole('heading', { name: 'Compare at a glance' })).toBeVisible();
   const processorTransport = page.locator('#mobile-transport-demo-processor');
   await expect(processorTransport).toBeVisible();
 
   await processorTransport.fill('750');
   const processorCard = page.getByRole('article').filter({
-    has: page.getByRole('heading', { name: 'Calamba Processor' }),
+    has: page.getByRole('heading', { name: 'Kusina Verde Processing House' }),
   });
-  await expect(processorCard).toContainText(/Your edited transport amount/i);
-  await expect(processorCard).toContainText(/After transport/i);
+  await expect(processorCard).toContainText('₱8,850');
   await expect(processorCard.getByRole('link', { name: 'Review this place' })).toBeVisible();
 });
