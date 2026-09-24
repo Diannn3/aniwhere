@@ -42,12 +42,13 @@ export async function loadRouteGeometry(
     return null;
   }
 
-  const existing = geometryCache.get(route.geometryPath);
+  const geometryPath = route.geometryPath;
+  const existing = geometryCache.get(geometryPath);
   if (existing) return existing;
 
   const request = (async () => {
     try {
-      const response = await fetchImpl(route.geometryPath, {
+      const response = await fetchImpl(geometryPath, {
         headers: { Accept: 'application/geo+json, application/json' },
       });
       if (!response.ok) return null;
@@ -58,9 +59,9 @@ export async function loadRouteGeometry(
     }
   })();
 
-  geometryCache.set(route.geometryPath, request);
+  geometryCache.set(geometryPath, request);
   const result = await request;
-  if (!result) geometryCache.delete(route.geometryPath);
+  if (!result) geometryCache.delete(geometryPath);
   return result;
 }
 
