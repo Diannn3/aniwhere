@@ -30,12 +30,16 @@
     selectedId = undefined,
     lang = 'en',
     onSelect = () => {},
+    routeOverride = undefined,
+    routeRequestState = 'idle',
   }: {
     items?: OutletWithFit[];
     harvest: HarvestQuery;
     selectedId?: string;
     lang?: 'en' | 'fil';
     onSelect?: (id: string) => void;
+    routeOverride?: OutletRouteEstimate;
+    routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   } = $props();
 
   let mapContainer: HTMLDivElement;
@@ -57,13 +61,14 @@
 
   const selectedItem = $derived(items.find((item) => item.outlet.id === selectedId));
   const selectedRoute = $derived<OutletRouteEstimate | undefined>(
-    selectedItem
-      ? getOutletRouteEstimate(
-          harvest.originMunicipality,
-          selectedItem.outlet.id,
-          selectedItem.distanceKm
-        )
-      : undefined
+    routeOverride ??
+      (selectedItem
+        ? getOutletRouteEstimate(
+            harvest.originMunicipality,
+            selectedItem.outlet.id,
+            selectedItem.distanceKm
+          )
+        : undefined)
   );
 
   function activeRouteGeometry(): RouteGeometry | undefined {
@@ -370,10 +375,24 @@
             </div>
             <div>
               <dt>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</dt>
-              <dd>{lang === 'fil' ? 'Hindi available' : 'Unavailable'}</dd>
+              <dd>
+                {routeRequestState === 'loading'
+                  ? (lang === 'fil' ? 'Nilo-load…' : 'Loading…')
+                  : routeRequestState === 'not_configured'
+                    ? (lang === 'fil' ? 'Hindi naka-configure' : 'Not configured')
+                    : routeRequestState === 'unavailable'
+                      ? (lang === 'fil' ? 'Pansamantalang hindi available' : 'Temporarily unavailable')
+                      : (lang === 'fil' ? 'Hindi available' : 'Unavailable')}
+              </dd>
             </div>
           </dl>
-          <p>{lang === 'fil' ? 'Mula ito sa reference point ng munisipyo. Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'This starts from the municipality reference point. The dashed line is geographic context only, not road directions.'}</p>
+          <p>
+            {routeRequestState === 'loading'
+              ? (lang === 'fil' ? 'Kinukuha ang rutang pangkalsada. Tuwid na konteksto muna ang ipinapakita.' : 'Fetching the road route. Straight-line context is shown while it loads.')
+              : routeRequestState === 'unavailable'
+                ? (lang === 'fil' ? 'Hindi na-load ang ruta sa ngayon. Ang putol-putol na linya ay tuwid na konteksto lamang.' : 'Road routing could not be loaded right now. The dashed line is straight-line context only.')
+                : (lang === 'fil' ? 'Mula ito sa reference point ng munisipyo. Ang putol-putol na linya ay konteksto lamang, hindi direksyon sa kalsada.' : 'This starts from the municipality reference point. The dashed line is geographic context only, not road directions.')}
+          </p>
         {/if}
       </aside>
     {/if}
