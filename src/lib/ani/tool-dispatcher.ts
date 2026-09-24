@@ -160,11 +160,13 @@ export class AniToolDispatcher {
             source: route.source,
             straightLineDistanceKm: route.straightLineDistanceKm,
             roadDistanceKm: route.roadDistanceKm,
+            roadDurationSeconds: route.roadDurationSeconds,
             roadDurationMinutes: route.roadDurationMinutes,
             provider: route.provider,
             profile: route.profile,
             generatedAt: route.generatedAt,
-            geometryAvailable: Boolean(route.geometry?.coordinates?.length),
+            geometryAvailable:
+              route.geometryStatus === 'ready' || Boolean(route.geometry?.coordinates?.length),
           };
 
           return { requestId: request.id, tool: request.name, ok: true, dataMode: CURRENT_DATA_MODE, data: facts };

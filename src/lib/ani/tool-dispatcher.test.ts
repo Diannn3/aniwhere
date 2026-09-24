@@ -58,6 +58,7 @@ describe('AniToolDispatcher', () => {
     expect(route.source).toBe('straight_line');
     expect(route.straightLineDistanceKm).toBeTypeOf('number');
     expect(route.roadDistanceKm).toBeNull();
+    expect(route.roadDurationSeconds).toBeNull();
     expect(route.roadDurationMinutes).toBeNull();
     expect(route.provider).toBeNull();
     expect(route.geometryAvailable).toBe(false);

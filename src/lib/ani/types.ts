@@ -87,6 +87,7 @@ export interface AniRouteFacts {
   source: 'road' | 'straight_line';
   straightLineDistanceKm: number;
   roadDistanceKm: number | null;
+  roadDurationSeconds: number | null;
   roadDurationMinutes: number | null;
   provider: 'openrouteservice' | null;
   profile: 'driving-car' | null;
