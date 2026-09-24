@@ -3,7 +3,8 @@
   import type { FitResult, HarvestQuery, Outlet } from '../../lib/domain/types';
   import { LAGUNA_MUNICIPALITIES } from '../../content/municipalities';
   import { getOutletRouteEstimate } from '../../lib/routing/routing-matrix';
-  import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import type { OutletRouteEstimate, RouteGeometry } from '../../lib/routing/routing-matrix';
+  import { loadRouteGeometry } from '../../lib/routing/route-geometry';
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import {
     loadAniwhereMapStyle,
@@ -42,6 +43,9 @@
   let maplibre: any;
   let originMarker: any;
   let outletMarkers: any[] = [];
+  let loadedRouteGeometry = $state<RouteGeometry | undefined>();
+  let geometryLoadState = $state<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+  let geometryRequestId = 0;
 
   const origin = $derived(
     LAGUNA_MUNICIPALITIES.find((item) => item.id === harvest.originMunicipality) ??
@@ -59,10 +63,15 @@
       : undefined
   );
 
+  function activeRouteGeometry(): RouteGeometry | undefined {
+    return loadedRouteGeometry ?? selectedRoute?.geometry;
+  }
+
   function routeCoordinates(): Array<[number, number]> {
     if (!selectedItem) return [];
-    if (selectedRoute?.geometry?.coordinates?.length) {
-      return selectedRoute.geometry.coordinates;
+    const geometry = activeRouteGeometry();
+    if (geometry?.coordinates?.length) {
+      return geometry.coordinates;
     }
     return [
       [origin.lng, origin.lat],
@@ -74,7 +83,8 @@
     return {
       type: 'Feature',
       properties: {
-        routeKind: selectedRoute?.source === 'road' && selectedRoute.geometry ? 'road' : 'straight_line',
+        routeKind:
+          selectedRoute?.source === 'road' && activeRouteGeometry() ? 'road' : 'straight_line',
       },
       geometry: {
         type: 'LineString',
@@ -153,7 +163,7 @@
       });
     }
 
-    const actualRoad = selectedRoute?.source === 'road' && Boolean(selectedRoute.geometry);
+    const actualRoad = selectedRoute?.source === 'road' && Boolean(activeRouteGeometry());
     map.setPaintProperty(
       'aniwhere-selected-route-line',
       'line-dasharray',
@@ -178,6 +188,29 @@
     syncMarkers();
     syncRoute();
   }
+
+  $effect(() => {
+    const route = selectedRoute;
+    const requestId = ++geometryRequestId;
+    loadedRouteGeometry = route?.geometry;
+    geometryLoadState = route?.geometry ? 'ready' : 'idle';
+
+    if (
+      route?.source === 'road' &&
+      !route.geometry &&
+      route.geometryStatus === 'ready' &&
+      route.geometryPath
+    ) {
+      geometryLoadState = 'loading';
+      void loadRouteGeometry(route).then((geometry) => {
+        if (requestId !== geometryRequestId) return;
+        loadedRouteGeometry = geometry ?? undefined;
+        geometryLoadState = geometry ? 'ready' : 'unavailable';
+      });
+    } else if (route?.source === 'road' && route.geometryStatus === 'unavailable') {
+      geometryLoadState = 'unavailable';
+    }
+  });
 
   $effect(() => {
     items;
