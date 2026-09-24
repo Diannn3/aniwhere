@@ -34,13 +34,15 @@ The core trust rule is that AniWhere should never convert missing or stale marke
 - no cloud persistence for farmer searches;
 - no production buyer authentication.
 
-Browser interactions such as saved outlets and the buyer-demo workspace still persist through local browser storage.
+Browser interactions such as saved outlets and the Bagsakan workspace persist through local browser storage. One Bagsakan profile can hold dated buying needs for different crops; those entries are visible to farmer views only in the same browser. They are not published or synchronized with a buyer network.
 
 The new `supabase/` directory is a **handoff scaffold**, not evidence that a remote database has been deployed.
 
 ### B. Demo and production data must stay distinguishable
 
 Current outlet terms are explicit fictional fixtures separated into places, crop capabilities, offers, sources, and hauling assumptions in `src/content/`. The demo shifts its sample dates relative to the current Manila date for offline presentation; the displayed freshness is illustrative, not evidence of recent verification.
+
+Local Bagsakan entries are converted to the same place/capability/offer/source contracts in the browser. Their source stays `demo`, even when a need is marked Active demo. A local entry is not a reviewed place or authenticated buyer offer. The legacy `aniwhere_buyer_offers` key is preserved but not migrated because its free-text location and delivery window cannot establish a valid Bagsakan profile or buying window.
 
 The trust-model v2 domain now carries:
 
@@ -63,6 +65,8 @@ Straight-line distance is still computed deterministically with Haversine. The c
 When a generated matrix cell exists, the UI may label its values **Road distance** and **Estimated drive**. Otherwise it continues to label Haversine as **Straight-line distance** and shows no invented driving time.
 
 Route distance/time remains separate from market evidence, buyer acceptance, fit state, and hauling expense.
+
+A locally created Bagsakan has no checked-in road-matrix cell. Its farmer result therefore uses a labelled straight-line distance, even when other fixture outlets have road routes.
 
 ---
 
@@ -90,7 +94,7 @@ Important semantics:
 - missing price cannot produce proceeds;
 - a fit result never reserves capacity.
 
-Quality, grade, variety, and packaging are not yet fully machine-evaluated in the local fixture engine. They remain conditions to confirm unless/until structured production data is available.
+Fixture quality, grade, variety, and packaging terms are not universally machine-evaluated. Explicit requirements entered in a local Bagsakan need use the existing deterministic structured-requirement checks; missing farmer detail remains **Contact to confirm**. Free-text notes and receiving hours remain terms to confirm rather than inferred arrival-time matches.
 
 ---
 
