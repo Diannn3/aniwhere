@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { createRoutingClient } from './lib/routing-provider.mjs';
 import {
   assertMatrixResponse,
+  assertRoutingPoints,
   createInputFingerprint,
   validateRouteGeometry,
   validateRoutingArtifact,
@@ -21,6 +22,7 @@ const WITH_GEOMETRY = process.argv.includes('--geometry');
 
 const pointsPath = resolve('scripts/routing-points.json');
 const routingPoints = JSON.parse(await readFile(pointsPath, 'utf8'));
+assertRoutingPoints(routingPoints.origins, routingPoints.outlets);
 
 const origins = routingPoints.origins.map(({ id, name, lat, lng }) => [id, name, lat, lng]);
 const outlets = routingPoints.outlets.map(({ id, name, lat, lng }) => [id, name, lat, lng]);

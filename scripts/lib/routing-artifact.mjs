@@ -5,6 +5,33 @@ function finiteNonNegative(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0;
 }
 
+export function assertRoutingPoints(origins, outlets) {
+  for (const [label, points] of [['origin', origins], ['outlet', outlets]]) {
+    if (!Array.isArray(points) || points.length === 0) {
+      throw new Error(`Routing ${label} points are missing.`);
+    }
+    const seen = new Set();
+    for (const point of points) {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(point?.id || '')) {
+        throw new Error(`Routing ${label} ID is not safe: ${point?.id ?? 'missing'}`);
+      }
+      if (seen.has(point.id)) throw new Error(`Duplicate routing ${label} ID: ${point.id}`);
+      seen.add(point.id);
+      if (
+        typeof point.name !== 'string' ||
+        !Number.isFinite(point.lat) ||
+        point.lat < -90 ||
+        point.lat > 90 ||
+        !Number.isFinite(point.lng) ||
+        point.lng < -180 ||
+        point.lng > 180
+      ) {
+        throw new Error(`Routing ${label} point is invalid: ${point.id}`);
+      }
+    }
+  }
+}
+
 export function createInputFingerprint({ provider, providerBase, profile, origins, outlets }) {
   const compact = (points) =>
     points
