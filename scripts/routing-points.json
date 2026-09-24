@@ -1,0 +1,132 @@
+{
+  "origins": [
+    {
+      "id": "los-banos",
+      "name": "Los Baños, Laguna",
+      "lat": 14.17,
+      "lng": 121.241
+    },
+    {
+      "id": "santa-cruz",
+      "name": "Santa Cruz, Laguna",
+      "lat": 14.281,
+      "lng": 121.417
+    },
+    {
+      "id": "calamba",
+      "name": "Calamba, Laguna",
+      "lat": 14.214,
+      "lng": 121.164
+    },
+    {
+      "id": "san-pablo",
+      "name": "San Pablo, Laguna",
+      "lat": 14.067,
+      "lng": 121.325
+    },
+    {
+      "id": "cabuyao",
+      "name": "Cabuyao, Laguna",
+      "lat": 14.278,
+      "lng": 121.124
+    },
+    {
+      "id": "nagcarlan",
+      "name": "Nagcarlan, Laguna",
+      "lat": 14.135,
+      "lng": 121.417
+    },
+    {
+      "id": "pagsanjan",
+      "name": "Pagsanjan, Laguna",
+      "lat": 14.273,
+      "lng": 121.454
+    },
+    {
+      "id": "liliw",
+      "name": "Liliw, Laguna",
+      "lat": 14.133,
+      "lng": 121.433
+    },
+    {
+      "id": "bay",
+      "name": "Bay, Laguna",
+      "lat": 14.183,
+      "lng": 121.283
+    },
+    {
+      "id": "victoria",
+      "name": "Victoria, Laguna",
+      "lat": 14.233,
+      "lng": 121.333
+    }
+  ],
+  "outlets": [
+    {
+      "id": "demo-cooperative",
+      "name": "Ani at Agos Farmers Cooperative",
+      "lat": 14.281,
+      "lng": 121.417
+    },
+    {
+      "id": "demo-processor",
+      "name": "Kusina Verde Processing House",
+      "lat": 14.214,
+      "lng": 121.164
+    },
+    {
+      "id": "demo-market",
+      "name": "Sariwa sa Los Baños Market Collective",
+      "lat": 14.18,
+      "lng": 121.243
+    },
+    {
+      "id": "demo-msme-confirm",
+      "name": "Timpladong Ani Kitchen",
+      "lat": 14.067,
+      "lng": 121.325
+    },
+    {
+      "id": "demo-organic-shop",
+      "name": "Dahon at Gulay Café",
+      "lat": 14.133,
+      "lng": 121.433
+    },
+    {
+      "id": "demo-bay-trading",
+      "name": "Bay Luntian Trading Post",
+      "lat": 14.185,
+      "lng": 121.285
+    },
+    {
+      "id": "demo-pagsanjan-hub",
+      "name": "Pagsanjan Ilog Harvest Hub",
+      "lat": 14.275,
+      "lng": 121.459
+    },
+    {
+      "id": "demo-binan-store",
+      "name": "Biñan Sariwa Corner",
+      "lat": 14.337,
+      "lng": 121.105
+    },
+    {
+      "id": "demo-nagcarlan-kitchen",
+      "name": "Nagcarlan Hinog Kitchen",
+      "lat": 14.137,
+      "lng": 121.417
+    },
+    {
+      "id": "demo-cabuyao-commissary",
+      "name": "Cabuyao Sangkap Commissary",
+      "lat": 14.246,
+      "lng": 121.124
+    },
+    {
+      "id": "demo-victoria-eatery",
+      "name": "Silangan Hapunan Eatery",
+      "lat": 14.23,
+      "lng": 121.33
+    }
+  ]
+}

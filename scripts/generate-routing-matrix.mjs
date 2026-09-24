@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const API_KEY = process.env.ORS_API_KEY;
@@ -11,26 +11,11 @@ const BASE = process.env.ORS_BASE_URL || 'https://api.heigit.org/openrouteservic
 const PROFILE = 'driving-car';
 const WITH_GEOMETRY = process.argv.includes('--geometry');
 
-const origins = [
-  ['los-banos', 'Los Baños, Laguna', 14.170, 121.241],
-  ['santa-cruz', 'Santa Cruz, Laguna', 14.281, 121.417],
-  ['calamba', 'Calamba, Laguna', 14.214, 121.164],
-  ['san-pablo', 'San Pablo, Laguna', 14.067, 121.325],
-  ['cabuyao', 'Cabuyao, Laguna', 14.278, 121.124],
-  ['nagcarlan', 'Nagcarlan, Laguna', 14.135, 121.417],
-  ['pagsanjan', 'Pagsanjan, Laguna', 14.273, 121.454],
-  ['liliw', 'Liliw, Laguna', 14.133, 121.433],
-  ['bay', 'Bay, Laguna', 14.183, 121.283],
-  ['victoria', 'Victoria, Laguna', 14.233, 121.333],
-];
+const pointsPath = resolve('scripts/routing-points.json');
+const routingPoints = JSON.parse(await readFile(pointsPath, 'utf8'));
 
-const outlets = [
-  ['demo-cooperative', 'Demo Cooperative', 14.281, 121.417],
-  ['demo-processor', 'Demo Processor', 14.214, 121.164],
-  ['demo-market', 'Demo Market', 14.180, 121.243],
-  ['demo-msme-confirm', 'Demo MSME (Confirm Capacity)', 14.067, 121.325],
-  ['demo-organic-shop', 'Demo Organic Shop', 14.133, 121.433],
-];
+const origins = routingPoints.origins.map(({ id, name, lat, lng }) => [id, name, lat, lng]);
+const outlets = routingPoints.outlets.map(({ id, name, lat, lng }) => [id, name, lat, lng]);
 
 const locations = [...origins, ...outlets].map(([, , lat, lng]) => [lng, lat]);
 const sourceIndexes = origins.map((_, index) => index);
@@ -94,7 +79,7 @@ for (let oi = 0; oi < origins.length; oi += 1) {
 }
 
 if (WITH_GEOMETRY) {
-  console.log('Fetching route geometry for 50 demo origin/outlet pairs at a conservative rate...');
+  console.log(`Fetching route geometry for ${origins.length * outlets.length} demo origin/outlet pairs at a conservative rate...`);
   for (const [originId, , originLat, originLng] of origins) {
     for (const [outletId, , outletLat, outletLng] of outlets) {
       const cell = artifact.cells[originId][outletId];
