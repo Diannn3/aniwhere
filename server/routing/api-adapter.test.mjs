@@ -21,6 +21,51 @@ describe('runtime route API adapter', () => {
     expect(res.headers.Allow).toBe('POST');
   });
 
+  it('rejects cross-site browser requests before provider work', async () => {
+    const res = response();
+    await handler({
+      method: 'POST',
+      headers: {
+        origin: 'https://attacker.example',
+        host: 'aniwhere.example',
+        'x-forwarded-proto': 'https',
+      },
+      socket: {},
+      body: {
+        originMunicipalityId: 'los-banos',
+        destination: { lat: 14.275, lng: 121.459 },
+      },
+    }, res);
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toEqual({ error: 'origin_not_allowed' });
+  });
+
+  it('allows the same browser origin to reach normal validation', async () => {
+    const previous = process.env.ORS_API_KEY;
+    delete process.env.ORS_API_KEY;
+    try {
+      const res = response();
+      await handler({
+        method: 'POST',
+        headers: {
+          origin: 'https://aniwhere.example',
+          host: 'aniwhere.example',
+          'x-forwarded-proto': 'https',
+        },
+        socket: { remoteAddress: '127.0.0.3' },
+        body: {
+          originMunicipalityId: 'los-banos',
+          destination: { lat: 14.275, lng: 121.459 },
+        },
+      }, res);
+      expect(res.statusCode).toBe(503);
+      expect(res.body).toEqual({ error: 'routing_not_configured' });
+    } finally {
+      if (previous === undefined) delete process.env.ORS_API_KEY;
+      else process.env.ORS_API_KEY = previous;
+    }
+  });
+
   it('rejects oversized bodies before provider work', async () => {
     const res = response();
     await handler({
