@@ -162,4 +162,104 @@ export const DEMO_CAPABILITIES: PlaceCropCapabilityRecord[] = [
     conditions: ['No papaya shelf space in the sample plan'], conditionsFil: ['Walang puwesto para sa papaya sa halimbawang plano'],
     ...DEMO_EVIDENCE,
   },
+  {
+    id: 'cap-demo-market-pechay', placeId: 'demo-market', cropKey: 'pechay', acceptanceState: 'accepted',
+    conditions: ['Keep leaves shaded until morning receiving'], conditionsFil: ['Ilagay sa lilim ang dahon hanggang sa pagtanggap sa umaga'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-binan-pechay', placeId: 'demo-binan-store', cropKey: 'pechay', acceptanceState: 'accepted',
+    conditions: ['Bundle by size; no yellow leaves'], conditionsFil: ['Itali ayon sa laki; walang naninilaw na dahon'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-bay-pechay', placeId: 'demo-bay-trading', cropKey: 'pechay', acceptanceState: 'accepted',
+    conditions: ['Deliver before the midday heat'], conditionsFil: ['Ihatid bago ang matinding init ng tanghali'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-victoria-pechay', placeId: 'demo-victoria-eatery', cropKey: 'pechay', acceptanceState: 'accepted',
+    conditions: ['Same-day leaves only; price to be agreed'], conditionsFil: ['Dahong pinitas sa araw ding iyon; pag-usapan muna ang presyo'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-nagcarlan-pechay', placeId: 'demo-nagcarlan-kitchen', cropKey: 'pechay', acceptanceState: 'unknown',
+    conditions: ['Ask whether the menu needs leafy greens'], conditionsFil: ['Itanong kung kailangan ng madahong gulay sa menu'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cabuyao-pechay', placeId: 'demo-cabuyao-commissary', cropKey: 'pechay', acceptanceState: 'excluded',
+    conditions: ['Leafy greens are not processed here in this sample'],
+    conditionsFil: ['Hindi pinoproseso rito ang madahong gulay sa halimbawang ito'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-bay-sitaw', placeId: 'demo-bay-trading', cropKey: 'sitaw', acceptanceState: 'accepted',
+    conditions: ['Tie straight pods in loose bundles'], conditionsFil: ['Itali nang maluwag ang tuwid na bunga'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-binan-sitaw', placeId: 'demo-binan-store', cropKey: 'sitaw', acceptanceState: 'accepted',
+    conditions: ['No wilted pods; pack in ventilated baskets'],
+    conditionsFil: ['Walang lantang bunga; ilagay sa maaliwalas na basket'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-pagsanjan-sitaw', placeId: 'demo-pagsanjan-hub', cropKey: 'sitaw', acceptanceState: 'accepted',
+    conditions: ['Truck space is assigned only after a call'], conditionsFil: ['Itinatakda lamang ang puwesto sa trak pagkatapos tumawag'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-victoria-sitaw', placeId: 'demo-victoria-eatery', cropKey: 'sitaw', acceptanceState: 'accepted',
+    conditions: ['Small kitchen batches; confirm price on arrival'],
+    conditionsFil: ['Maliit na batch para sa kusina; kumpirmahin ang presyo pagdating'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cabuyao-sitaw', placeId: 'demo-cabuyao-commissary', cropKey: 'sitaw', acceptanceState: 'excluded',
+    conditions: ['No sitaw in the sample prep schedule'], conditionsFil: ['Walang sitaw sa halimbawang iskedyul ng paghahanda'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-bay-tomato', placeId: 'demo-bay-trading', cropKey: 'tomato', acceptanceState: 'accepted',
+    conditions: ['Separate firm from soft fruit for stall sales'], conditionsFil: ['Ihiwalay ang matigas sa malambot na bunga para sa puwesto'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-binan-tomato', placeId: 'demo-binan-store', cropKey: 'tomato', acceptanceState: 'accepted',
+    conditions: ['Table-ripe only in stackable crates'], conditionsFil: ['Pang-mesang hinog lang sa patung-patong na kahon'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cabuyao-tomato', placeId: 'demo-cabuyao-commissary', cropKey: 'tomato', acceptanceState: 'accepted',
+    conditions: ['Confirm recipe grade and batch availability'],
+    conditionsFil: ['Kumpirmahin ang klaseng kailangan sa resipe at bakanteng batch'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-pagsanjan-eggplant', placeId: 'demo-pagsanjan-hub', cropKey: 'eggplant', acceptanceState: 'accepted',
+    conditions: ['Pack firm eggplant in shallow crates'], conditionsFil: ['Ilagay ang matibay na talong sa mababaw na kahon'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-victoria-eggplant', placeId: 'demo-victoria-eatery', cropKey: 'eggplant', acceptanceState: 'accepted',
+    conditions: ['Short same-day kitchen order'], conditionsFil: ['Maliit na order para sa kusina sa araw ding iyon'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-nagcarlan-calamansi', placeId: 'demo-nagcarlan-kitchen', cropKey: 'calamansi', acceptanceState: 'accepted',
+    conditions: ['Clean, firm fruit for preserves'], conditionsFil: ['Malinis at matibay na prutas para sa palaman'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-cabuyao-calamansi', placeId: 'demo-cabuyao-commissary', cropKey: 'calamansi', acceptanceState: 'accepted',
+    conditions: ['Request sample for juice yield before booking'],
+    conditionsFil: ['Magpasa ng sample para sa dami ng katas bago magpa-iskedyul'],
+    ...DEMO_EVIDENCE,
+  },
+  {
+    id: 'cap-demo-victoria-calamansi', placeId: 'demo-victoria-eatery', cropKey: 'calamansi', acceptanceState: 'unknown',
+    conditions: ['Ask whether the menu needs calamansi'], conditionsFil: ['Itanong kung kailangan ng kalamansi sa menu'],
+    ...DEMO_EVIDENCE,
+  },
 ];
