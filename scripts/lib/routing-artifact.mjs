@@ -52,6 +52,20 @@ export function createInputFingerprint({ provider, providerBase, profile, origin
     .digest('hex');
 }
 
+export function extractEngineMetadata(payload) {
+  const engine = payload?.metadata?.engine;
+  if (!engine || typeof engine !== 'object') return undefined;
+
+  const candidate = {
+    version: typeof engine.version === 'string' ? engine.version : undefined,
+    buildDate: typeof engine.build_date === 'string' ? engine.build_date : undefined,
+    graphDate: typeof engine.graph_date === 'string' ? engine.graph_date : undefined,
+    osmDate: typeof engine.osm_date === 'string' ? engine.osm_date : undefined,
+  };
+
+  return Object.values(candidate).some(Boolean) ? candidate : undefined;
+}
+
 export function assertMatrixResponse(matrix, originCount, outletCount) {
   if (!Array.isArray(matrix?.distances) || !Array.isArray(matrix?.durations)) {
     throw new Error('Routing matrix response is missing distances or durations.');

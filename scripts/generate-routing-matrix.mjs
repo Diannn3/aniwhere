@@ -5,6 +5,7 @@ import {
   assertMatrixResponse,
   assertRoutingPoints,
   createInputFingerprint,
+  extractEngineMetadata,
   validateRouteGeometry,
   validateRoutingArtifact,
   writeJsonAtomic,
@@ -66,6 +67,7 @@ const artifact = {
   attribution: 'Routing data © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
   inputFingerprint,
   geometryRunId,
+  engine: extractEngineMetadata(matrix),
   note: WITH_GEOMETRY
     ? 'Road matrix and route geometries generated from OpenRouteService.'
     : 'Road matrix generated from OpenRouteService. Geometry was not requested.',

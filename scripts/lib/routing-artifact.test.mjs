@@ -3,6 +3,7 @@ import {
   assertMatrixResponse,
   assertRoutingPoints,
   createInputFingerprint,
+  extractEngineMetadata,
   validateRouteGeometry,
   validateRoutingArtifact,
 } from './routing-artifact.mjs';
@@ -79,6 +80,26 @@ describe('routing artifact validation', () => {
 
     expect(createInputFingerprint(args)).toBe(createInputFingerprint(reversed));
     expect(createInputFingerprint(args)).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('copies provider engine metadata only when the provider actually returns it', () => {
+    expect(
+      extractEngineMetadata({
+        metadata: {
+          engine: {
+            version: '9.10.0',
+            build_date: '2026-07-01T00:00:00Z',
+            graph_date: '2026-09-20T00:00:00Z',
+          },
+        },
+      })
+    ).toEqual({
+      version: '9.10.0',
+      buildDate: '2026-07-01T00:00:00Z',
+      graphDate: '2026-09-20T00:00:00Z',
+      osmDate: undefined,
+    });
+    expect(extractEngineMetadata({ metadata: {} })).toBeUndefined();
   });
 
   it('accepts routed and explicitly unavailable matrix cells', () => {
