@@ -1,3 +1,4 @@
+import { isRouteGeometry } from './route-geometry';
 import type { OutletRouteEstimate } from './routing-matrix';
 
 const memory = new Map<string, OutletRouteEstimate>();
@@ -9,6 +10,31 @@ export function runtimeRouteCacheKey(
   lng: number
 ): string {
   return `${originMunicipalityId}:${lat.toFixed(6)}:${lng.toFixed(6)}:driving-car`;
+}
+
+function finiteNonNegative(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+export function isCachedRuntimeRoute(value: unknown): value is OutletRouteEstimate {
+  if (!value || typeof value !== 'object') return false;
+  const route = value as OutletRouteEstimate;
+  if (
+    route.source !== 'road' ||
+    route.routeEvidence !== 'runtime_endpoint' ||
+    route.provider !== 'openrouteservice' ||
+    route.profile !== 'driving-car' ||
+    route.metricSource !== 'directions' ||
+    !finiteNonNegative(route.straightLineDistanceKm) ||
+    !finiteNonNegative(route.roadDistanceKm) ||
+    !finiteNonNegative(route.roadDurationSeconds) ||
+    route.geometryPath !== null ||
+    typeof route.generatedAt !== 'string' ||
+    Number.isNaN(Date.parse(route.generatedAt)) ||
+    typeof route.attribution !== 'string'
+  ) return false;
+  if (route.geometryStatus === 'ready') return isRouteGeometry(route.geometry);
+  return route.geometryStatus === 'unavailable' && route.geometry === undefined;
 }
 
 function storage(): Storage | null {
@@ -28,14 +54,8 @@ export function getCachedRuntimeRoute(key: string): OutletRouteEstimate | null {
   try {
     const raw = store.getItem(`${PREFIX}${key}`);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as OutletRouteEstimate;
-    if (
-      parsed?.source !== 'road' ||
-      parsed.routeEvidence !== 'runtime_endpoint' ||
-      parsed.provider !== 'openrouteservice'
-    ) {
-      return null;
-    }
+    const parsed: unknown = JSON.parse(raw);
+    if (!isCachedRuntimeRoute(parsed)) return null;
     memory.set(key, parsed);
     return parsed;
   } catch {
@@ -44,7 +64,7 @@ export function getCachedRuntimeRoute(key: string): OutletRouteEstimate | null {
 }
 
 export function setCachedRuntimeRoute(key: string, route: OutletRouteEstimate): void {
-  if (route.source !== 'road' || route.routeEvidence !== 'runtime_endpoint') return;
+  if (!isCachedRuntimeRoute(route)) return;
   memory.set(key, route);
   const store = storage();
   if (!store) return;
