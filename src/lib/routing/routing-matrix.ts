@@ -157,6 +157,14 @@ export function distanceForSorting(route: OutletRouteEstimate): number {
   return route.roadDistanceKm ?? route.straightLineDistanceKm;
 }
 
+export function formatEstimatedDriveDuration(route: OutletRouteEstimate): string | null {
+  const seconds = route.roadDurationSeconds;
+  if (seconds === null) return null;
+  if (seconds === 0) return '0 min';
+  if (seconds < 60) return '<1 min';
+  return `~${Math.round(seconds / 60)} min`;
+}
+
 export function hasRoadRoutingDataForArtifact(artifactInput: RouteMatrixArtifact): boolean {
   return artifactInput.status === 'ready' || artifactInput.status === 'partial';
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   distanceForBasis,
   distanceForSorting,
+  formatEstimatedDriveDuration,
   getOutletRouteEstimate,
   getOutletRouteEstimateFromArtifact,
   getRoutingMatrixArtifact,
@@ -81,6 +82,25 @@ describe('routing matrix trust boundary', () => {
     expect(route.source).toBe('road');
     expect(route.roadDurationSeconds).toBe(0);
     expect(route.roadDurationMinutes).toBe(0);
+    expect(formatEstimatedDriveDuration(route)).toBe('0 min');
+  });
+
+  it('formats sub-minute provider evidence without inflating it', () => {
+    const route: OutletRouteEstimate = {
+      source: 'road',
+      straightLineDistanceKm: 0.1,
+      roadDistanceKm: 0.1,
+      roadDurationSeconds: 35,
+      roadDurationMinutes: 1,
+      geometryStatus: 'not_requested',
+      geometryPath: null,
+      metricSource: 'matrix',
+      provider: 'openrouteservice',
+      profile: 'driving-car',
+      generatedAt: '2026-09-25T00:00:00Z',
+      attribution: 'test',
+    };
+    expect(formatEstimatedDriveDuration(route)).toBe('<1 min');
   });
 
   it('keeps an unavailable cell on straight-line fallback even in a partial artifact', () => {
