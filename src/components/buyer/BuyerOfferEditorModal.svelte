@@ -103,10 +103,38 @@
       onClose();
     }
   }
+  // Mount outside page filters, which otherwise contain fixed positioning.
+  function mountOverlay(node: HTMLElement) {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    document.body.appendChild(node);
+    queueMicrotask(() => node.querySelector<HTMLButtonElement>('button')?.focus());
+    return {
+      destroy: () => {
+        node.remove();
+        previouslyFocused?.focus();
+      },
+    };
+  }
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       onClose();
+    }
+  }
+
+  function handleDialogKeyDown(e: KeyboardEvent) {
+    if (e.key !== 'Tab') return;
+    const dialog = e.currentTarget as HTMLElement;
+    const controls = [...dialog.querySelectorAll<HTMLElement>('button, input, textarea')]
+      .filter((control) => control.offsetParent !== null && !control.hasAttribute('disabled'));
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last?.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first?.focus();
     }
   }
 </script>
@@ -115,34 +143,32 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#20251E]/60 backdrop-blur-xs overflow-y-auto animate-fadeIn"
+    use:mountOverlay
+    class="fixed inset-0 z-50 flex items-center justify-center bg-[#20251E]/60 p-2 sm:p-6 animate-fadeIn"
     role="presentation"
     onclick={handleBackdrop}
   >
     <div
-      class="bg-[#FFFDF8] border border-[#20251E]/15 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden my-8"
+      class="flex h-[calc(100dvh-1rem)] w-full min-h-0 flex-col overflow-hidden rounded-xl bg-[#FFFDF8] shadow-[0_24px_64px_-24px_rgba(32,37,30,0.45)] sm:h-auto sm:max-h-[calc(100dvh-3rem)] sm:max-w-[640px]"
       role="dialog"
+      tabindex="-1"
       aria-modal="true"
       aria-labelledby="modal-offer-title"
+      onkeydown={handleDialogKeyDown}
     >
       <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-[#20251E]/10 bg-[#FFFDF8] flex items-center justify-between">
+      <div class="flex shrink-0 items-start justify-between gap-4 border-b border-[#20251E]/20 px-5 py-5 sm:px-8 sm:py-7">
         <div>
-          <h2 id="modal-offer-title" class="font-serif text-xl font-bold text-[#20251E]">
+          <h2 id="modal-offer-title" class="text-2xl font-bold leading-tight text-[#20251E] sm:text-3xl">
             {offerToEdit
               ? (isFil ? 'Baguhin ang Alok' : 'Edit Buying Offer')
               : (isFil ? 'Gumawa ng Bagong Alok' : 'Create Buying Offer')}
           </h2>
-          <p class="text-xs text-[#596052] mt-0.5">
-            {isFil
-              ? 'Naka-save sa device na ito lamang para sa demonstrasyon.'
-              : 'Saved on this device only for hackathon demonstration.'}
-          </p>
         </div>
         <button
           type="button"
           onclick={onClose}
-          class="w-9 h-9 flex items-center justify-center rounded-lg text-[#596052] hover:text-[#20251E] hover:bg-[#FCECD8]/50 transition-colors"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[#4A5245] transition-colors hover:bg-[#FCECD8]/60 hover:text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           aria-label={isFil ? 'Isara' : 'Close dialog'}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,55 +178,54 @@
       </div>
 
       <!-- Modal Body Form -->
-      <form onsubmit={handleSave} class="p-6 space-y-5">
-        <!-- Crop Selection -->
-        <div>
-          <label for="offer-crop" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
-            {isFil ? 'Uri ng Pananim' : 'Crop'} <span class="text-[#6E3511]">*</span>
-          </label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
-            {#each SUPPORTED_CROPS as crop}
-              <button
-                type="button"
-                onclick={() => { cropKey = crop.key; }}
-                class={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center flex flex-col items-center gap-1 min-h-[44px] justify-center ${
+      <form onsubmit={handleSave} class="flex min-h-0 flex-1 flex-col">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8">
+          <!-- Crop selection -->
+          <fieldset class="border-b border-[#20251E]/15 py-6 sm:py-7">
+            <legend class="mb-3 text-xs font-bold uppercase tracking-wider text-[#20251E]">
+              {isFil ? 'Uri ng Pananim' : 'Crop'} <span class="text-[#6E3511]">*</span>
+            </legend>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-describedby={errors.crop ? 'offer-crop-error' : undefined}>
+              {#each SUPPORTED_CROPS as crop}
+                <label class={`relative flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-semibold transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                   cropKey === crop.key
-                    ? 'border-[#597928] bg-[#597928]/10 text-[#486320] ring-2 ring-[#597928]'
-                    : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/50'
-                }`}
-              >
-                <span>{isFil ? crop.labelFil : crop.labelEn}</span>
-              </button>
-            {/each}
-            <button
-              type="button"
-              onclick={() => { cropKey = 'other'; }}
-              class={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center flex flex-col items-center gap-1 min-h-[44px] justify-center ${
+                    ? 'border-[#597928] bg-[#FCECD8]/60 text-[#20251E]'
+                    : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+                }`}>
+                  <input type="radio" name="offer-crop" value={crop.key} bind:group={cropKey} class="sr-only" />
+                  {isFil ? crop.labelFil : crop.labelEn}
+                </label>
+              {/each}
+              <label class={`relative flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-semibold transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 cropKey === 'other'
-                  ? 'border-[#597928] bg-[#597928]/10 text-[#486320] ring-2 ring-[#597928]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/50'
-              }`}
-            >
-              <span>{isFil ? 'Iba Pa' : 'Other Crop'}</span>
-            </button>
-          </div>
+                  ? 'border-[#597928] bg-[#FCECD8]/60 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-crop" value="other" bind:group={cropKey} class="sr-only" />
+                {isFil ? 'Iba Pa' : 'Other Crop'}
+              </label>
+            </div>
+            {#if cropKey === 'other'}
+              <label for="offer-crop-custom" class="mt-4 block text-sm font-semibold text-[#20251E]">
+                {isFil ? 'Pangalan ng pananim' : 'Crop name'}
+              </label>
+              <input
+                id="offer-crop-custom"
+                type="text"
+                bind:value={customCropLabel}
+                aria-invalid={!!errors.crop}
+                aria-describedby={errors.crop ? 'offer-crop-error' : undefined}
+                placeholder={isFil ? 'Hal. Sitaw, Luya, Mais' : 'e.g. String beans, Ginger, Corn'}
+                class="mt-2 w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
+              />
+            {/if}
+            {#if errors.crop}
+              <p id="offer-crop-error" class="mt-2 text-sm font-medium text-[#6E3511]">{errors.crop}</p>
+            {/if}
+          </fieldset>
 
-          {#if cropKey === 'other'}
-            <input
-              id="offer-crop-custom"
-              type="text"
-              bind:value={customCropLabel}
-              placeholder={isFil ? 'Hal. Sitaw, Luya, Mais' : 'e.g. String beans, Ginger, Corn'}
-              class="w-full px-3.5 py-2 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
-            />
-          {/if}
-          {#if errors.crop}
-            <p class="text-xs text-[#6E3511] font-medium mt-1">{errors.crop}</p>
-          {/if}
-        </div>
-
-        <!-- Quantity and Price Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Quantity and price -->
+          <div class="grid grid-cols-1 gap-5 border-b border-[#20251E]/15 py-6 sm:grid-cols-2 sm:gap-6 sm:py-7">
           <!-- Quantity -->
           <div>
             <label for="offer-qty" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
@@ -213,7 +238,9 @@
                 min="1"
                 step="1"
                 bind:value={quantityKg}
-                class="w-full px-3.5 py-2.5 pr-10 text-sm font-semibold bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+                aria-invalid={!!errors.quantity}
+                aria-describedby={errors.quantity ? 'offer-quantity-error' : undefined}
+                class="w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 pr-10 text-base font-semibold text-[#20251E] tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
                 required
               />
               <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#596052]">
@@ -221,7 +248,7 @@
               </span>
             </div>
             {#if errors.quantity}
-              <p class="text-xs text-[#6E3511] font-medium mt-1">{errors.quantity}</p>
+              <p id="offer-quantity-error" class="mt-2 text-sm font-medium text-[#6E3511]">{errors.quantity}</p>
             {/if}
           </div>
 
@@ -229,7 +256,7 @@
           <div>
             <label for="offer-price" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
               {isFil ? 'Alok na Presyo (PHP/kg)' : 'Buying Price (PHP/kg)'}
-              <span class="text-[10px] font-normal text-[#596052] lowercase">
+              <span class="text-xs font-normal text-[#596052] lowercase">
                 ({isFil ? 'opsyonal' : 'optional'})
               </span>
             </label>
@@ -243,83 +270,54 @@
                 min="0"
                 step="0.5"
                 bind:value={pricePerKg}
+                aria-invalid={!!errors.price}
+                aria-describedby={errors.price ? 'offer-price-error' : undefined}
                 placeholder={isFil ? 'Walang nakasaad' : 'Price not posted'}
-                class="w-full pl-8 pr-3.5 py-2.5 text-sm font-semibold bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+                class="w-full rounded-lg border border-[#20251E]/25 bg-white py-3 pl-8 pr-3.5 text-base font-semibold text-[#20251E] tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
               />
             </div>
             {#if errors.price}
-              <p class="text-xs text-[#6E3511] font-medium mt-1">{errors.price}</p>
+              <p id="offer-price-error" class="mt-2 text-sm font-medium text-[#6E3511]">{errors.price}</p>
             {/if}
           </div>
         </div>
 
-        <!-- Status Selector (Radio segmented) -->
-        <div>
-          <label class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-2">
-            {isFil ? 'Katayuan ng Alok' : 'Offer Status'}
-          </label>
-          <div class="grid grid-cols-3 gap-2">
-            <!-- Published -->
-            <label
-              class={`cursor-pointer p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ${
+          <!-- Status selector -->
+          <fieldset class="border-b border-[#20251E]/15 py-6 sm:py-7">
+            <legend class="mb-3 text-xs font-bold uppercase tracking-wider text-[#20251E]">
+              {isFil ? 'Katayuan ng Alok' : 'Offer Status'}
+            </legend>
+            <div class="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
+              <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'published'
-                  ? 'border-[#597928] bg-[#EBF3DF] text-[#47661E] ring-2 ring-[#597928]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#597928]/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="offer-status"
-                value="published"
-                bind:group={status}
-                class="sr-only"
-              />
-              <span class="text-xs font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
-              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Makikita sa demo' : 'Active in demo'}</span>
-            </label>
-
-            <!-- In Review -->
-            <label
-              class={`cursor-pointer p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ${
+                  ? 'border-[#597928] bg-[#FCECD8]/60 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-status" value="published" bind:group={status} class="sr-only" />
+                <span class="text-sm font-bold">{isFil ? 'Nailathala' : 'Published'}</span>
+              </label>
+              <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'in_review'
-                  ? 'border-[#6E3511] bg-[#FCECD8] text-[#6E3511] ring-2 ring-[#6E3511]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#6E3511]/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="offer-status"
-                value="in_review"
-                bind:group={status}
-                class="sr-only"
-              />
-              <span class="text-xs font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
-              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Sample workflow' : 'Sample workflow'}</span>
-            </label>
-
-            <!-- Draft -->
-            <label
-              class={`cursor-pointer p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ${
+                  ? 'border-[#6E3511] bg-[#FCECD8]/60 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-status" value="in_review" bind:group={status} class="sr-only" />
+                <span class="text-sm font-bold">{isFil ? 'Nasa pagsusuri' : 'In review'}</span>
+              </label>
+              <label class={`flex min-h-14 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#597928] ${
                 status === 'draft'
-                  ? 'border-[#4B5563] bg-[#F3F4F6] text-[#1F2937] ring-2 ring-[#4B5563]'
-                  : 'border-[#20251E]/15 bg-white text-[#4A5245] hover:border-[#4B5563]/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="offer-status"
-                value="draft"
-                bind:group={status}
-                class="sr-only"
-              />
-              <span class="text-xs font-bold">{isFil ? 'Burador' : 'Draft'}</span>
-              <span class="text-[10px] font-medium text-[#4A5245]">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
-            </label>
-          </div>
-        </div>
+                  ? 'border-[#20251E]/50 bg-[#FCECD8]/35 text-[#20251E]'
+                  : 'border-[#20251E]/20 bg-white text-[#4A5245] hover:border-[#597928]'
+              }`}>
+                <input type="radio" name="offer-status" value="draft" bind:group={status} class="sr-only" />
+                <span class="text-sm font-bold">{isFil ? 'Burador' : 'Draft'}</span>
+                <span class="text-xs text-[#4A5245]">{isFil ? 'Hindi pa aktibo' : 'Internal draft'}</span>
+              </label>
+            </div>
+          </fieldset>
 
-        <!-- Receiving Details: Delivery Window & Location -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Receiving details -->
+          <div class="grid grid-cols-1 gap-5 border-b border-[#20251E]/15 py-6 sm:grid-cols-2 sm:gap-6 sm:py-7">
           <div>
             <label for="offer-window" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
               {isFil ? 'Petsa ng Pagtanggap' : 'Delivery Window'}
@@ -329,7 +327,7 @@
               type="text"
               bind:value={deliveryWindow}
               placeholder="e.g. YYYY-MM-DD or Sep 18-20"
-              class="w-full px-3.5 py-2.5 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+              class="w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
             />
           </div>
 
@@ -342,37 +340,38 @@
               type="text"
               bind:value={location}
               placeholder="e.g. Los Baños, Laguna"
-              class="w-full px-3.5 py-2.5 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+              class="w-full rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
             />
           </div>
         </div>
 
         <!-- Requirements / Notes -->
-        <div>
+        <div class="py-6 sm:py-7">
           <label for="offer-notes" class="block text-xs font-bold text-[#20251E] uppercase tracking-wider mb-1.5">
             {isFil ? 'Kondisyon sa Pagtanggap' : 'Receiving Specs & Terms'}
           </label>
           <textarea
             id="offer-notes"
-            rows="2"
+            rows="3"
             bind:value={notes}
             placeholder={isFil ? 'Hal. Ripe, walang pasa, nakalagay sa malinis na crate' : 'e.g. Grade A, undamaged, delivered in plastic crates'}
-            class="w-full px-3.5 py-2 text-sm bg-white border border-[#20251E]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#597928] text-[#20251E]"
+            class="w-full resize-y rounded-lg border border-[#20251E]/25 bg-white px-3.5 py-3 text-base text-[#20251E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           ></textarea>
         </div>
+        </div>
 
-        <!-- Action Buttons -->
-        <div class="pt-3 border-t border-[#20251E]/10 flex items-center justify-end gap-3">
+        <!-- Actions remain visible while the form scrolls -->
+        <div class="flex shrink-0 items-center justify-end gap-2 border-t border-[#20251E]/20 bg-[#FFFDF8] px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-8">
           <button
             type="button"
             onclick={onClose}
-            class="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#4A5245] hover:bg-[#20251E]/5 transition-colors min-h-[44px]"
+            class="min-h-11 rounded-lg px-4 py-2.5 text-sm font-semibold text-[#4A5245] transition-colors hover:bg-[#20251E]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           >
             {isFil ? 'Kanselahin' : 'Cancel'}
           </button>
           <button
             type="submit"
-            class="px-6 py-2.5 rounded-xl text-sm font-bold bg-[#597928] text-white hover:bg-[#47661E] shadow-sm transition-all min-h-[44px] flex items-center gap-2"
+            class="flex min-h-11 items-center gap-2 rounded-lg bg-[#597928] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#486320] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#597928]"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

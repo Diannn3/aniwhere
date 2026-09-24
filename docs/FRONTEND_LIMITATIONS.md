@@ -230,7 +230,7 @@ It is **not** an offline language model and it does not generate fresh market in
 - map tiles;
 - transactions or reservations.
 
-Online Ani remains optional and explicit. When enabled, any market-bearing response still depends on the deterministic AniWhere tool layer and the currently valid harvest state.
+Ani's chat panel presents only the bundled local FAQ. It has no online-provider or voice switch.
 
 ### PWA/service-worker behavior
 
@@ -242,6 +242,6 @@ The service worker is a resilience layer, not a freshness guarantee.
 - Farmer query strings are not intentionally persisted as cache keys; navigation responses are cached by pathname.
 - `/api/` requests are not intercepted by the service worker.
 - Static assets may be reused from cache.
-- Live map tiles, fresh road-route requests, and online Ani still require network access.
+- Live map tiles and fresh road-route requests still require network access.
 
 Cached demo or previously loaded information must never be described as current merely because it remains available offline.

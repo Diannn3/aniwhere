@@ -6,8 +6,8 @@ const description = 'The requested page or outlet was not found in Laguna fixtur
 ---
 
 <BaseLayout title={title} description={description} currentPath="/404">
-  <div class="max-w-2xl mx-auto px-4 py-20 text-center space-y-6">
-    <div class="w-16 h-16 rounded-full bg-[#6E3511]/10 text-[#6E3511] mx-auto flex items-center justify-center">
+  <div class="almanac-page mx-auto max-w-3xl px-4 py-20 text-center space-y-6">
+    <div class="mx-auto flex h-16 w-16 items-center justify-center border border-[#6E3511]/25 bg-[#FCECD8] text-[#6E3511]">
       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
@@ -24,14 +24,14 @@ const description = 'The requested page or outlet was not found in Laguna fixtur
     <div class="pt-4 flex flex-wrap items-center justify-center gap-4">
       <a
         href="/"
-        class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white border border-[#20251E]/20 font-semibold text-sm hover:border-[#597928] transition-all min-h-[44px]"
+        class="almanac-button inline-flex min-h-[44px] items-center gap-2 border border-[#20251E]/20 bg-[#FFFDF8] px-6 py-3 font-semibold text-sm hover:border-[#597928] transition-all"
       >
         <span>Return Home</span>
       </a>
 
       <a
         href="/discover"
-        class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#597928] text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm min-h-[44px]"
+        class="almanac-button inline-flex min-h-[44px] items-center gap-2 bg-[#597928] px-6 py-3 text-white font-semibold text-sm hover:bg-[#435c1d] transition-all shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

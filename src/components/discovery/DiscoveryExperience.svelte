@@ -38,6 +38,7 @@
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
+  let filtersOpen = $state(false);
   let compareNotice = $state('');
 
   // Editable harvest draft
@@ -313,7 +314,7 @@
 
   function priceLabelFor(fit: FitResult): string {
     if (fit.evidenceKind === 'demo') {
-      return lang === 'fil' ? 'Halimbawang presyo' : 'Sample price';
+      return lang === 'fil' ? 'Presyo' : 'Price';
     }
     if (fit.evidenceKind === 'buyer_offer') {
       return lang === 'fil' ? 'Presyong naka-post ng buyer' : 'Buyer-posted price';
@@ -322,19 +323,16 @@
   }
 </script>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-6">
+<div class="almanac-plane discovery-page relative w-full max-w-none px-3 py-3 sm:px-5 sm:py-4">
   
   <!-- 1. Harvest Context Header & Quick Editor Bar (Compact & Ergonomic) -->
-  <div class="bg-[#FFFDF8] border border-[#20251E]/12 rounded-2xl p-3.5 sm:p-5 shadow-xs">
+  <div class="discovery-docket border border-[#20251E]/25 bg-[#FFFDF8] p-3.5 sm:p-5">
     <div class="flex items-center justify-between gap-3">
       <div>
         <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#20251E] tracking-tight leading-tight">
-          {harvest.quantityKg.toLocaleString()} kg {getCropLabel(harvest.crop, lang)}
-          <span class="text-[#4A5245] font-normal text-xs sm:text-sm block sm:inline sm:ml-2">
-            {lang === 'fil' ? 'mula' : 'from'} {originCoords.name} &bull;
-            {statusFilter === 'all'
-              ? `${processedOutlets.length} ${lang === 'fil' ? 'lugar na natagpuan' : 'places found'}`
-              : `${lang === 'fil' ? 'ipinapakita' : 'showing'} ${filteredOutlets.length} ${lang === 'fil' ? 'sa' : 'of'} ${processedOutlets.length}`}
+          {lang === 'fil' ? 'Ruta ng iyong ani' : 'Your harvest route'}
+          <span class="docket-harvest">
+            {getCropLabel(harvest.crop, lang)} &bull; {harvest.quantityKg.toLocaleString()} kg &bull; {originCoords.name}
           </span>
         </h1>
       </div>
@@ -352,6 +350,23 @@
         </svg>
         <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
+    <button type="button" class="docket-filter-toggle" onclick={() => filtersOpen = !filtersOpen} aria-expanded={filtersOpen} aria-controls="discovery-filters">{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</button>
+    </div>
+    <div class="docket-summary">
+      <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
+      <div class="docket-key">
+        <span><i class="key-match"></i>{lang === 'fil' ? 'Tugma sa ani' : 'Matches your harvest'} ({statusCounts.match})</span>
+        <span><i class="key-partial"></i>{lang === 'fil' ? 'Tumatanggap ng bahagi' : 'Accepts part'} ({statusCounts.partial})</span>
+        <span><i class="key-confirm"></i>{lang === 'fil' ? 'Kumpirmahin muna' : 'Contact to confirm'} ({statusCounts.confirm})</span>
+      </div>
+      <div class="docket-route">
+        <h2>{lang === 'fil' ? 'Ruta mula sa' : 'Route from'} {originCoords.name.split(',')[0]}</h2>
+        <p>1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &middot; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}</p>
+        <p>{lang === 'fil' ? 'Pumili ng outlet upang makita ang ruta at ebidensya sa ibaba.' : 'Select an outlet to explore route details and view evidence below.'}</p>
+      </div>
+      <a class="docket-compare" href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}>
+        {lang === 'fil' ? 'Ihambing' : 'Compare'} {comparedIds.length || ''}
+      </a>
     </div>
 
     <!-- Collapsible Quick Harvest Editor -->
@@ -422,11 +437,10 @@
     {/if}
   </div>
 
-  <!-- 2. Controls Row: Mobile View Switcher + Filter Pills + Sort -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  <div id="discovery-filters" class={`discovery-filters ${filtersOpen ? 'is-open' : ''} flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center`}>
     
     <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:flex-col lg:items-stretch lg:overflow-visible">
       <!-- Mobile Segmented Toggle -->
       <div
         class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
@@ -470,7 +484,7 @@
 
       <!-- Filter Pills (Horizontally scrollable on mobile) -->
       <div
-        class="flex items-center gap-1.5 shrink-0"
+        class="flex items-center gap-1.5 shrink-0 lg:grid lg:grid-cols-2"
         role="group"
         aria-label={lang === 'fil' ? 'I-filter ayon sa pagkakatugma' : 'Filter by fit status'}
       >
@@ -540,7 +554,7 @@
     </div>
 
     <!-- Right: Sort By Dropdown -->
-    <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+    <div class="flex items-center justify-between gap-2 shrink-0 lg:border-t lg:border-[#20251E]/15 lg:pt-3">
       <div class="flex items-center gap-1.5 text-xs text-[#4A5245]">
         <label for="sort-by-select" class="font-semibold">{lang === 'fil' ? 'Ayusin:' : 'Sort:'}</label>
         <select
@@ -581,15 +595,18 @@
     </p>
   {/if}
 
-  <!-- 3. Main Responsive 2-Column Split -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+  <!-- 3. Map-first Field Almanac workspace -->
+  <div class="discovery-workspace grid grid-cols-1 items-start">
     
-    <!-- Left Column: Outlet Cards List (7 cols on desktop) -->
-    <div class={`lg:col-span-7 space-y-4 ${activeMobileView === 'map' ? 'hidden lg:block' : 'block'}`}>
+    <!-- Ruled outlet evidence index -->
+    <div class={`discovery-outlets ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
+      <header class="ledger-heading">
+        <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} ({filteredOutlets.length})</h2>
+      </header>
       
       {#if filteredOutlets.length === 0}
         <!-- Empty State -->
-        <div class="bg-[#FFFDF8] border border-[#20251E]/10 rounded-2xl p-8 text-center space-y-3">
+        <div class="almanac-entry p-8 text-center space-y-3">
           <div class="w-12 h-12 rounded-full bg-[#FCECD8] text-[#6E3511] flex items-center justify-center mx-auto">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" /><line x1="8" y1="12" x2="16" y2="12" />
@@ -613,15 +630,13 @@
         </div>
       {:else}
         <!-- Outlets List -->
-        {#each filteredOutlets as item (item.outlet.id)}
+        {#each filteredOutlets as item, index (item.outlet.id)}
           <article
             id={`outlet-card-${item.outlet.id}`}
-            class={`bg-[#FFFDF8] border rounded-2xl p-4 sm:p-5 transition-all shadow-xs space-y-3 sm:space-y-4 ${
-              selectedOutletId === item.outlet.id
-                ? 'border-[#597928] ring-2 ring-[#597928]/30'
-                : 'border-[#20251E]/12 hover:border-[#597928]/50'
-            }`}
+            aria-current={selectedOutletId === item.outlet.id ? 'true' : undefined}
+            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''}`}
           >
+            <button type="button" class="ledger-number" onclick={() => handleSelectPin(item.outlet.id)} aria-label={`${lang === 'fil' ? 'Piliin' : 'Select'} ${item.outlet.name} ${lang === 'fil' ? 'sa mapa' : 'on map'}`}>{index + 1}</button>
             <!-- Card Header: Fit Badge + Category + Distance -->
             <div class="flex flex-wrap items-center justify-between gap-2">
               <!-- Fit Status Badge -->
@@ -680,7 +695,7 @@
                   type="button"
                   onclick={() => handleToggleSave(item.outlet.id)}
                   aria-label={item.isSaved ? t('removeFromSaved', lang) : t('saveOutlet', lang)}
-                  class={`premium-control grid min-h-11 min-w-11 place-items-center rounded-full transition-colors cursor-pointer ${
+                  class={`premium-control grid min-h-11 min-w-11 place-items-center rounded-lg transition-colors cursor-pointer ${
                     item.isSaved
                       ? 'text-[#486320] bg-[#EAF3DE]'
                       : 'text-[#596052] hover:text-[#20251E] hover:bg-[#FCECD8]/50'
@@ -698,7 +713,7 @@
 
             <!-- Decision quantities stay visible even when no price exists. -->
             {#if item.fit.status === 'match' || item.fit.status === 'partial'}
-              <dl class="grid grid-cols-2 overflow-hidden rounded-xl border border-[#20251E]/10 bg-[#F9FBF7]">
+              <dl class="grid grid-cols-2 overflow-hidden border-y border-[#20251E]/15 bg-[#FCECD8]/25">
                 <div class="p-3 sm:p-3.5">
                   <dt class="text-[11px] font-semibold text-[#596052]">{lang === 'fil' ? 'Kayang tanggapin' : 'Can accept'}</dt>
                   <dd class="mt-0.5 font-tabular text-xl font-bold tracking-tight text-[#20251E]">{item.fit.acceptedKg?.toLocaleString() ?? '—'} <span class="text-xs font-semibold text-[#596052]">kg</span></dd>
@@ -709,7 +724,7 @@
                 </div>
               </dl>
             {:else if item.fit.status === 'confirm'}
-              <div class="rounded-xl border border-[#4E7380]/20 bg-[#EBF2F5]/55 px-3 py-2.5">
+              <div class="border-y border-[#4E7380]/25 bg-[#EBF2F5]/55 px-3 py-2.5">
                 <p class="text-xs font-bold text-[#2A4B56]">{lang === 'fil' ? 'Hindi pa alam ang kayang tanggapin' : 'Accepted quantity is still unknown'}</p>
                 <p class="mt-1 text-[11px] leading-relaxed text-[#4A5245]">{lang === 'fil' ? 'Kumpirmahin muna ang kapasidad bago magplano ng biyahe.' : 'Confirm capacity before planning a trip.'}</p>
               </div>
@@ -720,8 +735,8 @@
               {lang === 'fil' ? item.fit.reasonFil : item.fit.reason}
             </p>
 
-            <!-- Evidence / freshness: demo, buyer-posted, reviewed, and public-reference data must stay visibly distinct. -->
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-[#FAF7EE] border border-[#20251E]/8 px-3 py-2 text-[10px] text-[#4A5245]">
+            <!-- Evidence / freshness: source types must stay visibly distinct. -->
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-[#20251E]/12 bg-[#FCECD8]/35 px-3 py-2 text-[10px] text-[#4A5245]">
               <span class="font-bold text-[#20251E]">{item.fit.sourceLabel || (lang === 'fil' ? 'Pinagmulan hindi alam' : 'Source unknown')}</span>
               {#if item.fit.dataUpdatedAt}
                 <span>{lang === 'fil' ? 'Na-update' : 'Updated'} {formatEvidenceDate(item.fit.dataUpdatedAt)}</span>
@@ -736,7 +751,7 @@
 
             <!-- Price evidence stays visible; arithmetic is progressively disclosed. -->
             {#if item.fit.samplePricePerKg !== null}
-              <details class="group rounded-xl border border-[#20251E]/10 bg-[#F9FBF7]">
+              <details class="group border-y border-[#20251E]/15 bg-[#FFFDF8]">
                 <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 sm:px-3.5">
                   <span>
                     <span class="block text-[11px] text-[#596052]">{priceLabelFor(item.fit)}</span>
@@ -793,7 +808,7 @@
               <!-- View Details Link -->
               <a
                 href={`/places/${item.outlet.slug}?${serializeDiscoverQuery(harvest, 'list', item.outlet.id, lang)}`}
-                class="premium-control inline-flex min-h-11 items-center gap-1 px-4 py-2 rounded-full text-xs font-bold bg-[#486320] hover:bg-[#3A5219] text-[#FFFDF8] transition-colors shadow-xs"
+                class="almanac-button premium-control inline-flex min-h-11 items-center gap-1 bg-[#486320] px-4 py-2 text-xs text-[#FFFDF8] transition-colors hover:bg-[#3A5219]"
               >
                 <span>{t('viewDetails', lang)}</span>
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -808,8 +823,12 @@
 
     </div>
 
-    <!-- Right Column: Interactive Resilient Map Panel (5 cols on desktop, sticky) -->
-    <div class={`lg:col-span-5 lg:sticky lg:top-24 space-y-4 ${activeMobileView === 'list' ? 'hidden lg:block' : 'block'}`}>
+    <!-- Dominant synchronized map plate -->
+    <div class={`almanac-map discovery-map ${activeMobileView === 'list' ? 'hidden' : 'block'}`}>
+      <div class="map-view-switch" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
+        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class:active={activeMobileView === 'map'}>{lang === 'fil' ? 'Mapa' : 'Map'}</button>
+        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class:active={activeMobileView === 'list'}>{lang === 'fil' ? 'Listahan' : 'List'}</button>
+      </div>
       <LiveLagunaMap
         items={filteredOutlets}
         {harvest}
@@ -817,9 +836,20 @@
         {lang}
         onSelect={handleSelectPin}
       />
+      <aside class="map-legend" aria-label={lang === 'fil' ? 'Paliwanag ng mapa' : 'Map legend'}>
+        <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'}</h3>
+        <div class="map-legend__rows">
+          <span><i class="legend-road-route"></i>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</span>
+          <span><i class="legend-straight-route"></i>{lang === 'fil' ? 'Tuwid na layo' : 'Straight-line link'}</span>
+          <span><i class="legend-origin"></i>{lang === 'fil' ? 'Pinagmulan' : 'Origin'}</span>
+          <span><i class="legend-outlet"></i>{lang === 'fil' ? 'Posibleng outlet' : 'Potential outlet'}</span>
+          <span><i class="legend-water"></i>{lang === 'fil' ? 'Tubig' : 'Water'}</span>
+          <span><i class="legend-land"></i>{lang === 'fil' ? 'Lupa' : 'Land'}</span>
+        </div>
+      </aside>
 
       <!-- Map Guidance Card -->
-      <div class="bg-[#FFFDF8] border border-[#20251E]/10 rounded-2xl p-4 text-xs text-[#4A5245] space-y-1.5 shadow-xs">
+      <div class="border-t border-[#20251E]/20 bg-[#FFFDF8]/95 p-4 text-xs text-[#4A5245] space-y-1.5">
         <h4 class="font-bold text-[#20251E] flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
@@ -892,3 +922,20 @@
   {/if}
 
 </div>
+
+<style>
+  .map-legend { position: absolute; z-index: 10; right: 26px; top: 110px; width: 170px; padding: 12px; border: 1px solid #747965; border-radius: 5px; background: #fffdf8; box-shadow: 0 12px 22px -16px #20251e; color: #20251e; font-size: 12px; }
+  .map-legend h3 { display: flex; justify-content: space-between; margin-bottom: 9px; padding-bottom: 6px; border-bottom: 1px solid #aab19c; font-weight: 700; }
+  .map-legend small { font-size: 10px; font-weight: 500; }
+  .map-legend__rows { display: grid; gap: 10px; }
+  .map-legend__rows span { display: flex; align-items: center; gap: 10px; }
+  .map-legend i { display: inline-block; width: 24px; flex: none; }
+  .legend-road-route { border-top: 3px solid #486320; }
+  .legend-straight-route { border-top: 3px dashed #486320; }
+  .legend-origin { width: 15px !important; height: 15px; margin-inline: 4px 5px; border: 2px solid #20251e; border-radius: 50%; background: #fffdf8; }
+  .legend-outlet { width: 15px !important; height: 15px; margin-inline: 4px 5px; border-radius: 50%; background: #597928; }
+  .legend-water { height: 12px; background: #698f9c; }
+  .legend-land { height: 12px; background: #b3c494; }
+  @media (max-width: 1199px) { .map-legend { right: 12px; top: 100px; } }
+  @media (max-width: 767px) { .map-legend { width: 155px; padding: 9px; font-size: 11px; } .map-legend__rows { gap: 6px; } }
+</style>

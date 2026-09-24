@@ -202,7 +202,7 @@ test('explains the three-place comparison limit instead of silently blocking the
 
 test('keeps price arithmetic available without overwhelming the primary result card', async ({ page }) => {
   await page.goto(discoverPath);
-  const processor = outletCard(page, 'Demo Processor');
+  const processor = outletCard(page, 'Calamba Processor');
 
   await expect(processor.getByText(/₱.*\/ kg/i).first()).toBeVisible();
   await expect(processor.getByText('Gross amount')).toBeHidden();
@@ -219,8 +219,8 @@ test('comparison ignores malformed, duplicate, and unknown outlet selections', a
 
   const ledger = page.getByRole('table', { name: /comparison ledger/i });
   await expect(ledger).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: /Demo Market/i })).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: /Demo Processor/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Los Baños Market/i })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: /Calamba Processor/i })).toBeVisible();
   await expect(ledger.getByRole('columnheader')).toHaveCount(3);
   await expect(page.getByText('<script>')).toHaveCount(0);
 });
@@ -247,8 +247,8 @@ test('comparison never preselects outlets and preserves harvest context when emp
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
-  await outletCard(page, 'Demo Processor').getByRole('checkbox').check();
-  await outletCard(page, 'Demo Market').getByRole('checkbox').check();
+  await outletCard(page, 'Calamba Processor').getByRole('checkbox').check();
+  await outletCard(page, 'Los Baños Market').getByRole('checkbox').check();
 
   const dock = page.getByRole('complementary', { name: 'Comparison dock' });
   await expect(dock).toContainText(/2 of 3 places selected/i);
@@ -257,11 +257,11 @@ test('selects outlets in discovery and compares them in a semantic decision ledg
 
   const ledger = page.getByRole('table', { name: /comparison ledger for selected outlets/i });
   await expect(ledger).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: 'Demo Processor' })).toBeVisible();
-  await expect(ledger.getByRole('columnheader', { name: 'Demo Market' })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: 'Calamba Processor' })).toBeVisible();
+  await expect(ledger.getByRole('columnheader', { name: 'Los Baños Market' })).toBeVisible();
   await expect(ledger.getByRole('rowheader', { name: 'Accepted quantity' })).toBeVisible();
 
-  await ledger.getByLabel('Transport for Demo Processor').fill('7100');
+  await ledger.getByLabel('Transport for Calamba Processor').fill('7100');
   await expect(page.locator('[aria-live="polite"]').filter({ hasText: /after transport updated/i })).toHaveCount(1);
 });
 
@@ -271,26 +271,26 @@ test('removing a compared outlet updates the URL so refresh does not restore it'
   );
 
   const ledger = page.getByRole('table', { name: /comparison ledger/i });
-  await ledger.getByRole('button', { name: /Remove Demo Market from comparison/i }).click();
+  await ledger.getByRole('button', { name: /Remove Los Baños Market from comparison/i }).click();
 
   await expect(page).toHaveURL(/places=demo-processor/);
   await expect(page).not.toHaveURL(/demo-market/);
   await page.reload();
 
-  await expect(page.getByRole('columnheader', { name: 'Demo Processor' })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'Demo Market' })).toHaveCount(0);
+  await expect(page.getByRole('columnheader', { name: 'Calamba Processor' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Los Baños Market' })).toHaveCount(0);
 });
 
 test('saves an outlet locally and makes it available on the saved route', async ({ page }) => {
   await page.goto(discoverPath);
-  const cooperative = outletCard(page, 'Demo Cooperative');
+  const cooperative = outletCard(page, 'Santa Cruz Cooperative');
 
   await cooperative.getByRole('button', { name: 'Save outlet' }).click();
   await expect(cooperative.getByRole('button', { name: 'Remove from saved' })).toBeVisible();
 
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Saved' }).click();
   await expect(page).toHaveURL(/\/saved/);
-  await expect(page.getByRole('heading', { name: 'Demo Cooperative' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Santa Cruz Cooperative' })).toBeVisible();
   await expect(page.getByText(/Saving does not reserve capacity or contact the buyer/i)).toBeVisible();
   await expect(page.getByText('Can accept').first()).toBeVisible();
   await expect(page.getByText('Harvest remaining').first()).toBeVisible();
@@ -300,15 +300,15 @@ test('saves an outlet locally and makes it available on the saved route', async 
 
 test('saved outlets require confirmation before clearing the shortlist', async ({ page }) => {
   await page.goto(discoverPath);
-  await outletCard(page, 'Demo Cooperative').getByRole('button', { name: 'Save outlet' }).click();
+  await outletCard(page, 'Santa Cruz Cooperative').getByRole('button', { name: 'Save outlet' }).click();
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Saved' }).click();
 
   await page.getByRole('button', { name: 'Clear all' }).click();
   await expect(page.getByText('Clear every saved place?')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Demo Cooperative' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Santa Cruz Cooperative' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Cancel' }).click();
-  await expect(page.getByRole('heading', { name: 'Demo Cooperative' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Santa Cruz Cooperative' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Clear all' }).click();
   await page.getByRole('button', { name: 'Yes, clear all' }).click();

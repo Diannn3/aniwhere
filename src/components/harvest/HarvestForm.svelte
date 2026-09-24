@@ -235,9 +235,7 @@
   <div class="flex items-start justify-between gap-4 border-b quiet-rule pb-5">
     <div class="max-w-xl">
       <h2 class="text-2xl font-bold tracking-tight text-[#20251E] sm:text-3xl">{lang === 'fil' ? 'Ilagay ang ani mo' : 'Describe your harvest'}</h2>
-      <p class="mt-2 text-sm leading-relaxed text-[#4A5245] sm:text-base">{lang === 'fil' ? 'Makikita mo kung saan maaaring dalhin ang ani, kung gaano karami ang kaya nilang tanggapin, at kung ano ang kailangang kumpirmahin.' : 'See where your harvest could go, how much an outlet can take, and what you still need to confirm.'}</p>
     </div>
-    <span class="hidden shrink-0 rounded-lg bg-[#FCECD8] px-3 py-2 text-xs font-semibold text-[#6E3511] sm:inline-block">{t('demoNotice', lang)}</span>
   </div>
 
   {#if Object.keys(errors).length > 0}
@@ -280,7 +278,7 @@
     {#if errors.crop}<p id="crop-error" class="mt-2 text-sm font-semibold text-[#6E3511]">{errors.crop}</p>{/if}
   </fieldset>
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
     <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20">
       <span class="block text-sm font-bold text-[#20251E]">{t('quantityLabel', lang)} <span class="text-[#6E3511]" aria-hidden="true">*</span></span>
       <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Kabuuang timbang na handa mong dalhin.' : 'Total weight you are ready to bring.'}</span>
@@ -306,7 +304,7 @@
       {#if errors.originMunicipality}<span id="origin-error" class="mt-2 block text-sm font-semibold text-[#6E3511]">{errors.originMunicipality}</span>{/if}
     </label>
 
-    <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20 sm:col-span-2">
+    <label class="block rounded-xl border border-[#20251E]/12 bg-[#FFFDF8]/80 p-4 transition-colors focus-within:border-[#597928] focus-within:ring-2 focus-within:ring-[#597928]/20 sm:col-span-2 xl:col-span-1">
       <span class="block text-sm font-bold text-[#20251E]">{t('readyDateLabel', lang)}</span>
       <span class="mt-1 block text-xs text-[#4A5245]">{lang === 'fil' ? 'Ilagay ang petsang handa nang dalhin ang ani.' : 'Set the day the harvest will be ready to move.'}</span>
       <input id="harvest-ready-date" bind:this={readyDateInputEl} bind:value={readyDate} type="date" min={todayInManila()} aria-invalid={Boolean(errors.readyDate)} aria-describedby={errors.readyDate ? 'ready-date-error' : undefined} class="mt-3 min-h-11 w-full bg-transparent text-base font-bold text-[#20251E] outline-none" />
@@ -336,5 +334,4 @@
     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
   </button>
 
-  <p class="text-center text-xs leading-relaxed text-[#4A5245]">{t('noAccountNeeded', lang)} <span class="text-[#6E3511]">{t('confirmTermsNotice', lang)}</span></p>
 </form>

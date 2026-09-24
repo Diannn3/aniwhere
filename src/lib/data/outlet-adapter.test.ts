@@ -28,7 +28,7 @@ describe('market data adapter', () => {
     expect(organic.isDemoFixture).toBe(true);
   });
 
-  it('preserves current offer provenance and demo hauling assumptions', () => {
+  it('preserves current offer provenance and recorded hauling assumptions', () => {
     const outlets = composeOutletViewModels(
       DEMO_MARKET_SNAPSHOT,
       DEMO_TRANSPORT_ASSUMPTIONS
@@ -39,7 +39,7 @@ describe('market data adapter', () => {
     expect(coop.acceptedCrops.tomato?.maxKg).toBe(500);
     expect(coop.acceptedCrops.tomato?.defaultTransportExpense).toBe(600);
     expect(coop.acceptedCrops.tomato?.sourceKind).toBe('demo');
-    expect(coop.acceptedCrops.tomato?.sourceLabel).toBe('Demo — sample data');
+    expect(coop.acceptedCrops.tomato?.sourceLabel).toBe('Outlet record');
     expect(coop.acceptedCrops.tomato?.validUntil).toBe('2026-09-30');
   });
 

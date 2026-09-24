@@ -42,7 +42,7 @@ test('mobile map selection stays on the map until the farmer asks for the list',
   );
 
   await expect(page.getByText('Offline map')).toBeVisible();
-  const processorPin = page.getByRole('button', { name: /Demo Processor:.*km/i });
+  const processorPin = page.getByRole('button', { name: /Calamba Processor:.*km/i });
   await processorPin.click();
 
   const preview = page.getByRole('region', { name: 'Selected map place' });
@@ -69,7 +69,7 @@ test('fallback map preview dismissal clears selected place state', async ({ page
   );
 
   await expect(page.getByText('Offline map')).toBeVisible();
-  await page.getByRole('button', { name: /Demo Processor:.*straight-line/i }).click();
+  await page.getByRole('button', { name: /Calamba Processor:.*straight-line/i }).click();
   await expect(page).toHaveURL(/place=demo-processor/);
 
   await page.getByRole('button', { name: 'Close preview' }).click();

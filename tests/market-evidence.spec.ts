@@ -174,7 +174,7 @@ test('comparison distinguishes recorded transport estimates from farmer-edited a
   await expect(page.getByText(/prefilled demo transport estimate/i)).toBeVisible();
   await expect(after).toContainText(/Not profit or guaranteed income/i);
 
-  const processorTransport = page.getByLabel(/Transport for Demo Processor/i);
+  const processorTransport = page.getByLabel(/Transport for Calamba Processor/i);
   await processorTransport.fill('750');
   await expect(transport).toContainText(/Your edited transport amount/i);
 });
@@ -190,7 +190,7 @@ test('mobile comparison cards keep transport editing and decision facts usable',
 
   await processorTransport.fill('750');
   const processorCard = page.getByRole('article').filter({
-    has: page.getByRole('heading', { name: 'Demo Processor' }),
+    has: page.getByRole('heading', { name: 'Calamba Processor' }),
   });
   await expect(processorCard).toContainText(/Your edited transport amount/i);
   await expect(processorCard).toContainText(/After transport/i);

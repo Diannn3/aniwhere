@@ -8,8 +8,9 @@ describe('Ani system instruction', () => {
     expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Never turn unknown information into a confident answer/i);
   });
 
-  it('protects demo, price and financial wording', () => {
-    expect(ANI_SYSTEM_INSTRUCTION).toMatch(/demo/i);
+  it('protects source, price and financial wording', () => {
+    expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Describe recorded market facts by their source and date/i);
+    expect(ANI_SYSTEM_INSTRUCTION).not.toMatch(/demo|sample/i);
     expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Never call a reference price a buyer offer/i);
     expect(ANI_SYSTEM_INSTRUCTION).toMatch(/Never call proceeds-after-transport profit/i);
   });

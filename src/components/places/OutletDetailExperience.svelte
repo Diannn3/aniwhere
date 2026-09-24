@@ -162,7 +162,7 @@
 
   const priceLabel = $derived(
     fitResult.evidenceKind === 'demo'
-      ? (isFil ? 'Halimbawang presyo' : 'Sample price')
+      ? (isFil ? 'Presyo' : 'Price')
       : fitResult.evidenceKind === 'buyer_offer'
         ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
         : (isFil ? 'Presyo' : 'Price')
@@ -193,8 +193,8 @@
   );
 </script>
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8">
-  <!-- Back Link & Breadcrumbs -->
+<div class="almanac-page outlet-detail relative w-full max-w-none px-4 py-3 sm:px-8 sm:py-4 lg:px-12 xl:px-16">
+  <!-- Back link -->
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
     <div class="flex items-center gap-2 text-sm text-[#4A5245]">
       <a
@@ -206,10 +206,6 @@
         </svg>
         <span>{isFil ? 'Bumalik sa resulta' : 'Back to discovery results'}</span>
       </a>
-      <span class="text-[#20251E]/20">/</span>
-      <span class="hidden sm:inline text-xs text-[#596052]">{originMun.name}</span>
-      <span class="hidden sm:inline text-[#20251E]/20">/</span>
-      <span class="text-xs font-medium text-[#20251E] truncate max-w-[200px]">{outlet.name}</span>
     </div>
 
     <!-- Right Controls: Save & Share -->
@@ -243,8 +239,8 @@
   </div>
 
   <!-- Hero Facility Card (Anti-Vibecode: Direct H1, No Kicker) -->
-  <header class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
-    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+  <header class="outlet-intro almanac-entry p-6 sm:p-8 space-y-6">
+    <div class="flex flex-col gap-6">
       <div class="space-y-3 max-w-2xl">
         <!-- Direct H1 Header (No eyebrow pill above!) -->
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#20251E] tracking-tight">
@@ -338,9 +334,56 @@
       </div>
     </div>
   </header>
+    <!-- Right: Geographic Route Preview -->
+    <section class="outlet-route bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
+      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-[#4E7380]/12 text-[#4E7380] flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-serif font-bold text-[#20251E]">
+            {isFil ? 'Mapa at konteksto ng biyahe' : 'Map & travel context'}
+          </h2>
+        </div>
+
+      </div>
+
+      <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">
+        <LiveLagunaMap
+          items={[{
+            outlet,
+            fit: fitResult,
+            distanceKm
+          }]}
+          harvest={harvest}
+          selectedId={outlet.id}
+          lang={lang}
+          onSelect={() => {}}
+        />
+      </div>
+
+      <div class="grid gap-2 text-xs text-[#596052] pt-1 sm:grid-cols-3 sm:items-start">
+        <span>
+          {isFil ? 'Batayang lokasyon' : 'Reference point'}:
+          <strong>{originMun.name.split(',')[0]}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
+        </span>
+        <span>
+          {routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid na layo' : 'Straight-line')}:
+          <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong>
+          {#if routeEstimate.source === 'road'}
+            <span class="block">{isFil ? '~' + routeEstimate.roadDurationMinutes + ' min biyahe' : '~' + routeEstimate.roadDurationMinutes + ' min drive'}</span>
+          {:else}
+            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
+          {/if}
+        </span>
+        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
+      </div>
+    </section>
 
   <!-- Decision Summary & Transparent Math Card -->
-  <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+  <section class="outlet-decision almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex items-center justify-between gap-4 border-b border-[#20251E]/10 pb-4">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
@@ -388,7 +431,7 @@
         </div>
       </div>
 
-      <!-- 3. Sample Price -->
+      <!-- 3. Price -->
       <div class="p-3.5 rounded-xl bg-[#FFFDF8] border border-[#20251E]/8 space-y-1">
         <div class="text-[11px] font-medium text-[#596052] uppercase tracking-wider">
           {priceLabel}
@@ -429,7 +472,7 @@
             : (isFil ? 'Walang nakatala' : 'Not recorded')}
         </div>
         <div class="text-[11px] text-[#596052]">
-          {isFil ? 'Tantiya sa demo record, hindi aktuwal na quote sa biyahe' : 'Demo-record estimate, not an actual hauling quote'}
+          {isFil ? 'Tinatayang gastos sa biyahe, hindi aktuwal na quote' : 'Recorded estimate, not an actual hauling quote'}
         </div>
       </div>
 
@@ -462,7 +505,7 @@
   </section>
 
   <!-- Two Column Layout: Requirements to Confirm & Geographic Corridor -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div class="outlet-questions grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Left: Requirements in Question Form -->
     <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
       <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
@@ -513,60 +556,10 @@
       </ul>
     </section>
 
-    <!-- Right: Geographic Route Preview -->
-    <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-5">
-      <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-[#4E7380]/12 text-[#4E7380] flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-          </div>
-          <h2 class="text-xl font-serif font-bold text-[#20251E]">
-            {isFil ? 'Mapa at konteksto ng biyahe' : 'Map & travel context'}
-          </h2>
-        </div>
-
-        <span class="text-xs bg-[#FCECD8] text-[#6E3511] px-2.5 py-0.5 rounded-full font-bold">
-          {isFil ? 'Konteksto ng mapa' : 'Map context'}
-        </span>
-      </div>
-
-      <div class="rounded-xl overflow-hidden border border-[#20251E]/10 bg-[#FAF7EE] relative">
-        <LiveLagunaMap
-          items={[{
-            outlet,
-            fit: fitResult,
-            distanceKm
-          }]}
-          harvest={harvest}
-          selectedId={outlet.id}
-          lang={lang}
-          onSelect={() => {}}
-        />
-      </div>
-
-      <div class="grid gap-2 text-xs text-[#596052] pt-1 sm:grid-cols-3 sm:items-start">
-        <span>
-          {isFil ? 'Batayang lokasyon' : 'Reference point'}:
-          <strong>{originMun.name.split(',')[0]}{isFil ? ' — sentro ng munisipyo' : ' municipality center'}</strong>
-        </span>
-        <span>
-          {routeEstimate.source === 'road' ? (isFil ? 'Kalsada' : 'Road') : (isFil ? 'Tuwid na layo' : 'Straight-line')}:
-          <strong>{routeEstimate.source === 'road' ? routeEstimate.roadDistanceKm?.toFixed(1) : distanceKm.toFixed(1)} km</strong>
-          {#if routeEstimate.source === 'road'}
-            <span class="block">{isFil ? '~' + routeEstimate.roadDurationMinutes + ' min biyahe' : '~' + routeEstimate.roadDurationMinutes + ' min drive'}</span>
-          {:else}
-            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
-          {/if}
-        </span>
-        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
-      </div>
-    </section>
   </div>
 
   <!-- Contact & Next Steps Action Dock -->
-  <section class="bg-white rounded-2xl border border-[#20251E]/12 p-6 sm:p-8 shadow-sm space-y-6">
+  <section class="outlet-actions almanac-entry p-6 sm:p-8 space-y-6">
     <div class="flex items-center gap-2.5 border-b border-[#20251E]/10 pb-4">
       <div class="w-8 h-8 rounded-lg bg-[#486320]/12 text-[#486320] flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -647,10 +640,6 @@
         {isFil ? 'Pinagmulan' : 'Source'}:
         <span class="font-medium text-[#20251E]">{fitResult.sourceLabel || (isFil ? 'Hindi alam' : 'Source unknown')} &bull; {outlet.sampleOfferDate}</span>
       </div>
-      <div>
-        {isFil ? 'Uri ng datos' : 'Data mode'}:
-        <span class="font-medium text-[#20251E]">{isFil ? 'Demo — halimbawang datos' : 'Demo — sample data'} &bull; NextGen Agri Hackathon 2026</span>
-      </div>
     </div>
   </section>
 </div>
@@ -687,7 +676,7 @@
       </div>
 
       <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
-        <strong>{isFil ? 'Paalala sa demo:' : 'Demo notice:'}</strong>
+        <strong>{isFil ? 'Paalala:' : 'Notice:'}</strong>
         {isFil
           ? ' Hindi awtomatikong nagpapadala ng SMS ang AniWhere. Kopyahin ang mensahe at ipadala mo mismo kung may beripikadong contact.'
           : ' AniWhere does not send automated SMS. Copy the message and send it yourself only when you have a verified contact.'}
@@ -775,8 +764,8 @@
             {/if}
             <p class="text-[11px] leading-relaxed text-[#6E3511]">
               {isFil
-                ? 'Demo field ito, hindi beripikadong real-world contact. Huwag tumawag o mag-message batay sa demo record.'
-                : 'This is a demo field, not a verified real-world contact. Do not call or message based on the demo record.'}
+                ? 'Hindi beripikadong contact. Kumpirmahin bago tumawag o mag-message.'
+                : 'Unverified contact. Verify before calling or messaging.'}
             </p>
           </div>
         {:else}
@@ -790,8 +779,8 @@
         <div class="rounded-xl p-3 bg-[#FCECD8]/60 border border-[#6E3511]/15 text-[11px] text-[#6E3511]">
           <strong>{isFil ? 'Paalala:' : 'Notice:'}</strong>
           {isFil
-            ? ' Demo — halimbawang datos para sa NextGen Agri Hackathon. Hindi gumagawa ang AniWhere ng tawag, reserbasyon, o transaksyon.'
-            : ' Demo — sample data for the NextGen Agri Hackathon. AniWhere does not place calls, reserve capacity, or execute transactions.'}
+            ? 'Hindi gumagawa ang AniWhere ng tawag, reserbasyon, o transaksyon.'
+            : 'AniWhere does not place calls, reserve capacity, or complete transactions.'}
         </div>
       </div>
 
@@ -807,3 +796,87 @@
     </div>
   </div>
 {/if}
+<style>
+  .outlet-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    background: #fffdf8;
+    color: #20251e;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+  .outlet-detail > :first-child,
+  .outlet-decision,
+  .outlet-questions,
+  .outlet-actions { grid-column: 1 / -1; }
+  .outlet-intro, .outlet-route, .outlet-decision, .outlet-actions,
+  .outlet-questions > section {
+    border: 1px solid rgb(32 37 30 / 18%);
+    border-radius: 12px;
+    background: #fffdf8;
+    box-shadow: none;
+  }
+  .outlet-route { min-width: 0; padding: 1rem; }
+  .outlet-route > div:nth-child(2) { border-radius: 4px; }
+  .outlet-route > div:last-child {
+    border-top: 1px solid rgb(32 37 30 / 18%);
+    padding: 1rem .25rem .25rem;
+    line-height: 1.5;
+  }
+  .outlet-route strong { display: block; color: #20251e; font-variant-numeric: tabular-nums; }
+  .outlet-intro > div:last-child {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+  }
+  .outlet-intro > div:last-child > div {
+    align-items: flex-start;
+    padding: .75rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .outlet-intro > div:last-child > div + div { border-left: 1px solid rgb(32 37 30 / 14%); }
+  .outlet-decision > div:nth-child(2) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-block: 1px solid rgb(32 37 30 / 18%); }
+  .outlet-decision > div:nth-child(2) > div {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 1rem;
+    border-bottom: 1px solid rgb(32 37 30 / 12%);
+  }
+  .outlet-decision > div:nth-child(2) > div:last-child { background: #eaf3de; }
+  .outlet-questions { display: block; }
+  .outlet-questions li { border-radius: 4px; }
+  .outlet-detail h1, .outlet-detail h2 { font-family: 'Outfit Variable', Outfit, system-ui, sans-serif; letter-spacing: -.025em; }
+  .outlet-detail h1 { font-size: clamp(1.875rem, 3vw, 2.75rem); line-height: 1.12; }
+  .outlet-detail :is(button, a):focus-visible { outline: 3px solid #486320; outline-offset: 3px; }
+  .outlet-detail :is(button, a) { border-radius: 8px; }
+  .outlet-detail ::selection { background: #d9e8c5; color: #20251e; }
+  @media (min-width: 1024px) {
+    .outlet-detail { grid-template-columns: minmax(20rem, 1fr) minmax(0, 1.55fr); gap: 1.25rem; }
+    .outlet-intro { grid-column: 1; grid-row: 2; }
+    .outlet-route { grid-column: 2; grid-row: 2; }
+    .outlet-actions { grid-row: 3; }
+    .outlet-decision { grid-row: 4; }
+    .outlet-questions { grid-row: 5; }
+    .outlet-decision > div:nth-child(2) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .outlet-decision > div:nth-child(2) > div:not(:nth-child(3n)) { border-right: 1px solid rgb(32 37 30 / 12%); }
+  }
+  @media (max-width: 1023px) {
+    .outlet-route { grid-row: 3; }
+    .outlet-actions { grid-row: 4; }
+    .outlet-decision { grid-row: 5; }
+    .outlet-questions { grid-row: 6; }
+  }
+  @media (max-width: 639px) {
+    .outlet-detail { gap: 1rem; padding-inline: 1rem; }
+    .outlet-intro, .outlet-decision, .outlet-actions, .outlet-questions > section { padding: 1rem; }
+    .outlet-intro > div:last-child { grid-template-columns: 1fr; }
+    .outlet-intro > div:last-child > div { padding: .5rem 0; }
+    .outlet-intro > div:last-child > div + div { border-left: 0; border-top: 1px solid rgb(32 37 30 / 14%); }
+    .outlet-route > div:first-child > span { display: none; }
+    .outlet-route > div:last-child { grid-template-columns: 1fr; }
+  }
+</style>

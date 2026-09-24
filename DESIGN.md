@@ -1,10 +1,55 @@
+---
+name: AniWhere
+description: Map-first market discovery for Laguna farmers
+colors:
+  field-olive: "#597928"
+  young-leaf: "#91AC67"
+  soil-brown: "#6E3511"
+  rice-cream: "#FCECD8"
+  warm-surface: "#FFFDF8"
+  field-ink: "#20251E"
+  route-blue: "#4E7380"
+typography:
+  display:
+    fontFamily: "Outfit Variable, Outfit, system-ui, sans-serif"
+    fontSize: "clamp(1.875rem, 4vw, 3rem)"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.025em"
+  body:
+    fontFamily: "Atkinson Hyperlegible Next Variable, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.5
+rounded:
+  control: "8px"
+  surface: "12px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+components:
+  button-primary:
+    backgroundColor: "{colors.field-olive}"
+    textColor: "{colors.warm-surface}"
+    rounded: "{rounded.control}"
+    padding: "12px 16px"
+  evidence-surface:
+    backgroundColor: "{colors.rice-cream}"
+    textColor: "{colors.field-ink}"
+    rounded: "{rounded.surface}"
+    padding: "16px"
+---
+
 # AniWhere Design System Specification
 
 ## 1. Product Identity
 AniWhere is a harvest-based market-discovery and decision-support tool for smallholder farmers in Laguna, Philippines.
 - Core Farmer Question: *Saan ko ibebenta ang ani ko?* (Where do I sell my harvest?)
 - Core Positioning: *Tell us your harvest. We show where it can realistically go.*
-- Visual Character: Warm, editorial, documentary-atlas aesthetic grounded in Philippine agriculture. Calm, high legibility, honest data presentation.
+- Visual Character: **Map-first Field Almanac**—a full-width working Laguna map, ruled evidence ledgers, shoulder indexes, and direct modern controls. Calm, legible, and honest about uncertainty.
 
 ---
 
@@ -65,24 +110,24 @@ tokens:
 ## 3. Typography Hierarchy
 
 ### 3.1 Typefaces
-- **Display / Headings (H1, H2)**: `Source Serif 4`, serif fallback `Georgia, serif`.
-  - Weight: 600 (Semibold) or 700 (Bold)
-  - Letter-spacing: `-0.02em` (tight tracking)
-  - Line-height: `1.15` to `1.25`
-  - Purpose: Restrained editorial titles, warm agricultural bookcraft. Exactly **one** H1 per page.
-- **UI / Body / Controls / Tables**: `Source Sans 3`, sans-serif fallback `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`.
-  - Weights: 400 (Regular), 500 (Medium), 600 (Semibold)
-  - Body base: minimum `16px` on mobile for high legibility
-  - Tabular Numbers (`font-variant-numeric: tabular-nums`): Mandatory on all financial, kilogram, and comparison data columns.
+- **Display / headings / brand:** `Outfit Variable`, then `Outfit`, `system-ui`, sans-serif.
+  - Weights: 600–700.
+  - Letter-spacing: `-0.025em`.
+  - Line-height: `1.1`–`1.25`.
+  - Purpose: compact field-guide headings and decisive screen titles. Exactly one H1 per page.
+- **UI / body / controls / tables:** `Atkinson Hyperlegible Next Variable`, then `Atkinson Hyperlegible Next`, `system-ui`, sans-serif.
+  - Weights: 400, 500, 600, 700.
+  - Body base: minimum `16px` on mobile.
+  - Tabular numerals are mandatory for financial, kilogram, distance, and comparison data.
 
 ### 3.2 Typography Scale
-- `H1`: 2.25rem (36px) mobile / 3.0rem (48px) desktop; leading tight
-- `H2`: 1.5rem (24px) mobile / 1.875rem (30px) desktop; leading snug
-- `H3`: 1.25rem (20px); font-sans semibold
-- `Body Large`: 1.125rem (18px); font-sans regular
-- `Body Base`: 1.0rem (16px); font-sans regular; leading relaxed (1.6)
-- `Caption / Meta`: 0.875rem (14px); font-sans medium
-- `Data / Numerical Metric`: 1.25rem - 2.0rem; font-sans bold with tabular numerals
+- `H1`: 1.875rem mobile / 3rem desktop; leading tight.
+- `H2`: 1.5rem mobile / 1.875rem desktop.
+- `H3`: 1.25rem, semibold.
+- `Body Large`: 1.125rem.
+- `Body Base`: 1rem, line-height 1.5.
+- `Caption / Meta`: 0.75–0.875rem, medium or semibold.
+- `Data / Numerical Metric`: 1.25–2rem, bold with tabular numerals.
 
 ---
 
@@ -108,9 +153,10 @@ tokens:
 ---
 
 ## 5. Signature Visual Motif: The Harvest Route
-The central visual anchor is the **Harvest Route**: transforming entered harvest mass into tangible destination pathways across the illustrated Laguna landscape (Mt. Makiling contours, Laguna de Bay waterline, quiet farm parcel geometries).
-- Illustrated cleanly in accessible vector SVG/HTML.
-- Map and List are peers, synchronized bidirectionally.
+The **Harvest Route** is a working decision surface, not decorative chrome. Discovery uses the full available width for synchronized map routes and outlet evidence.
+- Desktop: one dominant cartographic plate with a compact harvest docket and a ruled outlet ledger beneath it.
+- Mobile: a substantial map viewport paired with an indexed evidence sheet; never a shrunken desktop spread.
+- Map and list selection remain bidirectionally synchronized.
 
 ---
 

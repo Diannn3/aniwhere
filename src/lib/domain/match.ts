@@ -15,7 +15,7 @@ function evidenceKindFor(outlet: Outlet, cropRule?: CropCondition): MarketEviden
 function evidenceFields(outlet: Outlet, cropRule?: CropCondition) {
   return {
     evidenceKind: evidenceKindFor(outlet, cropRule),
-    sourceLabel: cropRule?.sourceLabel ?? (outlet.isDemoFixture ? 'Demo — sample data' : null),
+    sourceLabel: cropRule?.sourceLabel ?? (outlet.isDemoFixture ? 'Outlet record' : null),
     dataUpdatedAt: cropRule?.lastUpdatedAt ?? null,
     dataValidUntil: cropRule?.validUntil ?? null,
   };
