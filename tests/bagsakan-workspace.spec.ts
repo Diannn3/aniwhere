@@ -36,6 +36,48 @@ test('a Bagsakan can create, edit, and pause a need that changes farmer fit', as
   await expect(card).toContainText('Contact to confirm');
 });
 
+test('map clicks move the pin without recentering the camera', async ({ page }) => {
+  await page.goto('/bagsakan');
+  await page.locator('#bag-profile-name').fill('Map Pin Test Bagsakan');
+  await page.locator('#bag-profile-municipalityId').selectOption('santa-cruz');
+
+  await expect(page.getByText('Click or tap the map to place the pin. You can also use the coordinates below.'))
+    .toBeVisible({ timeout: 20_000 });
+
+  const map = page.locator('[data-bagsakan-pin-map]');
+  const canvas = map.locator('.maplibregl-canvas');
+  const marker = map.locator('.maplibregl-marker');
+  await expect(canvas).toBeVisible();
+  await expect(marker).toBeVisible();
+
+  const mapBox = await canvas.boundingBox();
+  expect(mapBox).not.toBeNull();
+  if (!mapBox) throw new Error('Bagsakan map canvas has no bounding box.');
+
+  const markerCenterX = async () => {
+    const box = await marker.boundingBox();
+    if (!box) throw new Error('Bagsakan marker has no bounding box.');
+    return box.x + box.width / 2;
+  };
+
+  const clickAt = async (xRatio: number) => {
+    const targetX = mapBox.x + mapBox.width * xRatio;
+    await canvas.click({ position: { x: mapBox.width * xRatio, y: mapBox.height * 0.5 } });
+    await expect.poll(async () => Math.abs((await markerCenterX()) - targetX)).toBeLessThan(45);
+  };
+
+  await clickAt(0.28);
+  await expect(page.getByText('Exact pin selected')).toBeVisible();
+  const firstLat = await page.locator('#bag-profile-lat').inputValue();
+  const firstLng = await page.locator('#bag-profile-lng').inputValue();
+  expect(firstLat).not.toBe('14.281');
+  expect(firstLng).not.toBe('121.417');
+
+  await clickAt(0.72);
+  await expect.poll(() => page.locator('#bag-profile-lat').inputValue()).not.toBe(firstLat);
+  await expect.poll(() => page.locator('#bag-profile-lng').inputValue()).not.toBe(firstLng);
+});
+
 test('pin coordinates can be set without dragging and reset to municipality center', async ({ page }) => {
   await page.goto('/bagsakan');
   await page.locator('#bag-profile-name').fill('Pinned Test Bagsakan');
