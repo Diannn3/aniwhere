@@ -12,9 +12,9 @@ function clientKey(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
-function requestOriginAllowed(req) {
+function allowedBrowserOrigin(req) {
   const origin = req.headers?.origin;
-  if (!origin) return true;
+  if (!origin) return null;
 
   const allowlist = new Set(
     (process.env.ROUTING_ALLOWED_ORIGINS || '')
@@ -22,7 +22,7 @@ function requestOriginAllowed(req) {
       .map((value) => value.trim())
       .filter(Boolean)
   );
-  if (allowlist.has(origin)) return true;
+  if (allowlist.has(origin)) return origin;
 
   try {
     const parsed = new URL(origin);
@@ -30,10 +30,18 @@ function requestOriginAllowed(req) {
     const host = (typeof forwardedHost === 'string' && forwardedHost) || req.headers?.host;
     const forwardedProto = req.headers?.['x-forwarded-proto'];
     if (!host || parsed.host !== host) return false;
-    return !forwardedProto || parsed.protocol === `${forwardedProto}:`;
+    return !forwardedProto || parsed.protocol === `${forwardedProto}:` ? origin : false;
   } catch {
     return false;
   }
+}
+
+function applyCors(res, origin) {
+  if (!origin) return;
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type');
+  res.setHeader('Vary', 'Origin');
 }
 
 function parseBody(body) {
@@ -50,12 +58,19 @@ function parseBody(body) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'method_not_allowed' });
-  }
-  if (!requestOriginAllowed(req)) {
+  const browserOrigin = allowedBrowserOrigin(req);
+  if (browserOrigin === false) {
     return res.status(403).json({ error: 'origin_not_allowed' });
+  }
+  applyCors(res, browserOrigin);
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(204).end();
+  }
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'method_not_allowed' });
   }
 
   const serializedLength =
