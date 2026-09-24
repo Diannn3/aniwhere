@@ -423,10 +423,27 @@
           {#if routeEstimate.source === 'road'}
             <span class="block">{formatEstimatedDriveDuration(routeEstimate) ?? '—'} {isFil ? 'tinatayang biyahe' : 'estimated drive'}</span>
           {:else}
-            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
+            <span class="block">
+              {routeRequestState === 'loading'
+                ? (isFil ? 'Kinukuha ang rutang pangkalsada…' : 'Fetching road route…')
+                : routeRequestState === 'not_configured'
+                  ? (isFil ? 'Hindi naka-configure ang live road routing.' : 'Live road routing is not configured.')
+                  : routeRequestState === 'unavailable'
+                    ? (isFil ? 'Pansamantalang hindi available ang rutang pangkalsada.' : 'Road route is temporarily unavailable.')
+                    : (isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.')}
+            </span>
           {/if}
         </span>
-        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
+        <span>
+          {isFil ? 'Destinasyon' : 'Destination'}:
+          <strong>
+            {outlet.isLocalBagsakan
+              ? outlet.localLocationBasis === 'exact_pin'
+                ? (isFil ? 'naka-save na eksaktong pin ng Bagsakan' : 'saved exact Bagsakan pin')
+                : (isFil ? 'sentro ng ' + outlet.municipality : outlet.municipality + ' municipality center')
+              : outlet.municipality}
+          </strong>
+        </span>
       </div>
       {#if routeEstimate.source === 'road'}
         <p class="mt-2 text-xs leading-5 text-[#596052]">
