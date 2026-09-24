@@ -1,7 +1,13 @@
-import { createHash } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createRoutingClient } from './lib/routing-provider.mjs';
+import {
+  assertMatrixResponse,
+  createInputFingerprint,
+  validateRouteGeometry,
+  validateRoutingArtifact,
+  writeJsonAtomic,
+} from './lib/routing-artifact.mjs';
 
 const API_KEY = process.env.ORS_API_KEY;
 if (!API_KEY) {
@@ -23,21 +29,13 @@ const locations = [...origins, ...outlets].map(([, , lat, lng]) => [lng, lat]);
 const sourceIndexes = origins.map((_, index) => index);
 const destinationIndexes = outlets.map((_, index) => origins.length + index);
 
-const fingerprintPayload = {
-  schemaVersion: 2,
+const inputFingerprint = createInputFingerprint({
   provider: 'openrouteservice',
   providerBase: BASE,
   profile: PROFILE,
-  origins: origins
-    .map(([id, , lat, lng]) => ({ id, lat, lng }))
-    .sort((a, b) => a.id.localeCompare(b.id)),
-  outlets: outlets
-    .map(([id, , lat, lng]) => ({ id, lat, lng }))
-    .sort((a, b) => a.id.localeCompare(b.id)),
-};
-const inputFingerprint = createHash('sha256')
-  .update(JSON.stringify(fingerprintPayload))
-  .digest('hex');
+  origins: routingPoints.origins,
+  outlets: routingPoints.outlets,
+});
 
 const ors = createRoutingClient({ baseUrl: BASE, apiKey: API_KEY });
 
@@ -48,6 +46,8 @@ const matrix = await ors(`/matrix/${PROFILE}`, {
   metrics: ['distance', 'duration'],
   units: 'm',
 });
+
+assertMatrixResponse(matrix, origins.length, outlets.length);
 
 const generatedAt = new Date().toISOString();
 const artifact = {
@@ -100,21 +100,26 @@ if (WITH_GEOMETRY) {
           coordinates: [[originLng, originLat], [outletLng, outletLat]],
           instructions: false,
         });
-        const geometry = geojson.features?.[0]?.geometry;
-        if (geometry?.type === 'LineString' && Array.isArray(geometry.coordinates)) {
+        const feature = geojson.features?.[0];
+        const geometry = feature?.geometry;
+        const summary = feature?.properties?.summary;
+        const validSummary =
+          typeof summary?.distance === 'number' &&
+          Number.isFinite(summary.distance) &&
+          summary.distance >= 0 &&
+          typeof summary?.duration === 'number' &&
+          Number.isFinite(summary.duration) &&
+          summary.duration >= 0;
+
+        if (validateRouteGeometry(geometry) && validSummary) {
           cell.geometry = geometry;
           cell.geometryStatus = 'ready';
-          const summary = geojson.features?.[0]?.properties?.summary;
-          if (
-            typeof summary?.distance === 'number' &&
-            Number.isFinite(summary.distance) &&
-            typeof summary?.duration === 'number' &&
-            Number.isFinite(summary.duration)
-          ) {
-            cell.distanceMeters = summary.distance;
-            cell.durationSeconds = summary.duration;
-            cell.metricSource = 'directions';
-          }
+          cell.distanceMeters = summary.distance;
+          cell.durationSeconds = summary.duration;
+          cell.metricSource = 'directions';
+        } else {
+          artifact.status = 'partial';
+          console.warn(`Geometry response invalid for ${originId} -> ${outletId}; keeping Matrix metrics.`);
         }
       } catch (error) {
         console.warn(`Geometry unavailable for ${originId} -> ${outletId}: ${error.message}`);
@@ -126,5 +131,9 @@ if (WITH_GEOMETRY) {
 }
 
 const output = resolve('src/generated/routing-matrix.json');
-await writeFile(output, JSON.stringify(artifact, null, 2) + '\n', 'utf8');
+const expectedOriginIds = origins.map(([id]) => id);
+const expectedOutletIds = outlets.map(([id]) => id);
+await writeJsonAtomic(output, artifact, (candidate) =>
+  validateRoutingArtifact(candidate, expectedOriginIds, expectedOutletIds)
+);
 console.log(`Wrote ${output} (${artifact.status}) at ${generatedAt}`);
