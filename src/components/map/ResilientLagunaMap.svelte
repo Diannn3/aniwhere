@@ -22,6 +22,8 @@
     selectedId = undefined,
     isDetailView = false,
     lang = 'en',
+    mobilePickerInset = 0,
+    mobileSelectionPreview = true,
     onSelect = () => {},
   }: {
     items?: OutletWithFit[];
@@ -29,6 +31,8 @@
     selectedId?: string;
     isDetailView?: boolean;
     lang?: 'en' | 'fil';
+    mobilePickerInset?: number;
+    mobileSelectionPreview?: boolean;
     onSelect?: (id: string) => void;
   } = $props();
 
@@ -49,7 +53,8 @@
     const paddingX = 40;
     const paddingTop = 45;
     const innerW = SVG_WIDTH - paddingX * 2;
-    const innerH = 205; // Lands comfortably between y=45 and y=250
+    const visibleSvgHeight = SVG_HEIGHT * (1 - Math.min(mobilePickerInset / 570, 0.88));
+    const innerH = Math.min(205, Math.max(50, visibleSvgHeight - paddingTop - 28));
     return {
       x: Math.round((paddingX + normX * innerW) * 10) / 10,
       y: Math.round((paddingTop + normY * innerH) * 10) / 10,
@@ -342,7 +347,7 @@
     </svg>
 
     <!-- Mobile Non-Modal Pin Inspection Bottom Sheet (P1.1 44px touch targets & zero pin occlusion) -->
-    {#if selectedItem && !isDetailView}
+    {#if selectedItem && !isDetailView && mobileSelectionPreview}
       <div
         role="region"
         aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}

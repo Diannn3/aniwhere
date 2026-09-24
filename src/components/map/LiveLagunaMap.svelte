@@ -30,6 +30,8 @@
     selectedId = undefined,
     lang = 'en',
     visible = true,
+    mobilePickerInset = undefined,
+    mobileSelectionPreview = true,
     onSelect = () => {},
   }: {
     items?: OutletWithFit[];
@@ -37,6 +39,8 @@
     selectedId?: string;
     lang?: 'en' | 'fil';
     visible?: boolean;
+    mobilePickerInset?: number;
+    mobileSelectionPreview?: boolean;
     onSelect?: (id: string) => void;
   } = $props();
 
@@ -186,7 +190,7 @@
     const compact = window.matchMedia('(max-width: 767px)').matches;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     map.fitBounds(bounds, {
-      padding: selectedRoutePadding(compact),
+      padding: selectedRoutePadding(compact, mobilePickerInset),
       maxZoom: 13,
       animate: !reduceMotion,
       duration: reduceMotion ? 0 : 420,
@@ -228,12 +232,16 @@
     selectedRoute;
     loadedRouteGeometry;
     geometryLoadState;
+    mobilePickerInset;
     if (liveReady) syncMap();
   });
 
   $effect(() => {
     if (visible && liveReady) {
-      requestAnimationFrame(() => map?.resize?.());
+      requestAnimationFrame(() => {
+        map?.resize?.();
+        syncMap();
+      });
     }
   });
 
@@ -304,7 +312,7 @@
       <strong>{lang === 'fil' ? 'Offline na mapa' : 'Offline map'}</strong>
       <span>{lang === 'fil' ? 'Hindi nag-load ang interaktibong mapa. Gamit muna ang ligtas na guhit-mapa.' : 'The interactive map did not load. Using the resilient map instead.'}</span>
     </div>
-    <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {onSelect} />
+    <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {mobilePickerInset} {mobileSelectionPreview} {onSelect} />
   </div>
 {:else}
   <div class="live-map-shell" class:is-ready={liveReady}>
@@ -330,7 +338,7 @@
     </div>
 
     {#if selectedItem && selectedRoute}
-      <aside class="route-card" aria-live="polite">
+      <aside class="route-card" class:picker-hidden={mobileSelectionPreview === false} aria-live="polite">
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
@@ -607,6 +615,10 @@
     .route-card {
       bottom: 1.8rem;
     }
+  }
+
+  @media (max-width: 1023px) {
+    .route-card.picker-hidden { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {

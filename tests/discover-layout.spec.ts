@@ -25,6 +25,7 @@ for (const viewport of widths) {
     const list = page.locator('.discovery-outlets');
 
     await expect(switcher).toBeVisible();
+    await expect(page.locator('.discovery-workspace')).toHaveAttribute('data-view', 'list');
     await expect(list).toBeVisible();
     await expect(map).toBeHidden();
     expect(await mapButton.evaluate((button) => {
@@ -90,6 +91,7 @@ test('keyboard switches views and the outlet card keeps separate actions', async
   await page.route('https://unpkg.com/**', (route) => route.abort());
   await page.goto(`/discover?${harvest}&view=list`);
   const switcher = page.getByRole('group', { name: 'Choose list or map view' });
+  await expect(page.locator('.discovery-workspace')).toHaveAttribute('data-view', 'list');
   await switcher.getByRole('button', { name: 'Map' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.discovery-map')).toBeVisible();
