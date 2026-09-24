@@ -77,7 +77,7 @@ test('Nagcarlan richer-data outlet obeys the same route truth contract', async (
 });
 
 
-test('mobile map selection stays on the map until the farmer asks for the list', async ({ page }) => {
+test('mobile map pins and the shared outlet picker stay synchronized', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('https://unpkg.com/**', (route) => route.abort());
   await page.goto(
@@ -85,26 +85,24 @@ test('mobile map selection stays on the map until the farmer asks for the list',
   );
 
   await expect(page.getByText('Offline map')).toBeVisible();
-  const processorPin = page.getByRole('button', { name: /Kusina Verde Processing House:.*km/i });
-  await processorPin.click();
-
-  const preview = page.getByRole('region', { name: 'Selected map place' });
-  await expect(preview.getByText('Can accept', { exact: true })).toBeVisible();
-  await expect(preview.getByText('Harvest remaining', { exact: true })).toBeVisible();
-  await expect(preview.getByText('300 kg', { exact: true })).toBeVisible();
-  await expect(preview.getByText('0 kg', { exact: true })).toBeVisible();
-
-  await expect(page.getByText('Offline map')).toBeVisible();
+  const selectedRow = page.locator('[data-outlet-id="demo-processor"] .map-picker__select');
+  await selectedRow.click();
   await expect(page).toHaveURL(/view=map/);
   await expect(page).toHaveURL(/place=demo-processor/);
+  await expect(selectedRow).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.map-picker__selection')).toContainText('Kusina Verde Processing House');
 
-  await page.getByRole('button', { name: /View selected place in the list/i }).click();
-  await expect(page).toHaveURL(/view=list/);
-  await expect(page.locator('#outlet-card-demo-processor')).toBeVisible();
+  const processorPin = page.getByRole('group', { name: /Illustrative Laguna outlet map/ })
+    .getByRole('button', { name: /Ani at Agos Farmers Cooperative:/i });
+  await processorPin.click();
+  await expect(page).toHaveURL(/place=demo-cooperative/);
+  await expect(page.locator('[data-outlet-id="demo-cooperative"] .map-picker__select'))
+    .toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.map-picker__selection')).toContainText('Ani at Agos Farmers Cooperative');
 });
 
 
-test('fallback map preview dismissal clears selected place state', async ({ page }) => {
+test('mobile picker details keep map and harvest context in their link', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('https://unpkg.com/**', (route) => route.abort());
   await page.goto(
@@ -112,10 +110,11 @@ test('fallback map preview dismissal clears selected place state', async ({ page
   );
 
   await expect(page.getByText('Offline map')).toBeVisible();
-  await page.getByRole('button', { name: /Kusina Verde Processing House:.*straight-line/i }).click();
+  await page.locator('[data-outlet-id="demo-processor"] .map-picker__select').click();
   await expect(page).toHaveURL(/place=demo-processor/);
-
-  await page.getByRole('button', { name: 'Close preview' }).click();
-  await expect(page).not.toHaveURL(/place=/);
-  await expect(page.getByRole('button', { name: /View selected place in the list/i })).toHaveCount(0);
+  await page.locator('.map-picker__selection').getByRole('link', { name: 'View details' }).click();
+  await expect(page).toHaveURL(/\/places\/demo-processor/);
+  await expect(page).toHaveURL(/view=map/);
+  await expect(page).toHaveURL(/kg=300/);
+  await expect(page).toHaveURL(/origin=los-banos/);
 });
