@@ -1,4 +1,3 @@
-import { loadEnv } from 'vite';
 import { createRequestLimiter } from './rate-limit.mjs';
 import { routeEstimateFromPayload } from './route-handler.mjs';
 
@@ -33,12 +32,10 @@ export function runtimeRoutingDevPlugin() {
   return {
     name: 'aniwhere-runtime-routing-dev',
     apply: 'serve',
-    configResolved(config) {
-      const env = loadEnv(config.mode, process.cwd(), '');
-      apiKey = process.env.ORS_API_KEY || env.ORS_API_KEY || '';
+    configResolved() {
+      apiKey = process.env.ORS_API_KEY || '';
       baseUrl =
         process.env.ORS_BASE_URL ||
-        env.ORS_BASE_URL ||
         'https://api.heigit.org/openrouteservice/v2';
     },
     configureServer(server) {
