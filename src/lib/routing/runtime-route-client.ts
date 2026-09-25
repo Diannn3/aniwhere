@@ -90,7 +90,15 @@ export async function requestRuntimeRoute(
       cache: 'no-store',
     });
     if (!response.ok) return { ok: false, reason: reasonForStatus(response.status) };
-    const parsed = validateRuntimeRouteResponse(await response.json());
+
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      return { ok: false, reason: 'invalid_response' };
+    }
+
+    const parsed = validateRuntimeRouteResponse(body);
     return parsed ?? { ok: false, reason: 'invalid_response' };
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
