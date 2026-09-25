@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { todayInManila } from '../src/lib/state/url-state';
 import { clearClientState } from './support';
 
@@ -8,7 +8,7 @@ const placeId = `local-bagsakan-${profileId}`;
 const today = todayInManila();
 const harvest = `crop=tomato&kg=300&origin=los-banos&ready=${today}&lang=en`;
 
-async function seedLocalBagsakan(page: Parameters<typeof test>[0] extends never ? never : any) {
+async function seedLocalBagsakan(page: Page) {
   const timestamp = new Date().toISOString();
   await page.evaluate(([key, value]) => {
     localStorage.setItem(key, JSON.stringify(value));
