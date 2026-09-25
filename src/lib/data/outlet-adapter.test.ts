@@ -33,6 +33,7 @@ describe('market data adapter', () => {
     const terms = coop.acceptedCrops.tomato!;
 
     expect(terms.sourceKind).toBe('demo');
+    expect(terms.sourceLabel).toBe('AniWhere fictional demo outlet record');
     expect(terms.validFrom! <= todayInManila()).toBe(true);
     expect(terms.validUntil! >= todayInManila()).toBe(true);
   });
