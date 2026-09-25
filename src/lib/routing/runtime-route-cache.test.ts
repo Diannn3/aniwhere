@@ -34,6 +34,7 @@ describe('runtime route cache contract', () => {
   it('rejects corrupt or contradictory cached evidence', () => {
     expect(isCachedRuntimeRoute({ ...route, roadDistanceKm: -1 })).toBe(false);
     expect(isCachedRuntimeRoute({ ...route, routeEvidence: 'static_artifact' })).toBe(false);
+    expect(isCachedRuntimeRoute({ ...route, roadDurationMinutes: 99 })).toBe(false);
     expect(isCachedRuntimeRoute({ ...route, geometry: undefined })).toBe(false);
     expect(isCachedRuntimeRoute({
       ...route,

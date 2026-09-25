@@ -28,6 +28,8 @@ export function isCachedRuntimeRoute(value: unknown): value is OutletRouteEstima
     !finiteNonNegative(route.straightLineDistanceKm) ||
     !finiteNonNegative(route.roadDistanceKm) ||
     !finiteNonNegative(route.roadDurationSeconds) ||
+    !finiteNonNegative(route.roadDurationMinutes) ||
+    route.roadDurationMinutes !== Math.round(route.roadDurationSeconds / 60) ||
     route.geometryPath !== null ||
     typeof route.generatedAt !== 'string' ||
     Number.isNaN(Date.parse(route.generatedAt)) ||
