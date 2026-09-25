@@ -5,6 +5,7 @@
   import { outletDetailHref } from '../../lib/data/outlet-links';
   import { t } from '../../content/translations';
   import { formatEstimatedDriveDuration, type OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import { LAGUNA_MAP_BOUNDS } from '../../lib/map/map-config';
 
   interface OutletWithFit {
     outlet: Outlet;
@@ -41,11 +42,9 @@
     routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   } = $props();
 
-  // Laguna Bounding Box
-  const MIN_LAT = 14.03;
-  const MAX_LAT = 14.34;
-  const MIN_LNG = 121.10;
-  const MAX_LNG = 121.48;
+  // Use the same canonical bounds as validation and MapLibre so a valid
+  // Bagsakan pin cannot fall outside only the resilient fallback.
+  const [[MIN_LNG, MIN_LAT], [MAX_LNG, MAX_LAT]] = LAGUNA_MAP_BOUNDS;
 
   const SVG_WIDTH = 480;
   const SVG_HEIGHT = 440;
