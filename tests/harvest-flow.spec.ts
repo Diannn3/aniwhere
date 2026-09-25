@@ -140,6 +140,20 @@ test('edits the discovery harvest and updates the address without discarding lan
 });
 
 
+test('labels fictional price evidence as demo data across farmer decision surfaces', async ({ page }) => {
+  await page.goto(discoverPath);
+  const cooperative = outletCard(page, 'Ani at Agos Farmers Cooperative');
+  await expect(cooperative.getByText('Demo price', { exact: true })).toBeVisible();
+
+  await cooperative.getByRole('link', { name: /view details/i }).click();
+  await expect(page.getByText('Demo price', { exact: true }).first()).toBeVisible();
+
+  await page.goto(
+    `/compare?places=demo-cooperative&crop=tomato&kg=300&origin=los-banos&ready=${todayInManila()}&lang=en`
+  );
+  await expect(page.getByText(/Demo price: ₱28\/kg/).first()).toBeVisible();
+});
+
 test('distance sorting explains the shared comparison basis to farmers', async ({ page }) => {
   await page.goto(discoverPath);
 
