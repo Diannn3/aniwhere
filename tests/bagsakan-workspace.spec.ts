@@ -50,6 +50,7 @@ test('map clicks move the pin without recentering the camera', async ({ page }) 
   await page.getByRole('button', { name: 'Set exact pin (optional)' }).click();
   await page.getByRole('button', { name: 'Choose on map' }).click();
 
+  await expect(page.getByText(/sends this saved Bagsakan pin.*OpenRouteService/i)).toBeVisible();
   await expect(page.getByText('Click or tap the map to place the pin. You can also use the coordinates below.'))
     .toBeVisible({ timeout: 20_000 });
 

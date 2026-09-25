@@ -113,6 +113,11 @@
     </div>
     {#if showExactPin}<div id="bag-exact-pin" class="space-y-4 border-t border-[#20251E]/15 pt-4">
       <p class="font-semibold">{isFil ? 'Eksaktong lokasyon' : 'Exact location'}</p>
+      <p class="text-sm leading-5 text-[#4A5245]">
+        {isFil
+          ? 'Kapag available ang road routing, ipinapadala ang naka-save na Bagsakan pin sa secure routing service ng AniWhere at OpenRouteService para gumawa ng tantyang ruta. Sentro ng munisipyo pa rin ang pinagmulan ng farmer route, hindi eksaktong lokasyon ng bukid.'
+          : 'When road routing is available, AniWhere sends this saved Bagsakan pin through its secure routing service to OpenRouteService to calculate a route estimate. The farmer origin remains the municipality reference point, not an exact farm location.'}
+      </p>
       <button type="button" aria-expanded={showMap} onclick={() => { showMap = !showMap; }} class="min-h-11 rounded-lg border border-[#20251E]/30 px-4 font-semibold hover:bg-[#FCECD8]">{showMap ? (isFil ? 'Itago ang mapa' : 'Hide map') : (isFil ? 'Pumili sa mapa' : 'Choose on map')}</button>
       {#if showMap}<PinPicker lat={Number(latInput)} lng={Number(lngInput)} {lang} recenterRequest={mapRecenterRequest} onPick={setPin} />{/if}
       <details bind:open={showCoordinates} class="rounded-lg border border-[#20251E]/20 px-4 py-2"><summary class="min-h-11 cursor-pointer py-2 font-semibold">{isFil ? 'Ilagay ang coordinates sa halip' : 'Enter coordinates instead'}</summary>
