@@ -5,9 +5,10 @@ import { serializeDiscoverQuery } from '../state/url-state';
 export function outletDetailHref(
   outlet: Outlet,
   harvest: HarvestQuery,
-  lang: 'en' | 'fil' = 'en'
+  lang: 'en' | 'fil' = 'en',
+  view: 'list' | 'map' = 'list'
 ): string {
-  const query = serializeDiscoverQuery(harvest, 'list', outlet.id, lang);
+  const query = serializeDiscoverQuery(harvest, view, outlet.id, lang);
   return outlet.isLocalBagsakan
     ? `/bagsakan/preview?${query}`
     : `/places/${encodeURIComponent(outlet.slug)}?${query}`;

@@ -77,7 +77,7 @@ test('one local entry survives discovery, comparison, saved places, and preview'
   const card = outletCard(page, 'Test Bagsakan');
   await expect(card).toBeVisible();
   await card.getByRole('button', { name: 'Save outlet' }).click();
-  await card.getByRole('checkbox').check();
+  await card.getByRole('button', { name: 'Add Test Bagsakan to compare' }).click();
 
   await page.getByRole('complementary', { name: 'Comparison dock' })
     .getByRole('link', { name: 'Compare' }).click();

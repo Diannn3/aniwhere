@@ -84,7 +84,8 @@ At runtime it currently uses:
 - browser `localStorage`;
 - a progressive Laguna map: MapLibre + OpenFreeMap when network/WebGL are available, with the in-repo SVG map as the resilient fallback;
 - deterministic Haversine straight-line distance;
-- a fail-closed road-routing matrix contract with a drift-checked 10-origin × 11-outlet OpenRouteService artifact generator.
+- a reviewed 10-origin × 11-outlet OpenRouteService road-routing artifact for static demo outlets;
+- secure on-demand road routing for a selected device-local Bagsakan when the runtime route endpoint is available.
 
 It does **not** currently use:
 
@@ -92,7 +93,6 @@ It does **not** currently use:
 - real-time buyer demand;
 - live authentication;
 - real buyer prices;
-- a generated OpenRouteService road matrix in the checked-in default artifact (the default remains intentionally `not_generated` until run with a valid private key);
 - payments, reservations, or checkout.
 
 The app labels demo evidence as demo data. Generated or fixture business names, capacities, prices, contacts, and transport costs must not be represented as real market facts.
@@ -138,6 +138,22 @@ pnpm dev
 
 The default example config uses `PUBLIC_DATA_MODE=demo`.
 
+For local Bagsakan road routing in development, set the private key in the shell before starting Astro:
+
+```bash
+ORS_API_KEY=... pnpm dev
+```
+
+On PowerShell:
+
+```powershell
+$env:ORS_API_KEY="..."
+pnpm dev
+```
+
+
+The dev server exposes a same-origin `/api/route-estimate` bridge; the browser never receives the ORS key. Production serverless deployments should keep `ORS_API_KEY` server-only and set `PUBLIC_RUNTIME_ROUTING_ENDPOINT=/api/route-estimate` at build time. The production adapter rejects cross-site browser requests by default; `ROUTING_ALLOWED_ORIGINS` is only for explicit additional trusted origins.
+
 Verification:
 
 ```bash
@@ -155,9 +171,9 @@ ORS_API_KEY=... pnpm routing:generate
 ORS_API_KEY=... pnpm routing:generate:geometry
 ```
 
-Routing inputs are checked against the current municipality and checked-in demo-place data and fingerprinted into the generated artifact. Generation validates the complete matrix before atomic replacement. The ORS key is never sent to the browser, and CI scans the production bundle for ORS secret markers. Without a reviewed generated artifact, AniWhere labels distances as straight-line and does not invent driving time.
+Routing inputs are checked against the current municipality and checked-in demo-place data and fingerprinted into the generated artifact. Generation validates the complete matrix before atomic replacement. The checked-in artifact now contains the reviewed 110 static route cells; missing or invalid road evidence still fails closed to straight-line distance. The ORS key is never sent to the browser, and CI scans the production bundle for ORS secret markers.
 
-A same-device Bagsakan is intentionally not part of the static road matrix because its coordinates can be created or moved at runtime. It therefore keeps the labelled straight-line fallback until a future secure runtime-routing path is deliberately implemented.
+A same-device Bagsakan is intentionally not part of the static road matrix because its coordinates can be created or moved at runtime. When the secure runtime route endpoint is configured, AniWhere requests one on-demand ORS Directions route for the selected local Bagsakan and keeps the key server-side. If the endpoint, network, or provider is unavailable, the UI remains on the labelled straight-line fallback.
 
 See [docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md](./docs/ROUTING_MATRIX_V2_IMPLEMENTATION_2026-09-25.md).
 

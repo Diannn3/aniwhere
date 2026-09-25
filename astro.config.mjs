@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
 import tailwindcss from '@tailwindcss/vite';
+import { runtimeRoutingDevPlugin } from './server/routing/dev-plugin.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,7 +13,7 @@ export default defineConfig({
   },
   integrations: [svelte()],
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), runtimeRoutingDevPlugin()],
     server: {
       port: 4321,
       strictPort: true,

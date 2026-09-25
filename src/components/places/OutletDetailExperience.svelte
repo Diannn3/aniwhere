@@ -10,10 +10,10 @@
   import { isOutletSaved, toggleSavedOutlet } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
-  import {
-    formatEstimatedDriveDuration,
-    getOutletRouteEstimate,
-  } from '../../lib/routing/routing-matrix';
+  import { formatEstimatedDriveDuration } from '../../lib/routing/routing-matrix';
+  import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
+  import { runtimeRouteCacheKey } from '../../lib/routing/runtime-route-cache';
 
   interface Props {
     outlet: Outlet;
@@ -23,6 +23,7 @@
   const { outlet, initialLang = 'en' } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
+  let returnView = $state<'list' | 'map'>('list');
   let harvest = $state<HarvestQuery>({
     crop: 'tomato',
     quantityKg: 300,
@@ -41,14 +42,21 @@
   let contactPanel: HTMLDivElement | null = $state(null);
   let messageCloseButton: HTMLButtonElement | null = $state(null);
   let contactCloseButton: HTMLButtonElement | null = $state(null);
+  type RouteRequestState = 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
+  let resolvedRoute = $state<OutletRouteEstimate | undefined>();
+  let resolvedRouteKey = $state<string | undefined>();
+  let routeRequestState = $state<RouteRequestState>('idle');
+  let routeClientReady = $state(false);
 
   onMount(() => {
     saved = isOutletSaved(outlet.id);
     const parsed = parseDiscoverQuery(window.location.search);
     harvest = parsed.harvest;
+    returnView = parsed.view;
     if (parsed.lang) {
       lang = parsed.lang;
     }
+    routeClientReady = true;
   });
 
   onMount(() => subscribeHarvestContext((next) => {
@@ -64,7 +72,70 @@
   );
 
   const fitResult = $derived(evaluateFit(outlet, harvest));
-  const routeEstimate = $derived(getOutletRouteEstimate(harvest.originMunicipality, outlet.id, distanceKm));
+  const immediateRoute = $derived(
+    getImmediateOutletRoute(harvest.originMunicipality, outlet, distanceKm)
+  );
+  const routeResolutionKey = $derived(
+    outlet.isLocalBagsakan
+      ? runtimeRouteCacheKey(harvest.originMunicipality, outlet.lat, outlet.lng)
+      : undefined
+  );
+  const routeEstimate = $derived(
+    outlet.isLocalBagsakan &&
+    resolvedRouteKey === routeResolutionKey &&
+    resolvedRoute
+      ? resolvedRoute
+      : immediateRoute.route
+  );
+  const displayRouteRequestState = $derived<RouteRequestState>(
+    !outlet.isLocalBagsakan
+      ? 'idle'
+      : resolvedRouteKey === routeResolutionKey
+        ? routeRequestState
+        : immediateRoute.state === 'cached'
+          ? 'ready'
+          : routeClientReady
+            ? 'loading'
+            : 'idle'
+  );
+
+  $effect(() => {
+    if (!routeClientReady) return;
+    const originId = harvest.originMunicipality;
+    const straightLineDistanceKm = distanceKm;
+    const key = outlet.isLocalBagsakan
+      ? runtimeRouteCacheKey(originId, outlet.lat, outlet.lng)
+      : undefined;
+    const immediate = getImmediateOutletRoute(originId, outlet, straightLineDistanceKm);
+    resolvedRouteKey = key;
+    resolvedRoute = immediate.route;
+
+    if (
+      !outlet.isLocalBagsakan ||
+      immediate.state === 'static' ||
+      immediate.state === 'cached'
+    ) {
+      routeRequestState = immediate.route.source === 'road' ? 'ready' : 'idle';
+      return;
+    }
+
+    routeRequestState = 'loading';
+    const controller = new AbortController();
+    void resolveOutletRoute(originId, outlet, straightLineDistanceKm, {
+      signal: controller.signal,
+    }).then((result) => {
+      if (controller.signal.aborted) return;
+      resolvedRoute = result.route;
+      routeRequestState =
+        result.route.source === 'road'
+          ? 'ready'
+          : result.failureReason === 'not_configured'
+            ? 'not_configured'
+            : 'unavailable';
+    });
+
+    return () => controller.abort();
+  });
 
   const isFil = $derived(lang === 'fil');
   const cropName = $derived(getCropLabel(harvest.crop, lang));
@@ -167,10 +238,10 @@
     outlet.isLocalBagsakan
       ? (isFil ? 'Presyo sa lokal na demo' : 'Local demo price')
       : fitResult.evidenceKind === 'demo'
-      ? (isFil ? 'Presyo' : 'Price')
+      ? (isFil ? 'Presyo sa demo' : 'Demo price')
       : fitResult.evidenceKind === 'buyer_offer'
         ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
-        : (isFil ? 'Presyo' : 'Price')
+        : (isFil ? 'Nakatalaang presyo' : 'Recorded price')
   );
 
   const priceQuestion = $derived(
@@ -190,7 +261,7 @@
   );
 
   const backUrl = $derived(
-    `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
+    `/discover?${serializeDiscoverQuery(harvest, returnView, undefined, lang)}`
   );
 
   const compareUrl = $derived(
@@ -370,6 +441,8 @@
           selectedId={outlet.id}
           lang={lang}
           onSelect={() => {}}
+          routeOverride={routeEstimate}
+          routeRequestState={displayRouteRequestState}
         />
       </div>
 
@@ -384,16 +457,33 @@
           {#if routeEstimate.source === 'road'}
             <span class="block">{formatEstimatedDriveDuration(routeEstimate) ?? '—'} {isFil ? 'tinatayang biyahe' : 'estimated drive'}</span>
           {:else}
-            <span class="block">{isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.'}</span>
+            <span class="block">
+              {displayRouteRequestState === 'loading'
+                ? (isFil ? 'Kinukuha ang rutang pangkalsada…' : 'Fetching road route…')
+                : displayRouteRequestState === 'not_configured'
+                  ? (isFil ? 'Hindi naka-configure ang live road routing.' : 'Live road routing is not configured.')
+                  : displayRouteRequestState === 'unavailable'
+                    ? (isFil ? 'Pansamantalang hindi available ang rutang pangkalsada.' : 'Road route is temporarily unavailable.')
+                    : (isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.')}
+            </span>
           {/if}
         </span>
-        <span>{isFil ? 'Destinasyon' : 'Destination'}: <strong>{outlet.municipality}</strong></span>
+        <span>
+          {isFil ? 'Destinasyon' : 'Destination'}:
+          <strong>
+            {outlet.isLocalBagsakan
+              ? outlet.localLocationBasis === 'exact_pin'
+                ? (isFil ? 'naka-save na eksaktong pin ng Bagsakan' : 'saved exact Bagsakan pin')
+                : (isFil ? 'sentro ng ' + outlet.municipality : outlet.municipality + ' municipality center')
+              : outlet.municipality}
+          </strong>
+        </span>
       </div>
       {#if routeEstimate.source === 'road'}
         <p class="mt-2 text-xs leading-5 text-[#596052]">
           {isFil
-            ? 'Tantya ito mula sa reference point ng munisipyo, hindi sa eksaktong bukid o live traffic ETA.'
-            : 'This is an estimate from the municipality reference point, not the exact farm or a live-traffic ETA.'}
+            ? 'Tantya ito ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid o live traffic ETA.'
+            : 'This is an OpenRouteService estimate from the municipality reference point, not the exact farm or a live-traffic ETA.'}
         </p>
       {/if}
     </section>

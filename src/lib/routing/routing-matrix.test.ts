@@ -31,6 +31,7 @@ describe('routing matrix trust boundary', () => {
     expect(hasRoadRoutingDataForArtifact(ungenerated)).toBe(false);
     const route = getOutletRouteEstimateFromArtifact(ungenerated, 'los-banos', 'demo-cooperative', 22.4);
     expect(route.source).toBe('straight_line');
+    expect(route.routeEvidence).toBe('none');
     expect(route.roadDistanceKm).toBeNull();
     expect(route.roadDurationMinutes).toBeNull();
     expect(route.provider).toBeNull();
@@ -69,6 +70,7 @@ describe('routing matrix trust boundary', () => {
     const route = getOutletRouteEstimateFromArtifact(ready, 'los-banos', 'demo-market', 1.1);
     expect(hasRoadRoutingDataForArtifact(ready)).toBe(true);
     expect(route.source).toBe('road');
+    expect(route.routeEvidence).toBe('static_artifact');
     expect(route.roadDistanceKm).toBe(1.8);
     expect(route.roadDurationSeconds).toBe(420);
     expect(route.roadDurationMinutes).toBe(7);
@@ -104,6 +106,7 @@ describe('routing matrix trust boundary', () => {
   it('formats sub-minute provider evidence without inflating it', () => {
     const route: OutletRouteEstimate = {
       source: 'road',
+      routeEvidence: 'static_artifact',
       straightLineDistanceKm: 0.1,
       roadDistanceKm: 0.1,
       roadDurationSeconds: 35,
@@ -151,6 +154,7 @@ describe('routing matrix trust boundary', () => {
   it('uses road distance only when every ranked route has road evidence', () => {
     const roadA: OutletRouteEstimate = {
       source: 'road',
+      routeEvidence: 'static_artifact',
       straightLineDistanceKm: 5,
       roadDistanceKm: 7,
       roadDurationSeconds: 840,
@@ -165,6 +169,7 @@ describe('routing matrix trust boundary', () => {
     };
     const roadB: OutletRouteEstimate = {
       source: 'road',
+      routeEvidence: 'static_artifact',
       straightLineDistanceKm: 6,
       roadDistanceKm: 8,
       roadDurationSeconds: 960,
@@ -187,6 +192,7 @@ describe('routing matrix trust boundary', () => {
   it('falls back the whole ranking to straight-line distance when routing is partial', () => {
     const routed: OutletRouteEstimate = {
       source: 'road',
+      routeEvidence: 'static_artifact',
       straightLineDistanceKm: 12,
       roadDistanceKm: 18,
       roadDurationSeconds: 1860,
@@ -201,6 +207,7 @@ describe('routing matrix trust boundary', () => {
     };
     const fallback: OutletRouteEstimate = {
       source: 'straight_line',
+      routeEvidence: 'none',
       straightLineDistanceKm: 13,
       roadDistanceKm: null,
       roadDurationSeconds: null,

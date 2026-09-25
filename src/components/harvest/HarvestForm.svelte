@@ -223,7 +223,7 @@
               }
             : undefined,
       },
-      'list',
+      window.matchMedia('(min-width: 1024px)').matches ? 'map' : 'list',
       undefined,
       lang,
     );

@@ -162,7 +162,7 @@ test('surface audit matrix at mobile width', async ({ page }) => {
 test('Ani trigger stays clear of mobile comparison dock', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(discovery);
-  await page.getByRole('checkbox').first().check();
+  await page.locator('.ledger-select-surface').first().click();
   const dock = page.getByLabel('Comparison dock');
   const ani = page.getByRole('button', { name: 'Ask Ani' });
   await expect(dock).toBeVisible();

@@ -60,13 +60,13 @@ The discovery and outlet-detail flows now use `LiveLagunaMap.svelte`, which lazy
 
 `ResilientLagunaMap.svelte` remains the explicit fallback. Live-map failure must not make discovery unusable.
 
-Straight-line distance is still computed deterministically with Haversine. The checked-in routing artifact is fail-closed (`status: not_generated`) until an operator runs the OpenRouteService generator with a private `ORS_API_KEY`.
+Straight-line distance is still computed deterministically with Haversine. The checked-in routing artifact now contains the reviewed 10 × 11 OpenRouteService matrix generated on 25 September 2026. Static demo outlets use that artifact when a valid routed cell exists; missing or invalid road evidence still fails closed to Haversine.
 
-When a generated matrix cell exists, the UI may label its values **Road distance** and **Estimated drive**. Otherwise it continues to label Haversine as **Straight-line distance** and shows no invented driving time.
+When a valid matrix or runtime route exists, the UI may label its values **Road distance** and **Estimated drive**. Otherwise it continues to label Haversine as **Straight-line distance** and shows no invented driving time.
 
 Route distance/time remains separate from market evidence, buyer acceptance, fit state, and hauling expense.
 
-A locally created Bagsakan has no checked-in road-matrix cell. Its farmer result therefore uses a labelled straight-line distance, even when other fixture outlets have road routes.
+A locally created Bagsakan has no checked-in road-matrix cell because its pin can be created or moved at runtime. When the secure runtime route endpoint is configured and online, the selected local Bagsakan can request a server-side ORS Directions route. If that endpoint, network, or provider is unavailable, it remains on labelled straight-line context.
 
 ---
 
@@ -172,7 +172,7 @@ The layered architecture is now implemented:
 5. `scripts/generate-routing-matrix.mjs` uses a private ORS key outside the browser to precompute 110 explicit cells with provenance and an input fingerprint.
 6. Optional geometry generation stores versioned same-origin GeoJSON route files that are loaded only for the selected outlet.
 7. Discovery/detail/compare read the same artifact and fall back explicitly when no routed cell exists.
-8. A same-device Bagsakan is not part of the static artifact because its coordinates are runtime-local; it keeps a labelled straight-line fallback.
+8. A same-device Bagsakan is not part of the static artifact because its coordinates are runtime-local; when the secure runtime endpoint is configured it can request one selected ORS Directions route, otherwise it keeps the labelled straight-line fallback.
 9. The resilient SVG map remains available when the live map cannot load.
 
 The browser does not send every candidate through a routing API and does not receive an ORS secret.
@@ -193,7 +193,7 @@ A production pilot still needs:
 - current buyer offer collection;
 - separation of demo and production repositories/adapters;
 - production review of the MapLibre/OpenFreeMap dependency, CSP, caching, attribution, and no-WebGL fallback;
-- a legitimately generated ORS road-routing artifact or a secure cached routing service, with private credentials kept out of the browser;
+- production deployment/configuration of the secure local-Bagsakan runtime routing endpoint, with the rotated ORS credential kept server-side;
 - field/usability validation with farmers and market actors;
 - representative Filipino/Taglish voice testing before claiming production-quality Ani voice navigation.
 

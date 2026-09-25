@@ -33,6 +33,7 @@ export default defineConfig({
         env: {
           ...process.env,
           PUBLIC_ANI_PROVIDER: 'mock',
+          PUBLIC_RUNTIME_ROUTING_ENDPOINT: '/api/route-estimate',
         },
       },
   projects: [

@@ -4,6 +4,8 @@
   import { todayInManila } from '../../lib/state/url-state';
   import { outletDetailHref } from '../../lib/data/outlet-links';
   import { t } from '../../content/translations';
+  import { formatEstimatedDriveDuration, type OutletRouteEstimate } from '../../lib/routing/routing-matrix';
+  import { LAGUNA_MAP_BOUNDS } from '../../lib/map/map-config';
 
   interface OutletWithFit {
     outlet: Outlet;
@@ -22,21 +24,27 @@
     selectedId = undefined,
     isDetailView = false,
     lang = 'en',
+    mobilePickerInset = 0,
+    mobileSelectionPreview = true,
     onSelect = () => {},
+    routeOverride = undefined,
+    routeRequestState = 'idle',
   }: {
     items?: OutletWithFit[];
     harvest?: HarvestQuery;
     selectedId?: string;
     isDetailView?: boolean;
     lang?: 'en' | 'fil';
+    mobilePickerInset?: number;
+    mobileSelectionPreview?: boolean;
     onSelect?: (id: string) => void;
+    routeOverride?: OutletRouteEstimate;
+    routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   } = $props();
 
-  // Laguna Bounding Box
-  const MIN_LAT = 14.03;
-  const MAX_LAT = 14.34;
-  const MIN_LNG = 121.10;
-  const MAX_LNG = 121.48;
+  // Use the same canonical bounds as validation and MapLibre so a valid
+  // Bagsakan pin cannot fall outside only the resilient fallback.
+  const [[MIN_LNG, MIN_LAT], [MAX_LNG, MAX_LAT]] = LAGUNA_MAP_BOUNDS;
 
   const SVG_WIDTH = 480;
   const SVG_HEIGHT = 440;
@@ -47,9 +55,11 @@
     const normX = (lng - MIN_LNG) / (MAX_LNG - MIN_LNG);
     const normY = (MAX_LAT - lat) / (MAX_LAT - MIN_LAT); // Invert Y
     const paddingX = 40;
-    const paddingTop = 45;
+    // Keep every outlet hit target clear of the mobile picker and bottom nav.
+    const paddingTop = mobilePickerInset > 0 ? 20 : 45;
     const innerW = SVG_WIDTH - paddingX * 2;
-    const innerH = 205; // Lands comfortably between y=45 and y=250
+    const visibleSvgHeight = SVG_HEIGHT * (1 - Math.min(mobilePickerInset / 570, 0.88));
+    const innerH = Math.min(205, Math.max(50, visibleSvgHeight - paddingTop - 28));
     return {
       x: Math.round((paddingX + normX * innerW) * 10) / 10,
       y: Math.round((paddingTop + normY * innerH) * 10) / 10,
@@ -69,6 +79,10 @@
 
   const selectedPos = $derived(
     selectedItem ? project(selectedItem.outlet.lat, selectedItem.outlet.lng) : null
+  );
+
+  const selectedRoadRoute = $derived(
+    routeOverride?.source === 'road' ? routeOverride : undefined
   );
 
   const routeMidpoint = $derived(
@@ -246,7 +260,9 @@
               fill="#20251E"
               text-anchor="middle"
             >
-              {selectedItem?.distanceKm} km
+              {selectedRoadRoute?.roadDistanceKm !== null && selectedRoadRoute?.roadDistanceKm !== undefined
+                ? `${selectedRoadRoute.roadDistanceKm.toFixed(1)} km road`
+                : `${selectedItem?.distanceKm} km`}
             </text>
           </g>
         </g>
@@ -276,7 +292,11 @@
             class="cursor-pointer shadow-sm"
             tabindex="0"
             role="button"
-            aria-label={`${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`}
+            aria-label={`${item.outlet.name}${item.outlet.isLocalBagsakan ? (lang === 'fil' ? ', demo sa device na ito' : ', demo on this device') : ''}: ${lang === 'fil' ? item.fit.statusLabelFil : item.fit.statusLabel}, ${
+              item.outlet.id === selectedId && selectedRoadRoute?.roadDistanceKm !== null && selectedRoadRoute?.roadDistanceKm !== undefined
+                ? `${selectedRoadRoute.roadDistanceKm.toFixed(1)} km ${lang === 'fil' ? 'sa kalsada' : 'by road'}`
+                : `${item.distanceKm} km ${lang === 'fil' ? 'tuwid na layo mula sa sentro ng ' + originMun.name.split(',')[0] : 'straight-line from ' + originMun.name.split(',')[0] + ' municipality center'}`
+            }`}
             onclick={(e) => {
               e.stopPropagation();
               onSelect(item.outlet.id);
@@ -342,7 +362,7 @@
     </svg>
 
     <!-- Mobile Non-Modal Pin Inspection Bottom Sheet (P1.1 44px touch targets & zero pin occlusion) -->
-    {#if selectedItem && !isDetailView}
+    {#if selectedItem && !isDetailView && mobileSelectionPreview}
       <div
         role="region"
         aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}
@@ -363,9 +383,18 @@
                 {lang === 'fil' ? selectedItem.fit.statusLabelFil : selectedItem.fit.statusLabel}
               </span>
               <span class="text-[11px] text-[#596052] font-medium">
-                {lang === 'fil'
-                  ? `${selectedItem.distanceKm} km tuwid · mula sa sentro ng ${originMun.name.split(',')[0]}`
-                  : `${selectedItem.distanceKm} km straight-line · from ${originMun.name.split(',')[0]} municipality center`}
+                {#if selectedRoadRoute?.roadDistanceKm !== null && selectedRoadRoute?.roadDistanceKm !== undefined}
+                  {selectedRoadRoute.roadDistanceKm.toFixed(1)} km {lang === 'fil' ? 'sa kalsada' : 'by road'}
+                  · {formatEstimatedDriveDuration(selectedRoadRoute) ?? '—'}
+                {:else if routeRequestState === 'loading'}
+                  {lang === 'fil'
+                    ? `Kinukuha ang ruta · ${selectedItem.distanceKm} km tuwid muna`
+                    : `Fetching road route · ${selectedItem.distanceKm} km straight-line for now`}
+                {:else}
+                  {lang === 'fil'
+                    ? `${selectedItem.distanceKm} km tuwid · mula sa sentro ng ${originMun.name.split(',')[0]}`
+                    : `${selectedItem.distanceKm} km straight-line · from ${originMun.name.split(',')[0]} municipality center`}
+                {/if}
               </span>
             </div>
 
@@ -450,7 +479,9 @@
     </div>
 
     <span class="text-[10px] text-[#596052] italic">
-      {lang === 'fil' ? 'Tuwid na konteksto lamang' : 'Straight-line context only'}
+      {selectedRoadRoute
+        ? (lang === 'fil' ? 'May road estimate · ilustratibong guhit lamang' : 'Road estimate available · line is illustrative')
+        : (lang === 'fil' ? 'Tuwid na konteksto lamang' : 'Straight-line context only')}
     </span>
   </div>
 

@@ -73,6 +73,8 @@ export interface Outlet {
   isDemoFixture: boolean;
   /** A device-local demo Bagsakan composed after browser hydration. */
   isLocalBagsakan?: boolean;
+  /** How a local Bagsakan coordinate was chosen. */
+  localLocationBasis?: 'municipality_center' | 'exact_pin';
 }
 
 /**

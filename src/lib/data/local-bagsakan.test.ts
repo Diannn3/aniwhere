@@ -23,6 +23,7 @@ describe('local Bagsakan market adapter', () => {
   it('preserves canonical partial and full fit arithmetic through the existing matcher', () => {
     const [outlet] = composeLocalBagsakanOutlets(state);
     expect(outlet.isLocalBagsakan).toBe(true);
+    expect(outlet.localLocationBasis).toBe('municipality_center');
     expect(outlet.acceptedCrops.tomato?.sourceKind).toBe('demo');
     expect(outlet.acceptedCrops.tomato?.sourceLabel).toBe(LOCAL_BAGSAKAN_SOURCE_LABEL);
     const partial = evaluateFit(outlet, query);

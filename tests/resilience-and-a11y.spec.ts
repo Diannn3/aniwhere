@@ -52,7 +52,7 @@ test('keeps the harvest journey operable with reduced motion enabled', async ({ 
   await fillHomeHarvest(page);
   await page.getByRole('button', { name: /find places to sell/i }).click();
   await page.waitForURL(/\/discover\?/);
-  await expectHarvestQuery(page);
+  await expectHarvestQuery(page, { view: 'map' });
 });
 
 test('keeps invalid-harvest recovery usable with forced colors enabled', async ({ page }) => {
@@ -96,7 +96,7 @@ const auditTargets: AuditTarget[] = [
     name: 'Bagsakan workspace',
     path: '/bagsakan',
     prepare: async (page) => {
-      await expect(page.getByRole('heading', { name: 'Set up your bagsakan' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Where can farmers find you?' })).toBeVisible();
     },
   },
   {
