@@ -12,6 +12,7 @@
   import { isOutletSaved, toggleSavedOutlet, getSavedOutletIds } from '../../lib/state/saved-outlets';
   import { t } from '../../content/translations';
   import LiveLagunaMap from '../map/LiveLagunaMap.svelte';
+  import MapOutletPicker from './MapOutletPicker.svelte';
   import {
     distanceForBasis,
     getOutletRouteEstimate,
@@ -28,20 +29,23 @@
 
   let harvest = $state<HarvestQuery>(initialQuery.harvest);
   let lang = $state<'en' | 'fil'>(initialQuery.lang);
-  let activeMobileView = $state<'list' | 'map'>(initialQuery.view);
+  let activeView = $state<'list' | 'map' | 'auto'>('auto');
+  let mapOpened = $state(false);
   let selectedOutletId = $state<string | undefined>(initialQuery.selectedPlaceId);
 
   // Filters
   let statusFilter = $state<'all' | 'match' | 'partial' | 'confirm' | 'no_match'>('all');
   let sortBy = $state<'fit' | 'distance'>('fit');
+  let filtersOpen = $state(false);
 
   // Local state
   let savedIds = $state<string[]>([]);
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
-  let filtersOpen = $state(false);
   let compareNotice = $state('');
+  let mobilePickerInset = $state(0);
   let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
+  let mapStageElement: HTMLElement | undefined = $state();
 
   // Editable harvest draft
   let editCrop = $state(initialQuery.harvest.crop);
@@ -56,14 +60,22 @@
   onMount(() => {
     savedIds = getSavedOutletIds();
 
-    // Hydrate client-side query parameters if present in browser
-    if (typeof window !== 'undefined' && window.location.search) {
+    // Static pages cannot know the visitor's URL or viewport until hydration.
+    if (typeof window !== 'undefined') {
       const clientQuery = parseDiscoverQuery(window.location.search);
       harvest = clientQuery.harvest;
       lang = clientQuery.lang;
-      activeMobileView = clientQuery.view;
+      const requestedView = new URLSearchParams(window.location.search).get('view');
+      activeView = requestedView === 'list' || requestedView === 'map'
+        ? requestedView
+        : window.matchMedia('(min-width: 1024px)').matches ? 'map' : 'list';
+      mapOpened = activeView === 'map';
       if (clientQuery.selectedPlaceId) {
         selectedOutletId = clientQuery.selectedPlaceId;
+      }
+      if (requestedView !== 'list' && requestedView !== 'map') {
+        const query = serializeDiscoverQuery(harvest, currentView(), selectedOutletId, lang);
+        window.history.replaceState({}, '', `/discover?${query}`);
       }
       editCrop = clientQuery.harvest.crop;
       editKg = clientQuery.harvest.quantityKg;
@@ -84,9 +96,14 @@
     editVariety = next.details?.variety || '';
     editGrade = next.details?.grade || '';
     editPackaging = next.details?.packaging || '';
-    const newQuery = serializeDiscoverQuery(next, activeMobileView, selectedOutletId, lang);
+    const newQuery = serializeDiscoverQuery(next, currentView(), selectedOutletId, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }));
+
+  function currentView(): 'list' | 'map' {
+    if (activeView !== 'auto') return activeView;
+    return typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches ? 'map' : 'list';
+  }
 
   onMount(() => {
     marketOutlets = getClientMarketOutlets();
@@ -98,6 +115,33 @@
       }
       comparedIds = comparedIds.filter((id) => outlets.some((outlet) => outlet.id === id));
     });
+  });
+
+  function updateMapStageHeight() {
+    if (!mapStageElement || typeof window === 'undefined') return;
+    if (!window.matchMedia('(max-width: 1023px)').matches) {
+      mapStageElement.style.height = '';
+      return;
+    }
+    if (currentView() !== 'map') return;
+    const availableHeight = window.innerHeight - mapStageElement.getBoundingClientRect().top;
+    const height = Math.max(280, Math.min(720, availableHeight));
+    if (Math.abs(mapStageElement.getBoundingClientRect().height - height) > 1) {
+      mapStageElement.style.height = `${Math.round(height)}px`;
+    }
+  }
+
+  onMount(() => {
+    const scheduleUpdate = () => requestAnimationFrame(updateMapStageHeight);
+    const page = document.querySelector('.discovery-page');
+    const observer = new ResizeObserver(scheduleUpdate);
+    if (page) observer.observe(page);
+    window.addEventListener('resize', scheduleUpdate);
+    scheduleUpdate();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+    };
   });
 
   const originCoords = $derived(
@@ -255,12 +299,12 @@
     statusFilter = 'all';
     publishHarvestContext(harvest);
 
-    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, undefined, lang);
+    const newQuery = serializeDiscoverQuery(harvest, currentView(), undefined, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
   function syncDiscoveryUrl() {
-    const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
+    const newQuery = serializeDiscoverQuery(harvest, currentView(), selectedOutletId, lang);
     window.history.replaceState({}, '', `/discover?${newQuery}`);
   }
 
@@ -287,7 +331,9 @@
   }
 
   function setView(view: 'list' | 'map') {
-    activeMobileView = view;
+    activeView = view;
+    if (view === 'map') mapOpened = true;
+    requestAnimationFrame(updateMapStageHeight);
     syncDiscoveryUrl();
     if (view === 'list' && selectedOutletId) {
       scrollSelectedIntoView(selectedOutletId);
@@ -297,14 +343,6 @@
   function handleSelectPin(id: string) {
     selectedOutletId = id || undefined;
     syncDiscoveryUrl();
-
-    if (!id) return;
-
-    // On phones, keep the map visible so the farmer can read the route card.
-    // Desktop already shows map and list together, so reveal the selected card there too.
-    if (window.matchMedia('(min-width: 1024px)').matches) {
-      scrollSelectedIntoView(id);
-    }
   }
 
   function formatCurrency(val: number | null | undefined): string {
@@ -365,7 +403,6 @@
         </svg>
         <span>{isEditingHarvest ? (lang === 'fil' ? 'Kanselahin' : 'Cancel') : t('editHarvest', lang)}</span>
       </button>
-    <button type="button" class="docket-filter-toggle" onclick={() => filtersOpen = !filtersOpen} aria-expanded={filtersOpen} aria-controls="discovery-filters">{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</button>
     </div>
     <div class="docket-summary">
       <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}</h2>
@@ -379,9 +416,6 @@
         <p>1 {lang === 'fil' ? 'pinagmulan' : 'origin'} &middot; {processedOutlets.length} {lang === 'fil' ? 'posibleng outlet' : 'potential outlets'}</p>
         <p>{lang === 'fil' ? 'Pumili ng outlet upang makita ang ruta at ebidensya sa ibaba.' : 'Select an outlet to explore route details and view evidence below.'}</p>
       </div>
-      <a class="docket-compare" href={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`}>
-        {lang === 'fil' ? 'Ihambing' : 'Compare'} {comparedIds.length || ''}
-      </a>
     </div>
 
     <!-- Collapsible Quick Harvest Editor -->
@@ -452,22 +486,19 @@
     {/if}
   </div>
 
-  <div id="discovery-filters" class={`discovery-filters ${filtersOpen ? 'is-open' : ''} flex flex-col justify-between gap-3 border-y border-[#20251E]/20 bg-[#FFFDF8] py-3 sm:flex-row sm:items-center`}>
-    
-    <!-- Left: Mobile View Switcher (List vs Map on mobile) + Filters -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 lg:flex-col lg:items-stretch lg:overflow-visible">
-      <!-- Mobile Segmented Toggle -->
+  <div id="discovery-filters" class="discovery-filters border-y border-[#20251E]/20 bg-[#FFFDF8]">
+      <!-- One view switch remains available in both views at every width. -->
       <div
-        class="lg:hidden inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
+        class="map-view-switch inline-flex bg-[#FFFDF8] border border-[#20251E]/15 rounded-full p-0.5 shrink-0 shadow-xs"
         role="group"
         aria-label={lang === 'fil' ? 'Piliin ang listahan o mapa' : 'Choose list or map view'}
       >
         <button
           type="button"
           onclick={() => setView('list')}
-          aria-pressed={activeMobileView === 'list'}
-          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-            activeMobileView === 'list'
+          aria-pressed={activeView === 'list'}
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 cursor-pointer ${
+            activeView === 'list'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -481,9 +512,9 @@
         <button
           type="button"
           onclick={() => setView('map')}
-          aria-pressed={activeMobileView === 'map'}
-          class={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-            activeMobileView === 'map'
+          aria-pressed={activeView === 'map'}
+          class={`premium-control min-h-11 px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 cursor-pointer ${
+            activeView === 'map'
               ? 'bg-[#486320] text-[#FFFDF8] shadow-xs'
               : 'text-[#4A5245] hover:text-[#20251E]'
           }`}
@@ -495,11 +526,21 @@
         </button>
       </div>
 
-      <div class="h-4 w-px bg-[#20251E]/15 hidden sm:block shrink-0"></div>
+      <button
+        type="button"
+        class="discovery-filter-toggle"
+        aria-expanded={filtersOpen}
+        aria-controls="discovery-filter-options"
+        onclick={() => { filtersOpen = !filtersOpen; requestAnimationFrame(updateMapStageHeight); }}
+      >
+        <span>{lang === 'fil' ? 'Salain at ayusin' : 'Filter & sort'}</span>
+        {#if statusFilter !== 'all' || sortBy === 'distance'}<span class="discovery-filter-active">{lang === 'fil' ? 'May pinili' : 'Active'}</span>{/if}
+      </button>
 
-      <!-- Filter Pills (Horizontally scrollable on mobile) -->
+      <div id="discovery-filter-options" class={`discovery-filter-options ${filtersOpen ? 'is-open' : ''}`}>
+      <!-- Fit filters remain available without covering the map or results. -->
       <div
-        class="flex items-center gap-1.5 shrink-0 lg:grid lg:grid-cols-2"
+        class="discovery-status-filters"
         role="group"
         aria-label={lang === 'fil' ? 'I-filter ayon sa pagkakatugma' : 'Filter by fit status'}
       >
@@ -566,10 +607,8 @@
           {lang === 'fil' ? 'Hindi tugma' : "Doesn't match"} ({statusCounts.no_match})
         </button>
       </div>
-    </div>
-
-    <!-- Right: Sort By Dropdown -->
-    <div class="flex items-center justify-between gap-2 shrink-0 lg:border-t lg:border-[#20251E]/15 lg:pt-3">
+    <!-- Sort stays alongside the filters and wraps below them when needed. -->
+    <div class="discovery-sort-controls flex items-center justify-between gap-2">
       <div class="flex items-center gap-1.5 text-xs text-[#4A5245]">
         <label for="sort-by-select" class="font-semibold">{lang === 'fil' ? 'Ayusin:' : 'Sort:'}</label>
         <select
@@ -596,6 +635,7 @@
         </button>
       {/if}
     </div>
+      </div>
   </div>
 
   {#if sortBy === 'distance'}
@@ -611,10 +651,10 @@
   {/if}
 
   <!-- 3. Map-first Field Almanac workspace -->
-  <div class="discovery-workspace grid grid-cols-1 items-start">
+  <div class="discovery-workspace grid grid-cols-1 items-start" data-view={activeView}>
     
     <!-- Ruled outlet evidence index -->
-    <div class={`discovery-outlets ${activeMobileView === 'map' ? 'hidden' : 'block'}`}>
+    <div class="discovery-outlets">
       <header class="ledger-heading">
         <h2>{lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'} ({filteredOutlets.length})</h2>
       </header>
@@ -649,9 +689,9 @@
           <article
             id={`outlet-card-${item.outlet.id}`}
             aria-current={selectedOutletId === item.outlet.id ? 'true' : undefined}
-            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''}`}
+            class={`almanac-entry ledger-entry status-${item.fit.status} ${selectedOutletId === item.outlet.id ? 'is-selected' : ''} ${item.isCompared ? 'is-compared' : ''}`}
           >
-            <button type="button" class="ledger-number" onclick={() => handleSelectPin(item.outlet.id)} aria-label={`${lang === 'fil' ? 'Piliin' : 'Select'} ${item.outlet.name} ${lang === 'fil' ? 'sa mapa' : 'on map'}`}>{index + 1}</button>
+            <span class="ledger-number" aria-hidden="true">{index + 1}</span>
             <!-- Card Header: Fit Badge + Category + Distance -->
             <div class="flex flex-wrap items-center justify-between gap-2">
               <!-- Fit Status Badge -->
@@ -810,18 +850,13 @@
             {/if}
 
             <!-- Card Actions Footer -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
-              <!-- Add to compare checkbox -->
-              <label class="flex min-h-11 items-center gap-2 rounded-lg px-1 text-xs font-semibold text-[#4A5245] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={item.isCompared}
-                  aria-disabled={!item.isCompared && comparedIds.length >= 3}
-                  onchange={() => handleToggleCompare(item.outlet.id)}
-                  class="rounded text-[#486320] focus:ring-[#597928] w-4 h-4 cursor-pointer"
-                />
-                <span>{item.isCompared ? (lang === 'fil' ? 'Nasa paghahambing' : 'In comparison') : t('addToCompare', lang)}</span>
-              </label>
+            <div class="ledger-actions flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#20251E]/8">
+              <span class="ledger-select-indicator inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-[#4A5245]" aria-hidden="true">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  {#if item.isCompared}<path d="m4 10 4 4 8-8" />{:else}<path d="M10 4v12M4 10h12" />{/if}
+                </svg>
+                <span>{item.isCompared ? (lang === 'fil' ? 'Napili para ihambing' : 'Selected to compare') : t('addToCompare', lang)}</span>
+              </span>
 
               <!-- View Details Link -->
               <a
@@ -835,39 +870,71 @@
               </a>
             </div>
 
+            <button
+              type="button"
+              class="ledger-select-surface"
+              onclick={() => handleToggleCompare(item.outlet.id)}
+              aria-pressed={item.isCompared}
+              aria-disabled={!item.isCompared && comparedIds.length >= 3}
+              aria-label={item.isCompared
+                ? `${lang === 'fil' ? 'Alisin ang' : 'Remove'} ${item.outlet.name} ${lang === 'fil' ? 'sa paghahambing' : 'from compare'}`
+                : `${lang === 'fil' ? 'Idagdag ang' : 'Add'} ${item.outlet.name} ${lang === 'fil' ? 'sa paghahambing' : 'to compare'}`}
+            ></button>
+
           </article>
         {/each}
       {/if}
 
     </div>
 
-    <!-- Dominant synchronized map plate -->
-    <div class={`almanac-map discovery-map ${activeMobileView === 'list' ? 'hidden' : 'block'}`}>
-      <div class="map-view-switch" role="group" aria-label={lang === 'fil' ? 'Piliin ang mapa o listahan' : 'Choose map or list view'}>
-        <button type="button" onclick={() => setView('map')} aria-pressed={activeMobileView === 'map'} class:active={activeMobileView === 'map'}>{lang === 'fil' ? 'Mapa' : 'Map'}</button>
-        <button type="button" onclick={() => setView('list')} aria-pressed={activeMobileView === 'list'} class:active={activeMobileView === 'list'}>{lang === 'fil' ? 'Listahan' : 'List'}</button>
-      </div>
-      <LiveLagunaMap
-        items={filteredOutlets}
-        {harvest}
-        selectedId={selectedOutletId}
-        {lang}
-        onSelect={handleSelectPin}
-      />
-      <aside class="map-legend" aria-label={lang === 'fil' ? 'Paliwanag ng mapa' : 'Map legend'}>
-        <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'}</h3>
-        <div class="map-legend__rows">
-          <span><i class="legend-road-route"></i>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</span>
-          <span><i class="legend-straight-route"></i>{lang === 'fil' ? 'Tuwid na layo' : 'Straight-line link'}</span>
-          <span><i class="legend-origin"></i>{lang === 'fil' ? 'Pinagmulan' : 'Origin'}</span>
-          <span><i class="legend-outlet"></i>{lang === 'fil' ? 'Posibleng outlet' : 'Potential outlet'}</span>
-          <span><i class="legend-water"></i>{lang === 'fil' ? 'Tubig' : 'Water'}</span>
-          <span><i class="legend-land"></i>{lang === 'fil' ? 'Lupa' : 'Land'}</span>
-        </div>
-      </aside>
+    <!-- The picker and map stay together in Map view. -->
+    <div class="almanac-map discovery-map" style={`--map-picker-inset: ${mobilePickerInset}px`}>
+      <div class="discovery-map-stage" bind:this={mapStageElement}>
+        <MapOutletPicker
+          items={filteredOutlets}
+          {harvest}
+          selectedId={selectedOutletId}
+          {lang}
+          {distanceBasis}
+          comparedCount={comparedIds.length}
+          {compareNotice}
+          compareHref={`/compare?places=${comparedIds.join(',')}&${serializeDiscoverQuery(harvest, 'map', undefined, lang)}`}
+          onSelect={handleSelectPin}
+          onCompare={handleToggleCompare}
+          onClearFilter={() => setStatusFilter('all')}
+          onClearCompare={() => comparedIds = []}
+          onHeightChange={(height) => mobilePickerInset = height}
+        />
 
-      <!-- Map Guidance Card -->
-      <div class="border-t border-[#20251E]/20 bg-[#FFFDF8]/95 p-4 text-xs text-[#4A5245] space-y-1.5">
+        <div class="discovery-map-canvas">
+          {#if mapOpened}
+            <LiveLagunaMap
+              items={filteredOutlets}
+              {harvest}
+              selectedId={selectedOutletId}
+              {lang}
+              visible={activeView === 'map'}
+              mobilePickerInset={mobilePickerInset}
+              mobileSelectionPreview={false}
+              onSelect={handleSelectPin}
+            />
+          {/if}
+          <aside class="map-legend" aria-label={lang === 'fil' ? 'Paliwanag ng mapa' : 'Map legend'}>
+            <h3>{lang === 'fil' ? 'Paliwanag' : 'Legend'}</h3>
+            <div class="map-legend__rows">
+              <span><i class="legend-road-route"></i>{lang === 'fil' ? 'Ruta sa kalsada' : 'Road route'}</span>
+              <span><i class="legend-straight-route"></i>{lang === 'fil' ? 'Tuwid na layo' : 'Straight-line link'}</span>
+              <span><i class="legend-origin"></i>{lang === 'fil' ? 'Pinagmulan' : 'Origin'}</span>
+              <span><i class="legend-outlet"></i>{lang === 'fil' ? 'Posibleng outlet' : 'Potential outlet'}</span>
+              <span><i class="legend-water"></i>{lang === 'fil' ? 'Tubig' : 'Water'}</span>
+              <span><i class="legend-land"></i>{lang === 'fil' ? 'Lupa' : 'Land'}</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Travel guidance spans the rail and map on wide screens. -->
+      <div class="discovery-map-guidance border-t border-[#20251E]/20 bg-[#FFFDF8]/95 p-4 text-xs text-[#4A5245] space-y-1.5">
         <h4 class="font-bold text-[#20251E] flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 text-[#486320]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
@@ -879,24 +946,15 @@
             ? 'Pumili ng pin upang makita ang layo at ruta mula sa batayang lokasyon ng munisipyo. Kumpirmahin muna ang pagtanggap bago bumiyahe.'
             : 'Select a pin to see distance and route context from the municipality reference point. Confirm receiving terms before travel.'}
         </p>
-        {#if selectedOutletId}
-          <button
-            type="button"
-            onclick={() => setView('list')}
-            class="premium-control mt-2 inline-flex min-h-11 items-center rounded-xl border border-[#597928]/30 px-3 py-2 font-bold text-[#486320] hover:bg-[#FCECD8]/45 lg:hidden"
-          >
-            {lang === 'fil' ? 'Tingnan ang napiling lugar sa listahan' : 'View selected place in the list'}
-          </button>
-        {/if}
       </div>
     </div>
 
   </div>
 
   <!-- 4. Floating Bottom Compare Bar (Appears when >= 1 outlet is selected) -->
-  <p class="sr-only" aria-live="polite">{compareNotice}</p>
+  <p class="sr-only" aria-live="polite">{currentView() === 'map' ? '' : compareNotice}</p>
 
-  {#if comparedIds.length > 0}
+  {#if comparedIds.length > 0 && currentView() !== 'map'}
     <aside
       class="fixed bottom-14 md:bottom-6 left-4 right-4 max-w-lg mx-auto z-40 bg-[#20251E] text-[#FFFDF8] rounded-2xl p-3.5 px-4 shadow-xl border border-[#FFFDF8]/20 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
       aria-label="Comparison dock"
@@ -942,7 +1000,13 @@
 </div>
 
 <style>
-  .map-legend { position: absolute; z-index: 10; right: 26px; top: 110px; width: 170px; padding: 12px; border: 1px solid #747965; border-radius: 5px; background: #fffdf8; box-shadow: 0 12px 22px -16px #20251e; color: #20251e; font-size: 12px; }
+  .discovery-filter-toggle { display: none; }
+  .discovery-filter-options { display: contents; }
+  .discovery-map { min-width: 0; }
+  .discovery-map-stage { position: relative; display: grid; grid-template-columns: minmax(288px, 320px) minmax(0, 1fr); height: clamp(570px, 60.5vh, 720px); min-width: 0; overflow: hidden; }
+  .discovery-map-canvas { position: relative; grid-column: 2; grid-row: 1; min-width: 0; height: 100%; overflow: hidden; }
+  .discovery-map-guidance { grid-column: 1 / -1; }
+  .map-legend { position: absolute; z-index: 10; right: 26px; top: 110px; width: 170px; padding: 12px; border: 1px solid #747965; border-radius: 5px; background: #fffdf8; box-shadow: 0 12px 22px -16px #20251e; color: #20251e; font-size: 12px; pointer-events: none; }
   .map-legend h3 { display: flex; justify-content: space-between; margin-bottom: 9px; padding-bottom: 6px; border-bottom: 1px solid #aab19c; font-weight: 700; }
   .map-legend small { font-size: 10px; font-weight: 500; }
   .map-legend__rows { display: grid; gap: 10px; }
@@ -954,6 +1018,29 @@
   .legend-outlet { width: 15px !important; height: 15px; margin-inline: 4px 5px; border-radius: 50%; background: #597928; }
   .legend-water { height: 12px; background: #698f9c; }
   .legend-land { height: 12px; background: #b3c494; }
-  @media (max-width: 1199px) { .map-legend { right: 12px; top: 100px; } }
-  @media (max-width: 767px) { .map-legend { width: 155px; padding: 9px; font-size: 11px; } .map-legend__rows { gap: 6px; } }
+  @media (max-width: 1199px) { .map-legend { right: 12px; top: 76px; } }
+  @media (max-width: 1023px) {
+    .discovery-map-stage { display: block; }
+    .discovery-map-canvas { height: clamp(570px, 60.5vh, 720px); }
+    .map-legend { top: 10px; right: 10px; width: 148px; padding: 9px; font-size: 11px; }
+    .map-legend__rows { gap: 6px; }
+  }
+  @media (max-width: 767px) {
+    .discovery-filters { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; padding-block: 8px; }
+    .discovery-filters .map-view-switch { width: auto; margin: 0; }
+    .discovery-filters .map-view-switch button { flex: initial; min-width: 0; padding-inline: 10px; }
+    .discovery-filter-toggle { display: flex; min-width: 0; min-height: 44px; align-items: center; justify-content: space-between; gap: 6px; border: 1px solid rgb(32 37 30 / 0.18); border-radius: 12px; background: #fffdf8; padding: 8px 12px; color: #20251e; font-size: 13px; font-weight: 700; text-align: left; }
+    .discovery-filter-toggle:focus-visible { outline: 3px solid #486320; outline-offset: 2px; }
+    .discovery-filter-active { color: #486320; font-size: 11px; }
+    .discovery-filter-options { display: none; grid-column: 1 / -1; min-width: 0; }
+    .discovery-filter-options.is-open { display: grid; gap: 10px; }
+    .discovery-filter-options .discovery-status-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .discovery-filter-options .discovery-status-filters button { min-width: 0; min-height: 44px; padding-inline: 8px; line-height: 1.25; white-space: normal; }
+    .discovery-filter-options .discovery-sort-controls { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
+    .discovery-filter-options .discovery-sort-controls > div { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: space-between; gap: 8px; }
+    .discovery-filter-options .discovery-sort-controls select { max-width: 70%; min-height: 44px; }
+    .map-legend { right: 8px; top: 8px; width: 138px; padding: 8px; font-size: 10px; }
+    .map-legend__rows { gap: 5px; }
+    .map-legend__rows span { gap: 6px; }
+  }
 </style>

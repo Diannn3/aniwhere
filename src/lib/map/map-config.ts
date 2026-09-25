@@ -43,8 +43,8 @@ export const LAGUNA_MAP_BOUNDS: [[number, number], [number, number]] = [
 export const MAP_ATTRIBUTION =
   'OpenFreeMap · OpenMapTiles · © OpenStreetMap contributors';
 
-export function selectedRoutePadding(compact: boolean) {
+export function selectedRoutePadding(compact: boolean, mobilePickerInset?: number) {
   return compact
-    ? { top: 76, right: 34, bottom: 190, left: 34 }
+    ? { top: 76, right: 34, bottom: mobilePickerInset === undefined ? 190 : mobilePickerInset + 24, left: 34 }
     : { top: 72, right: 52, bottom: 118, left: 52 };
 }

@@ -23,6 +23,8 @@
     selectedId = undefined,
     isDetailView = false,
     lang = 'en',
+    mobilePickerInset = 0,
+    mobileSelectionPreview = true,
     onSelect = () => {},
     routeOverride = undefined,
     routeRequestState = 'idle',
@@ -32,6 +34,8 @@
     selectedId?: string;
     isDetailView?: boolean;
     lang?: 'en' | 'fil';
+    mobilePickerInset?: number;
+    mobileSelectionPreview?: boolean;
     onSelect?: (id: string) => void;
     routeOverride?: OutletRouteEstimate;
     routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
@@ -52,9 +56,11 @@
     const normX = (lng - MIN_LNG) / (MAX_LNG - MIN_LNG);
     const normY = (MAX_LAT - lat) / (MAX_LAT - MIN_LAT); // Invert Y
     const paddingX = 40;
-    const paddingTop = 45;
+    // Keep every outlet hit target clear of the mobile picker and bottom nav.
+    const paddingTop = mobilePickerInset > 0 ? 20 : 45;
     const innerW = SVG_WIDTH - paddingX * 2;
-    const innerH = 205; // Lands comfortably between y=45 and y=250
+    const visibleSvgHeight = SVG_HEIGHT * (1 - Math.min(mobilePickerInset / 570, 0.88));
+    const innerH = Math.min(205, Math.max(50, visibleSvgHeight - paddingTop - 28));
     return {
       x: Math.round((paddingX + normX * innerW) * 10) / 10,
       y: Math.round((paddingTop + normY * innerH) * 10) / 10,
@@ -357,7 +363,7 @@
     </svg>
 
     <!-- Mobile Non-Modal Pin Inspection Bottom Sheet (P1.1 44px touch targets & zero pin occlusion) -->
-    {#if selectedItem && !isDetailView}
+    {#if selectedItem && !isDetailView && mobileSelectionPreview}
       <div
         role="region"
         aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}

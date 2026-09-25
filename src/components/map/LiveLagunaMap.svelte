@@ -30,6 +30,9 @@
     harvest,
     selectedId = undefined,
     lang = 'en',
+    visible = true,
+    mobilePickerInset = undefined,
+    mobileSelectionPreview = true,
     onSelect = () => {},
     routeOverride = undefined,
     routeRequestState = 'idle',
@@ -38,6 +41,9 @@
     harvest: HarvestQuery;
     selectedId?: string;
     lang?: 'en' | 'fil';
+    visible?: boolean;
+    mobilePickerInset?: number;
+    mobileSelectionPreview?: boolean;
     onSelect?: (id: string) => void;
     routeOverride?: OutletRouteEstimate;
     routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
@@ -200,7 +206,7 @@
     const compact = window.matchMedia('(max-width: 767px)').matches;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     map.fitBounds(bounds, {
-      padding: selectedRoutePadding(compact),
+      padding: selectedRoutePadding(compact, mobilePickerInset),
       maxZoom: 13,
       animate: !reduceMotion,
       duration: reduceMotion ? 0 : 420,
@@ -215,7 +221,7 @@
 
   $effect(() => {
     const item = selectedItem;
-    if (routeOverride || !item?.outlet.isLocalBagsakan) {
+    if (!visible || routeOverride || !item?.outlet.isLocalBagsakan) {
       internalRuntimeRoute = undefined;
       internalRouteState = 'idle';
       return;
@@ -282,7 +288,17 @@
     selectedRoute;
     loadedRouteGeometry;
     geometryLoadState;
+    mobilePickerInset;
     if (liveReady) syncMap();
+  });
+
+  $effect(() => {
+    if (visible && liveReady) {
+      requestAnimationFrame(() => {
+        map?.resize?.();
+        syncMap();
+      });
+    }
   });
 
   onMount(() => {
@@ -357,6 +373,8 @@
       {harvest}
       {selectedId}
       {lang}
+      {mobilePickerInset}
+      {mobileSelectionPreview}
       {onSelect}
       routeOverride={selectedRoute}
       routeRequestState={effectiveRouteRequestState}
@@ -388,6 +406,7 @@
     {#if selectedItem && selectedRoute}
       <aside
         class="route-card"
+        class:picker-hidden={mobileSelectionPreview === false}
         aria-live="polite"
         data-route-kind={selectedRoute.source === 'road' && activeRouteGeometry() ? 'road' : 'straight_line'}
         data-route-points={activeRouteGeometry()?.coordinates.length ?? 2}
@@ -682,6 +701,10 @@
     .route-card {
       bottom: 1.8rem;
     }
+  }
+
+  @media (max-width: 1023px) {
+    .route-card.picker-hidden { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -42,7 +42,7 @@ test('submits a harvest and carries its values to discovery', async ({ page }) =
   await page.getByRole('button', { name: /find places to sell/i }).click();
   await page.waitForURL(/\/discover\?/);
 
-  await expectHarvestQuery(page);
+  await expectHarvestQuery(page, { view: 'map' });
 });
 
 test('uses the invalid-submission summary to return focus to quantity', async ({ page }) => {
@@ -67,7 +67,7 @@ test('keeps Filipino selected while navigating home, discovery, and saved outlet
 
   await page.getByRole('button', { name: /hanapin/i }).click();
   await page.waitForURL(/\/discover\?/);
-  await expectHarvestQuery(page, { lang: 'fil' });
+  await expectHarvestQuery(page, { lang: 'fil', view: 'map' });
   await expect(page.locator('html')).toHaveAttribute('lang', 'fil');
 
   const navigation = page.getByRole('navigation', { name: /pangunahing nabigasyon/i });
@@ -151,7 +151,6 @@ test('distance sorting explains the shared comparison basis to farmers', async (
 
 test('makes all four fit filters understandable and exposes selected state', async ({ page }) => {
   await page.goto(discoverPath);
-  await page.getByRole('button', { name: 'Filter & sort' }).click();
 
   const filters = page.getByRole('group', { name: /filter by fit status/i });
   const all = filters.getByRole('button', { name: /all \(\d+\)/i });
@@ -175,7 +174,6 @@ test('clears a selected map place when a fit filter hides it', async ({ page }) 
   await page.goto(
     '/discover?crop=tomato&kg=300&origin=los-banos&ready=2026-09-24&view=list&place=demo-processor&lang=en'
   );
-  await page.getByRole('button', { name: 'Filter & sort' }).click();
   await expect(page).toHaveURL(/place=demo-processor/);
 
   const filters = page.getByRole('group', { name: /filter by fit status/i });
@@ -188,11 +186,11 @@ test('explains the three-place comparison limit instead of silently blocking the
   await page.goto(discoverPath);
 
   const cards = page.locator('article[id^="outlet-card-"]');
-  await cards.nth(0).getByRole('checkbox').check();
-  await cards.nth(1).getByRole('checkbox').check();
-  await cards.nth(2).getByRole('checkbox').check();
+  await cards.nth(0).locator('.ledger-select-surface').click();
+  await cards.nth(1).locator('.ledger-select-surface').click();
+  await cards.nth(2).locator('.ledger-select-surface').click();
 
-  const fourth = cards.nth(3).getByRole('checkbox');
+  const fourth = cards.nth(3).locator('.ledger-select-surface');
   await expect(fourth).toHaveAttribute('aria-disabled', 'true');
   const dock = page.getByLabel('Comparison dock');
   await expect(dock.getByText(/3 of 3 places selected/i)).toBeVisible();
@@ -235,8 +233,8 @@ test('comparison never preselects outlets and preserves harvest context when emp
 test('selects outlets in discovery and compares them in a semantic decision ledger', async ({ page }) => {
   await page.goto(discoverPath);
 
-  await outletCard(page, 'Kusina Verde Processing House').getByRole('checkbox').check();
-  await outletCard(page, 'Sariwa sa Los Baños Market Collective').getByRole('checkbox').check();
+  await outletCard(page, 'Kusina Verde Processing House').locator('.ledger-select-surface').click();
+  await outletCard(page, 'Sariwa sa Los Baños Market Collective').locator('.ledger-select-surface').click();
 
   const dock = page.getByRole('complementary', { name: 'Comparison dock' });
   await expect(dock).toContainText(/2 of 3 places selected/i);
