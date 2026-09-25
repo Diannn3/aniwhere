@@ -33,6 +33,7 @@
     visible = true,
     mobilePickerInset = undefined,
     mobileSelectionPreview = true,
+    resolveRuntimeInternally = true,
     onSelect = () => {},
     routeOverride = undefined,
     routeRequestState = 'idle',
@@ -44,6 +45,7 @@
     visible?: boolean;
     mobilePickerInset?: number;
     mobileSelectionPreview?: boolean;
+    resolveRuntimeInternally?: boolean;
     onSelect?: (id: string) => void;
     routeOverride?: OutletRouteEstimate;
     routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
@@ -221,7 +223,7 @@
 
   $effect(() => {
     const item = selectedItem;
-    if (!visible || routeOverride || !item?.outlet.isLocalBagsakan) {
+    if (!visible || !resolveRuntimeInternally || routeOverride || !item?.outlet.isLocalBagsakan) {
       internalRuntimeRoute = undefined;
       internalRouteState = 'idle';
       return;

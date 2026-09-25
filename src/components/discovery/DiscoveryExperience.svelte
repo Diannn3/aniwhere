@@ -964,6 +964,7 @@
               visible={activeView === 'map'}
               mobilePickerInset={mobilePickerInset}
               mobileSelectionPreview={false}
+              resolveRuntimeInternally={false}
               routeOverride={selectedMapRoute}
               routeRequestState={selectedMapRouteState}
               onSelect={handleSelectPin}
