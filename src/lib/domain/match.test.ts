@@ -83,6 +83,8 @@ describe('Deterministic Harvest Matching', () => {
 
     expect(result.status).toBe('confirm');
     expect(result.reasonCodes).toContain('crop_acceptance_unknown');
+    expect(result.evidenceKind).toBe('demo');
+    expect(result.sourceLabel).toBe('AniWhere fictional demo outlet record');
     expect(result.acceptedKg).toBeNull();
   });
 

@@ -25,6 +25,7 @@ describe('market data adapter', () => {
     expect(organic.excludedCrops).toContain('tomato');
     expect(organic.acceptedCrops.eggplant?.maxKg).toBe(100);
     expect(organic.isDemoFixture).toBe(true);
+    expect(organic.sourceLabel).toBe('AniWhere fictional demo outlet record');
   });
 
   it('keeps illustrative buying windows usable on the current Manila date', () => {

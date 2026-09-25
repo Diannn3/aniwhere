@@ -143,6 +143,7 @@ export function composeOutletViewModels(
         sampleOfferDate: formatSampleDate(sampleDate),
         acceptedCrops,
         excludedCrops: excludedCrops.length > 0 ? excludedCrops : undefined,
+        sourceLabel: placeSources[0]?.label,
         isDemoFixture: placeSources.some((source) => source.kind === 'demo'),
       };
     });
