@@ -49,12 +49,12 @@
   <p class="map-picker__caveat">
     {lang === 'fil'
       ? (hasRoadRoute
-          ? `Tantyang ruta mula sa sentro ng ${originName}, hindi sa eksaktong bukid. Kumpirmahin ang pagtanggap bago bumiyahe.`
+          ? `Tantya ng OpenRouteService mula sa sentro ng ${originName}, hindi sa eksaktong bukid. Kumpirmahin ang pagtanggap bago bumiyahe.`
           : routeRequestState === 'unavailable'
             ? `Pansamantalang hindi available ang road route. Tuwid na layo muna mula sa sentro ng ${originName}. Kumpirmahin ang pagtanggap bago bumiyahe.`
             : `Tuwid na layo mula sa sentro ng ${originName}; hindi ito direksyon sa kalsada. Kumpirmahin ang pagtanggap bago bumiyahe.`)
       : (hasRoadRoute
-          ? `Route estimate starts at ${originName} center, not the exact farm. Confirm receiving terms before travel.`
+          ? `OpenRouteService estimate starts at ${originName} center, not the exact farm. Confirm receiving terms before travel.`
           : routeRequestState === 'unavailable'
             ? `Road routing is temporarily unavailable. Using straight-line distance from ${originName} center for now. Confirm receiving terms before travel.`
             : `Straight-line distance starts at ${originName} center; it is not road directions. Confirm receiving terms before travel.`)}
