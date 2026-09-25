@@ -100,11 +100,11 @@
         : undefined)
   );
   const effectiveRouteRequestState = $derived<RouteRequestState>(
-    routeOverride
+    !resolveRuntimeInternally || routeOverride
       ? routeRequestState
       : internalRouteKey === selectedRuntimeRouteKey
         ? internalRouteState
-        : selectedRuntimeRouteKey && visible && resolveRuntimeInternally
+        : selectedRuntimeRouteKey && visible
           ? 'loading'
           : 'idle'
   );
