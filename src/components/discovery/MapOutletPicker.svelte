@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { HarvestQuery } from '../../lib/domain/types';
+  import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
   import type { PickerItem } from '../../lib/map/picker';
   import MapPickerFooter from './MapPickerFooter.svelte';
   import MapPickerHeader from './MapPickerHeader.svelte';
@@ -20,6 +21,8 @@
     onClearFilter,
     onClearCompare,
     onHeightChange,
+    routeOverride = undefined,
+    routeRequestState = 'idle',
   }: {
     items: PickerItem[];
     harvest: HarvestQuery;
@@ -34,6 +37,8 @@
     onClearFilter: () => void;
     onClearCompare: () => void;
     onHeightChange: (height: number) => void;
+    routeOverride?: OutletRouteEstimate;
+    routeRequestState?: 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   } = $props();
 
   let picker = $state<HTMLElement>();
@@ -97,7 +102,15 @@
   aria-label={lang === 'fil' ? 'Mga posibleng outlet' : 'Potential outlets'}
 >
   <MapPickerHeader count={items.length} {lang} {expanded} onToggle={toggleExpanded} />
-  {#if selectedItem}<MapPickerSelection item={selectedItem} {harvest} {lang} />{/if}
+  {#if selectedItem}
+    <MapPickerSelection
+      item={selectedItem}
+      {harvest}
+      {lang}
+      {routeOverride}
+      {routeRequestState}
+    />
+  {/if}
 
   <div id="map-picker-list" class="map-picker__body">
     {#if items.length === 0}

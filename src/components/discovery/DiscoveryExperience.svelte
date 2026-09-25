@@ -19,6 +19,7 @@
     sharedDistanceBasis,
     type OutletRouteEstimate,
   } from '../../lib/routing/routing-matrix';
+  import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
   import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
@@ -44,6 +45,8 @@
   let isEditingHarvest = $state(false);
   let compareNotice = $state('');
   let mobilePickerInset = $state(0);
+  let selectedMapRoute = $state<OutletRouteEstimate | undefined>();
+  let selectedMapRouteState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
   let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
   let mapStageElement: HTMLElement | undefined = $state();
 
@@ -189,6 +192,49 @@
   });
 
   const distanceBasis = $derived(sharedDistanceBasis(processedOutlets.map((item) => item.route)));
+
+  $effect(() => {
+    const item = processedOutlets.find((entry) => entry.outlet.id === selectedOutletId);
+    if (
+      activeView !== 'map' ||
+      !mapOpened ||
+      !item?.outlet.isLocalBagsakan
+    ) {
+      selectedMapRoute = undefined;
+      selectedMapRouteState = 'idle';
+      return;
+    }
+
+    const immediate = getImmediateOutletRoute(
+      harvest.originMunicipality,
+      item.outlet,
+      item.distanceKm
+    );
+    selectedMapRoute = immediate.route;
+    if (immediate.state === 'cached') {
+      selectedMapRouteState = 'ready';
+      return;
+    }
+
+    selectedMapRouteState = 'loading';
+    const controller = new AbortController();
+    void resolveOutletRoute(
+      harvest.originMunicipality,
+      item.outlet,
+      item.distanceKm,
+      { signal: controller.signal }
+    ).then((result) => {
+      if (controller.signal.aborted) return;
+      selectedMapRoute = result.route;
+      selectedMapRouteState =
+        result.route.source === 'road'
+          ? 'ready'
+          : result.failureReason === 'not_configured'
+            ? 'not_configured'
+            : 'unavailable';
+    });
+    return () => controller.abort();
+  });
 
   // Filter & Sort
   const filteredOutlets = $derived<ProcessedOutlet[]>(
@@ -904,6 +950,8 @@
           onClearFilter={() => setStatusFilter('all')}
           onClearCompare={() => comparedIds = []}
           onHeightChange={(height) => mobilePickerInset = height}
+          routeOverride={selectedMapRoute}
+          routeRequestState={selectedMapRouteState}
         />
 
         <div class="discovery-map-canvas">
@@ -916,6 +964,8 @@
               visible={activeView === 'map'}
               mobilePickerInset={mobilePickerInset}
               mobileSelectionPreview={false}
+              routeOverride={selectedMapRoute}
+              routeRequestState={selectedMapRouteState}
               onSelect={handleSelectPin}
             />
           {/if}
