@@ -19,4 +19,24 @@ describe('runtime route request limiter', () => {
     time += 10_001;
     expect(limiter.allow('client').allowed).toBe(true);
   });
+
+  it('caps unique client buckets instead of growing without bound', () => {
+    let time = 1_000;
+    const limiter = createRequestLimiter({
+      windowMs: 10_000,
+      maxRequests: 2,
+      maxBuckets: 2,
+      now: () => time,
+    });
+
+    expect(limiter.allow('a').allowed).toBe(true);
+    expect(limiter.allow('b').allowed).toBe(true);
+    expect(limiter.allow('c')).toEqual({
+      allowed: false,
+      retryAfterSeconds: 1,
+    });
+
+    time += 10_001;
+    expect(limiter.allow('c').allowed).toBe(true);
+  });
 });

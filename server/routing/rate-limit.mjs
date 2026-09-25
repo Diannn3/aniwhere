@@ -1,6 +1,7 @@
 export function createRequestLimiter({
   windowMs = 60_000,
   maxRequests = 12,
+  maxBuckets = 512,
   now = () => Date.now(),
 } = {}) {
   const buckets = new Map();
@@ -14,8 +15,11 @@ export function createRequestLimiter({
   return {
     allow(key = 'unknown') {
       const current = now();
-      if (buckets.size > 500) prune(current);
+      if (buckets.size >= maxBuckets) prune(current);
       const bucket = buckets.get(key);
+      if (!bucket && buckets.size >= maxBuckets) {
+        return { allowed: false, retryAfterSeconds: 1 };
+      }
       if (!bucket || bucket.resetAt <= current) {
         buckets.set(key, { count: 1, resetAt: current + windowMs });
         return { allowed: true, retryAfterSeconds: 0 };
