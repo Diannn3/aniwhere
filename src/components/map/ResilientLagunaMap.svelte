@@ -24,6 +24,7 @@
     lang = 'en',
     mobilePickerInset = 0,
     mobileSelectionPreview = true,
+    routePreviewBelowMap = false,
     onSelect = () => {},
   }: {
     items?: OutletWithFit[];
@@ -33,6 +34,7 @@
     lang?: 'en' | 'fil';
     mobilePickerInset?: number;
     mobileSelectionPreview?: boolean;
+    routePreviewBelowMap?: boolean;
     onSelect?: (id: string) => void;
   } = $props();
 
@@ -106,7 +108,7 @@
   }
 </script>
 
-<div class="relative flex min-h-[56vh] w-full select-none flex-col overflow-hidden lg:min-h-[68vh]" style="background: #B3C494 url('/plates/map-plate.png') center / cover;">
+<div class="relative flex min-h-[56vh] w-full select-none flex-col overflow-hidden lg:min-h-[68vh]" class:route-preview-below={routePreviewBelowMap} style="background: #B3C494 url('/plates/map-plate.png') center / cover;">
   
   <!-- Map Header Bar -->
   <div class="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
@@ -127,7 +129,7 @@
   </div>
 
   <!-- SVG Spatial Canvas with Backdrop Click Dismissal -->
-  <div class="w-full flex-1 flex items-center justify-center p-2 relative">
+  <div class="w-full flex-1 flex items-center justify-center p-2 relative" class:preview-layout-below={routePreviewBelowMap}>
     <svg
       class="w-full h-full max-h-[540px]"
       viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
@@ -352,7 +354,13 @@
       <div
         role="region"
         aria-label={lang === 'fil' ? 'Napiling lugar sa mapa' : 'Selected map place'}
-        class="absolute bottom-3 left-3 right-3 z-20 space-y-3 border border-[#597928]/30 bg-[#FFFDF8]/98 p-4 shadow-xl lg:hidden"
+        class="z-20 space-y-3 border border-[#597928]/30 bg-[#FFFDF8]/98 p-4 shadow-xl lg:hidden"
+        class:absolute={!routePreviewBelowMap}
+        class:bottom-3={!routePreviewBelowMap}
+        class:left-3={!routePreviewBelowMap}
+        class:right-3={!routePreviewBelowMap}
+        class:relative={routePreviewBelowMap}
+        class:mt-3={routePreviewBelowMap}
       >
         <div class="flex items-start justify-between gap-2">
           <div>
@@ -452,8 +460,13 @@
       <div class="flex items-center gap-1.5">
         <span class="w-2.5 h-2.5 rounded-full bg-[#8C9388] inline-block"></span>
         <span class="font-medium">{lang === 'fil' ? 'Hindi tugma' : 'No match'}</span>
-      </div>
-    </div>
+  </div>
+</div>
+
+<style>
+  .route-preview-below { overflow: visible; }
+  .preview-layout-below { flex-direction: column; }
+</style>
 
     <span class="text-[10px] text-[#596052] italic">
       {lang === 'fil' ? 'Tuwid na konteksto lamang' : 'Straight-line context only'}

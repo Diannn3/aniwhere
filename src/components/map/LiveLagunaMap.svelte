@@ -32,6 +32,7 @@
     visible = true,
     mobilePickerInset = undefined,
     mobileSelectionPreview = true,
+    routeCardBelowMap = false,
     onSelect = () => {},
   }: {
     items?: OutletWithFit[];
@@ -41,6 +42,7 @@
     visible?: boolean;
     mobilePickerInset?: number;
     mobileSelectionPreview?: boolean;
+    routeCardBelowMap?: boolean;
     onSelect?: (id: string) => void;
   } = $props();
 
@@ -312,10 +314,10 @@
       <strong>{lang === 'fil' ? 'Offline na mapa' : 'Offline map'}</strong>
       <span>{lang === 'fil' ? 'Hindi nag-load ang interaktibong mapa. Gamit muna ang ligtas na guhit-mapa.' : 'The interactive map did not load. Using the resilient map instead.'}</span>
     </div>
-    <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {mobilePickerInset} {mobileSelectionPreview} {onSelect} />
+    <ResilientLagunaMap {items} {harvest} {selectedId} {lang} {mobilePickerInset} {mobileSelectionPreview} routePreviewBelowMap={routeCardBelowMap} {onSelect} />
   </div>
 {:else}
-  <div class="live-map-shell" class:is-ready={liveReady}>
+  <div class="live-map-shell" class:is-ready={liveReady} class:has-below-route={routeCardBelowMap}>
     <div
       bind:this={mapContainer}
       class="live-map"
@@ -338,7 +340,7 @@
     </div>
 
     {#if selectedItem && selectedRoute}
-      <aside class="route-card" class:picker-hidden={mobileSelectionPreview === false} aria-live="polite">
+      <aside class="route-card" class:picker-hidden={mobileSelectionPreview === false} class:route-card--below={routeCardBelowMap} aria-live="polite">
         <div class="route-card__title">
           <span>{lang === 'fil' ? 'Ruta papunta sa' : 'Route to'}</span>
           <strong>{selectedItem.outlet.name}</strong>
@@ -470,6 +472,29 @@
     border-radius: 0.75rem;
     background: rgb(255 253 248 / 0.98);
     box-shadow: 0 16px 30px -24px rgb(32 37 30 / 0.5);
+  }
+
+  .live-map-shell.has-below-route .live-map {
+    position: relative;
+    inset: auto;
+    grid-row: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .live-map-shell.has-below-route {
+    display: grid;
+    grid-template-rows: minmax(0, min(68vh, 46rem)) auto;
+    overflow: visible;
+  }
+
+  .route-card--below {
+    position: relative;
+    inset: auto;
+    grid-row: 2;
+    width: auto;
+    max-width: none;
+    margin: 0.75rem;
   }
 
   .route-card__title {
@@ -606,6 +631,8 @@
     .live-map {
       min-height: 56vh;
     }
+    .live-map-shell.has-below-route { grid-template-rows: 56vh auto; }
+    .live-map-shell.has-below-route .live-map { height: 100%; }
     .map-status-bar {
       right: 3.4rem;
     }
@@ -614,6 +641,9 @@
     }
     .route-card {
       bottom: 1.8rem;
+    }
+    .route-card--below {
+      margin: 0.75rem;
     }
   }
 

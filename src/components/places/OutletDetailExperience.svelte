@@ -369,6 +369,7 @@
           harvest={harvest}
           selectedId={outlet.id}
           lang={lang}
+          routeCardBelowMap={outlet.isLocalBagsakan}
           onSelect={() => {}}
         />
       </div>
