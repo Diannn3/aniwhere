@@ -9,6 +9,7 @@
   import type { OutletRouteEstimate, RouteGeometry } from '../../lib/routing/routing-matrix';
   import { loadRouteGeometry } from '../../lib/routing/route-geometry';
   import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
+  import { runtimeRouteCacheKey } from '../../lib/routing/runtime-route-cache';
   import { loadMapLibre } from '../../lib/map/maplibre-loader';
   import {
     loadAniwhereMapStyle,
@@ -62,8 +63,10 @@
   let loadedRouteGeometry = $state<RouteGeometry | undefined>();
   let geometryLoadState = $state<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
   let geometryRequestId = 0;
+  type RouteRequestState = 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   let internalRuntimeRoute = $state<OutletRouteEstimate | undefined>();
-  let internalRouteState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
+  let internalRouteKey = $state<string | undefined>();
+  let internalRouteState = $state<RouteRequestState>('idle');
 
   const origin = $derived(
     LAGUNA_MUNICIPALITIES.find((item) => item.id === harvest.originMunicipality) ??
@@ -71,9 +74,23 @@
   );
 
   const selectedItem = $derived(items.find((item) => item.outlet.id === selectedId));
+  const selectedRuntimeRouteKey = $derived(
+    selectedItem?.outlet.isLocalBagsakan
+      ? runtimeRouteCacheKey(
+          harvest.originMunicipality,
+          selectedItem.outlet.lat,
+          selectedItem.outlet.lng
+        )
+      : undefined
+  );
+  const currentInternalRoute = $derived(
+    selectedRuntimeRouteKey && internalRouteKey === selectedRuntimeRouteKey
+      ? internalRuntimeRoute
+      : undefined
+  );
   const selectedRoute = $derived<OutletRouteEstimate | undefined>(
     routeOverride ??
-      internalRuntimeRoute ??
+      currentInternalRoute ??
       (selectedItem
         ? getOutletRouteEstimate(
             harvest.originMunicipality,
@@ -82,8 +99,14 @@
           )
         : undefined)
   );
-  const effectiveRouteRequestState = $derived(
-    routeOverride ? routeRequestState : internalRouteState
+  const effectiveRouteRequestState = $derived<RouteRequestState>(
+    routeOverride
+      ? routeRequestState
+      : internalRouteKey === selectedRuntimeRouteKey
+        ? internalRouteState
+        : selectedRuntimeRouteKey && visible && resolveRuntimeInternally
+          ? 'loading'
+          : 'idle'
   );
 
   function activeRouteGeometry(): RouteGeometry | undefined {
@@ -225,15 +248,22 @@
     const item = selectedItem;
     if (!visible || !resolveRuntimeInternally || routeOverride || !item?.outlet.isLocalBagsakan) {
       internalRuntimeRoute = undefined;
+      internalRouteKey = undefined;
       internalRouteState = 'idle';
       return;
     }
 
+    const key = runtimeRouteCacheKey(
+      harvest.originMunicipality,
+      item.outlet.lat,
+      item.outlet.lng
+    );
     const immediate = getImmediateOutletRoute(
       harvest.originMunicipality,
       item.outlet,
       item.distanceKm
     );
+    internalRouteKey = key;
     internalRuntimeRoute = immediate.route;
     if (immediate.state === 'cached') {
       internalRouteState = 'ready';
