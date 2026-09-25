@@ -31,7 +31,8 @@
 {#if error}<p id="landing-crop-error" role="alert" class="mt-3 font-semibold text-white">{lang === 'fil' ? 'Ilagay muna ang pangalan ng ani.' : 'Enter a crop to continue.'}</p>{/if}
 
 <style>
-  .landing-search { display: flex; align-items: center; gap: .65rem; padding: .5rem; border-radius: 12px; background: #fffdf8; color: #20251e; box-shadow: 0 18px 45px -18px rgba(8, 17, 5, .55); }
+  .landing-search { display: flex; align-items: center; gap: .65rem; padding: .5rem; border-radius: 12px; background: #fffdf8; color: #20251e; box-shadow: 0 18px 45px -18px rgba(8, 17, 5, .55); transition: box-shadow 220ms cubic-bezier(.16, 1, .3, 1); }
+  .landing-search:focus-within { box-shadow: 0 18px 45px -18px rgba(8, 17, 5, .55), 0 0 0 3px #91ac67; }
   .landing-search-icon { width: 1.65rem; height: 1.65rem; flex: none; margin-left: 1rem; color: #486320; }
   input { min-width: 0; flex: 1; height: 3.5rem; border: 0; background: transparent; color: #20251e; font-size: 1.25rem; outline: none; }
   input::placeholder { color: #535a50; opacity: 1; }
@@ -40,5 +41,5 @@
   button:hover { background: #354e16; transform: translateY(-1px); }
   button svg { width: 1.2rem; height: 1.2rem; }
   @media (max-width: 640px) { .landing-search { flex-wrap: wrap; gap: 0; } .landing-search-icon { margin-left: .65rem; } input { width: calc(100% - 3rem); font-size: 1rem; } button { width: 100%; } }
-  @media (prefers-reduced-motion: reduce) { button { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { button, .landing-search { transition: none; } button:hover { transform: none; } }
 </style>

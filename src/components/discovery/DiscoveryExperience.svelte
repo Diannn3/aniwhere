@@ -956,4 +956,16 @@
   .legend-land { height: 12px; background: #b3c494; }
   @media (max-width: 1199px) { .map-legend { right: 12px; top: 100px; } }
   @media (max-width: 767px) { .map-legend { width: 155px; padding: 9px; font-size: 11px; } .map-legend__rows { gap: 6px; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .discovery-map { animation: map-uncover 560ms cubic-bezier(.16, 1, .3, 1) both; }
+    .discovery-docket { animation: docket-arrive 420ms 120ms cubic-bezier(.16, 1, .3, 1) both; }
+    .ledger-entry { transition: background-color 220ms ease, border-color 220ms ease; }
+    .ledger-number { transition: background-color 180ms ease, transform 180ms cubic-bezier(.16, 1, .3, 1); }
+    .ledger-number:hover { transform: scale(1.06); }
+    .ledger-number:active { transform: scale(.96); }
+    .map-view-switch button { transition: background-color 180ms ease, color 180ms ease; }
+    .discovery-filters { transition: opacity 180ms ease; }
+  }
+  @keyframes map-uncover { from { clip-path: inset(0 0 5% 0); } to { clip-path: inset(0); } }
+  @keyframes docket-arrive { from { opacity: .7; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 </style>
