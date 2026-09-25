@@ -44,7 +44,10 @@ export const MAP_ATTRIBUTION =
   'OpenFreeMap · OpenMapTiles · © OpenStreetMap contributors';
 
 export function selectedRoutePadding(compact: boolean, mobilePickerInset?: number) {
+  if (typeof mobilePickerInset === 'number' && mobilePickerInset > 0) {
+    return { top: 76, right: 34, bottom: mobilePickerInset + 24, left: 34 };
+  }
   return compact
-    ? { top: 76, right: 34, bottom: mobilePickerInset === undefined ? 190 : mobilePickerInset + 24, left: 34 }
+    ? { top: 76, right: 34, bottom: 190, left: 34 }
     : { top: 72, right: 52, bottom: 118, left: 52 };
 }
