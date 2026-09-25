@@ -79,7 +79,9 @@
       : undefined
   );
   const routeEstimate = $derived(
-    resolvedRouteKey === routeResolutionKey && resolvedRoute
+    outlet.isLocalBagsakan &&
+    resolvedRouteKey === routeResolutionKey &&
+    resolvedRoute
       ? resolvedRoute
       : immediateRoute.route
   );
