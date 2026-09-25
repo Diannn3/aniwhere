@@ -87,6 +87,20 @@ describe('runtime route client', () => {
     ).resolves.toEqual({ ok: false, reason: 'invalid_response' });
   });
 
+  it('recognizes abort-shaped errors without relying on DOMException', async () => {
+    const fetchImpl = vi.fn(async () => {
+      const error = new Error('request aborted');
+      error.name = 'AbortError';
+      throw error;
+    });
+    await expect(
+      requestRuntimeRoute(
+        { originMunicipalityId: 'los-banos', destination: { lat: 14.275, lng: 121.459 } },
+        { endpoint: '/api/route-estimate', fetchImpl: fetchImpl as typeof fetch }
+      )
+    ).resolves.toEqual({ ok: false, reason: 'aborted' });
+  });
+
   it('treats network errors as offline fallback', async () => {
     const fetchImpl = vi.fn(async () => {
       throw new TypeError('network failed');

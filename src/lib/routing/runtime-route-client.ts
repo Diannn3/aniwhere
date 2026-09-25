@@ -101,7 +101,12 @@ export async function requestRuntimeRoute(
     const parsed = validateRuntimeRouteResponse(body);
     return parsed ?? { ok: false, reason: 'invalid_response' };
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'name' in error &&
+      error.name === 'AbortError'
+    ) {
       return { ok: false, reason: 'aborted' };
     }
     return { ok: false, reason: 'offline' };
