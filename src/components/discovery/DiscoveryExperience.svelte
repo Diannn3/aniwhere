@@ -20,6 +20,7 @@
     type OutletRouteEstimate,
   } from '../../lib/routing/routing-matrix';
   import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
+  import { runtimeRouteCacheKey } from '../../lib/routing/runtime-route-cache';
   import { publishHarvestContext, subscribeHarvestContext } from '../../lib/ani/harvest-sync';
 
   let {
@@ -44,9 +45,13 @@
   let comparedIds = $state<string[]>([]);
   let isEditingHarvest = $state(false);
   let compareNotice = $state('');
+  type RouteRequestState = 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   let mobilePickerInset = $state(0);
-  let selectedMapRoute = $state<OutletRouteEstimate | undefined>();
-  let selectedMapRouteState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
+  let selectedMapResolution = $state<{
+    key: string;
+    route: OutletRouteEstimate;
+    state: RouteRequestState;
+  } | undefined>();
   let marketOutlets = $state<Outlet[]>(getClientMarketOutlets());
   let mapStageElement: HTMLElement | undefined = $state();
 
@@ -192,16 +197,36 @@
   });
 
   const distanceBasis = $derived(sharedDistanceBasis(processedOutlets.map((item) => item.route)));
+  const selectedProcessedOutlet = $derived(
+    processedOutlets.find((entry) => entry.outlet.id === selectedOutletId)
+  );
+  const selectedMapRouteKey = $derived(
+    activeView === 'map' && mapOpened && selectedProcessedOutlet?.outlet.isLocalBagsakan
+      ? runtimeRouteCacheKey(
+          harvest.originMunicipality,
+          selectedProcessedOutlet.outlet.lat,
+          selectedProcessedOutlet.outlet.lng
+        )
+      : undefined
+  );
+  const selectedMapRoute = $derived(
+    selectedMapRouteKey && selectedMapResolution?.key === selectedMapRouteKey
+      ? selectedMapResolution.route
+      : undefined
+  );
+  const selectedMapRouteState = $derived<RouteRequestState>(
+    !selectedMapRouteKey
+      ? 'idle'
+      : selectedMapResolution?.key === selectedMapRouteKey
+        ? selectedMapResolution.state
+        : 'loading'
+  );
 
   $effect(() => {
-    const item = processedOutlets.find((entry) => entry.outlet.id === selectedOutletId);
-    if (
-      activeView !== 'map' ||
-      !mapOpened ||
-      !item?.outlet.isLocalBagsakan
-    ) {
-      selectedMapRoute = undefined;
-      selectedMapRouteState = 'idle';
+    const item = selectedProcessedOutlet;
+    const key = selectedMapRouteKey;
+    if (!key || !item) {
+      selectedMapResolution = undefined;
       return;
     }
 
@@ -210,13 +235,13 @@
       item.outlet,
       item.distanceKm
     );
-    selectedMapRoute = immediate.route;
-    if (immediate.state === 'cached') {
-      selectedMapRouteState = 'ready';
-      return;
-    }
+    selectedMapResolution = {
+      key,
+      route: immediate.route,
+      state: immediate.state === 'cached' ? 'ready' : 'loading',
+    };
+    if (immediate.state === 'cached') return;
 
-    selectedMapRouteState = 'loading';
     const controller = new AbortController();
     void resolveOutletRoute(
       harvest.originMunicipality,
@@ -225,13 +250,16 @@
       { signal: controller.signal }
     ).then((result) => {
       if (controller.signal.aborted) return;
-      selectedMapRoute = result.route;
-      selectedMapRouteState =
-        result.route.source === 'road'
-          ? 'ready'
-          : result.failureReason === 'not_configured'
-            ? 'not_configured'
-            : 'unavailable';
+      selectedMapResolution = {
+        key,
+        route: result.route,
+        state:
+          result.route.source === 'road'
+            ? 'ready'
+            : result.failureReason === 'not_configured'
+              ? 'not_configured'
+              : 'unavailable',
+      };
     });
     return () => controller.abort();
   });
