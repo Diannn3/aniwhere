@@ -159,3 +159,35 @@ test('Bagsakan profile validation associates inline errors with their fields', a
   await expect(page.locator('#bag-profile-lat-error')).toBeVisible();
   await expect(page.locator('#bag-profile-lng-error')).toBeVisible();
 });
+
+
+test('buying need validation focuses and describes basic and advanced errors', async ({ page }) => {
+  await page.goto('/bagsakan');
+  await page.locator('#bag-profile-name').fill('Validation Test Bagsakan');
+  await page.locator('#bag-profile-municipalityId').selectOption('santa-cruz');
+  await page.getByRole('button', { name: 'Save bagsakan' }).click();
+  await page.getByRole('button', { name: 'Add buying need' }).click();
+
+  await page.locator('#bag-demand-maxKg').fill('0');
+  await page.getByText('Additional receiving terms').click();
+  await page.locator('#bag-demand-receivingStartTime').fill('08:00');
+  await page.getByRole('button', { name: 'Save need' }).click();
+
+  const maxKg = page.locator('#bag-demand-maxKg');
+  await expect(maxKg).toHaveAttribute('aria-invalid', 'true');
+  await expect(maxKg).toHaveAttribute('aria-describedby', 'bag-demand-maxKg-error');
+  await expect(page.locator('#bag-demand-maxKg-error')).toBeVisible();
+  await expect(maxKg).toBeFocused();
+
+  await maxKg.fill('200');
+  await page.getByRole('button', { name: 'Save need' }).click();
+
+  const receivingEnd = page.locator('#bag-demand-receivingEndTime');
+  await expect(receivingEnd).toHaveAttribute('aria-invalid', 'true');
+  await expect(receivingEnd).toHaveAttribute(
+    'aria-describedby',
+    'bag-demand-receivingEndTime-error'
+  );
+  await expect(page.locator('#bag-demand-receivingEndTime-error')).toBeVisible();
+  await expect(receivingEnd).toBeFocused();
+});
