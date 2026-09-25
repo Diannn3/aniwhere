@@ -480,8 +480,8 @@
       {#if routeEstimate.source === 'road'}
         <p class="mt-2 text-xs leading-5 text-[#596052]">
           {isFil
-            ? 'Tantya ito mula sa reference point ng munisipyo, hindi sa eksaktong bukid o live traffic ETA.'
-            : 'This is an estimate from the municipality reference point, not the exact farm or a live-traffic ETA.'}
+            ? 'Tantya ito ng OpenRouteService mula sa reference point ng munisipyo, hindi sa eksaktong bukid o live traffic ETA.'
+            : 'This is an OpenRouteService estimate from the municipality reference point, not the exact farm or a live-traffic ETA.'}
         </p>
       {/if}
     </section>
