@@ -148,7 +148,7 @@
   }
   function evidenceKindLabel(kind: string) {
     const labels: Record<string, [string, string]> = {
-      demo: ['Outlet record', 'Tala ng outlet'], buyer_offer: ['Buyer-posted offer', 'Alok na naka-post ng buyer'],
+      demo: ['Demo outlet record', 'Tala ng demo outlet'], buyer_offer: ['Buyer-posted offer', 'Alok na naka-post ng buyer'],
       reviewed_place: ['Reviewed place information', 'Nasuring impormasyon ng lugar'], public_reference: ['Public reference', 'Pampublikong sanggunian'],
       unknown: ['Source type unknown', 'Hindi alam ang uri ng pinagmulan'],
     };
@@ -157,7 +157,7 @@
   }
   function priceLabel(kind: string, value: number | null, local = false) {
     if (value === null) return copy('No price recorded', 'Walang nakatalang presyo');
-    const prefix = local ? copy('Local demo price', 'Presyo sa lokal na demo') : kind === 'demo' ? copy('Price', 'Presyo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
+    const prefix = local ? copy('Local demo price', 'Presyo sa lokal na demo') : kind === 'demo' ? copy('Demo price', 'Presyo sa demo') : kind === 'buyer_offer' ? copy('Buyer-posted price', 'Presyong naka-post ng buyer') : kind === 'public_reference' ? copy('Reference price', 'Presyong sanggunian') : copy('Recorded price', 'Nakatalaang presyo');
     return `${prefix}: ₱${value.toLocaleString('en-PH', { maximumFractionDigits: 2 })}/kg`;
   }
   function fitTone(status: FitStatus) {

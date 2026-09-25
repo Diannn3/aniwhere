@@ -441,12 +441,12 @@
   function priceLabelFor(fit: FitResult, local: boolean): string {
     if (local) return lang === 'fil' ? 'Presyo sa demo sa device na ito' : 'Local demo price on this device';
     if (fit.evidenceKind === 'demo') {
-      return lang === 'fil' ? 'Presyo' : 'Price';
+      return lang === 'fil' ? 'Presyo sa demo' : 'Demo price';
     }
     if (fit.evidenceKind === 'buyer_offer') {
       return lang === 'fil' ? 'Presyong naka-post ng buyer' : 'Buyer-posted price';
     }
-    return lang === 'fil' ? 'Presyo' : 'Price';
+    return lang === 'fil' ? 'Nakatalaang presyo' : 'Recorded price';
   }
 </script>
 

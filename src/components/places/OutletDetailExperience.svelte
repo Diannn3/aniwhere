@@ -236,10 +236,10 @@
     outlet.isLocalBagsakan
       ? (isFil ? 'Presyo sa lokal na demo' : 'Local demo price')
       : fitResult.evidenceKind === 'demo'
-      ? (isFil ? 'Presyo' : 'Price')
+      ? (isFil ? 'Presyo sa demo' : 'Demo price')
       : fitResult.evidenceKind === 'buyer_offer'
         ? (isFil ? 'Presyong naka-post ng buyer' : 'Buyer-posted price')
-        : (isFil ? 'Presyo' : 'Price')
+        : (isFil ? 'Nakatalaang presyo' : 'Recorded price')
   );
 
   const priceQuestion = $derived(
