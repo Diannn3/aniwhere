@@ -83,7 +83,7 @@
       }
       if (requestedView !== 'list' && requestedView !== 'map') {
         const query = serializeDiscoverQuery(harvest, currentView(), selectedOutletId, lang);
-        window.history.replaceState({}, '', `/discover?${query}`);
+        replaceDiscoveryUrl(query);
       }
       editCrop = clientQuery.harvest.crop;
       editKg = clientQuery.harvest.quantityKg;
@@ -105,8 +105,13 @@
     editGrade = next.details?.grade || '';
     editPackaging = next.details?.packaging || '';
     const newQuery = serializeDiscoverQuery(next, currentView(), selectedOutletId, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    replaceDiscoveryUrl(newQuery);
   }));
+
+  function replaceDiscoveryUrl(query: string) {
+    window.history.replaceState({}, '', `/discover?${query}`);
+    window.dispatchEvent(new Event('aniwhere:harvest-url-change'));
+  }
 
   function currentView(): 'list' | 'map' {
     if (activeView !== 'auto') return activeView;
@@ -374,12 +379,12 @@
     publishHarvestContext(harvest);
 
     const newQuery = serializeDiscoverQuery(harvest, currentView(), undefined, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    replaceDiscoveryUrl(newQuery);
   }
 
   function syncDiscoveryUrl() {
     const newQuery = serializeDiscoverQuery(harvest, currentView(), selectedOutletId, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    replaceDiscoveryUrl(newQuery);
   }
 
   function setStatusFilter(next: 'all' | 'match' | 'partial' | 'confirm' | 'no_match') {
@@ -1122,4 +1127,17 @@
     .map-legend__rows { gap: 5px; }
     .map-legend__rows span { gap: 6px; }
   }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .discovery-map { animation: map-uncover 900ms cubic-bezier(.16, 1, .3, 1) both; }
+    .discovery-docket { animation: docket-arrive 720ms 180ms cubic-bezier(.16, 1, .3, 1) both; }
+    .ledger-entry { transition: background-color 360ms ease, border-color 360ms ease; }
+    .ledger-number { transition: background-color 280ms ease, transform 280ms cubic-bezier(.16, 1, .3, 1); }
+    .ledger-number:hover { transform: scale(1.06); }
+    .ledger-number:active { transform: scale(.96); }
+    .map-view-switch button { transition: background-color 280ms ease, color 280ms ease; }
+    .discovery-filters { transition: opacity 280ms ease; }
+  }
+  @keyframes map-uncover { from { clip-path: inset(0 0 5% 0); } to { clip-path: inset(0); } }
+  @keyframes docket-arrive { from { opacity: .7; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 </style>
