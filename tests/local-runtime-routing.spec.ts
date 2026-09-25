@@ -199,7 +199,7 @@ test('comparison adopts road basis only after the local route resolves', async (
   await expect(page.getByText(/Fetching comparable road estimates/)).toBeVisible();
   await expect(page.getByText(/All selected places have road estimates/).first()).toBeVisible();
   await expect(page.getByText(/Fetching comparable road estimates/)).toHaveCount(0);
-  await expect(page.getByText(/Road distance from Los Baños municipality center/).first()).toBeVisible();
+  await expect(page.getByText(/OpenRouteService road estimate from Los Baños municipality center/).first()).toBeVisible();
 });
 
 
