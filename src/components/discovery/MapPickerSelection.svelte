@@ -35,7 +35,15 @@
       ? (lang === 'fil'
           ? `Kinukuha ang road route · ${effectiveRoute.straightLineDistanceKm.toFixed(1)} km tuwid muna`
           : `Fetching road route · ${effectiveRoute.straightLineDistanceKm.toFixed(1)} km straight-line for now`)
-      : routeSummary(displayItem, lang)}
+      : routeRequestState === 'not_configured' && item.outlet.isLocalBagsakan && !hasRoadRoute
+        ? (lang === 'fil'
+            ? `Hindi naka-configure ang live road routing · ${effectiveRoute.straightLineDistanceKm.toFixed(1)} km tuwid muna`
+            : `Live road routing not configured · ${effectiveRoute.straightLineDistanceKm.toFixed(1)} km straight-line for now`)
+        : routeRequestState === 'unavailable' && item.outlet.isLocalBagsakan && !hasRoadRoute
+          ? (lang === 'fil'
+              ? `Pansamantalang hindi available ang road route · ${effectiveRoute.straightLineDistanceKm.toFixed(1)} km tuwid muna`
+              : `Road route temporarily unavailable · ${effectiveRoute.straightLineDistanceKm.toFixed(1)} km straight-line for now`)
+          : routeSummary(displayItem, lang)}
   </p>
   <p class="map-picker__quantity">{acceptedQuantity(item, lang)}</p>
   <p class="map-picker__caveat">

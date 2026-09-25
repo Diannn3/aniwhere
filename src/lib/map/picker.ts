@@ -1,5 +1,5 @@
 import type { FitResult, Outlet } from '../domain/types';
-import { distanceForBasis, type OutletRouteEstimate } from '../routing/routing-matrix';
+import { distanceForBasis, formatEstimatedDriveDuration, type OutletRouteEstimate } from '../routing/routing-matrix';
 
 export interface PickerItem {
   outlet: Outlet;
@@ -25,14 +25,17 @@ export function distanceLabel(item: PickerItem, basis: 'road' | 'straight_line',
 
 export function routeSummary(item: PickerItem, lang: 'en' | 'fil'): string {
   if (item.route.source === 'road' && typeof item.route.roadDistanceKm === 'number') {
-    const minutes = item.route.roadDurationMinutes;
+    const duration = formatEstimatedDriveDuration(item.route);
+    const localizedDuration = duration?.startsWith('~')
+      ? `${lang === 'fil' ? 'mga ' : 'about '}${duration.slice(1)}`
+      : duration;
     return lang === 'fil'
-      ? `${item.route.roadDistanceKm.toFixed(1)} km sa kalsada${minutes ? ` · mga ${minutes} min` : ''}`
-      : `${item.route.roadDistanceKm.toFixed(1)} km by road${minutes ? ` · about ${minutes} min` : ''}`;
+      ? `${item.route.roadDistanceKm.toFixed(1)} km sa kalsada${localizedDuration ? ` · ${localizedDuration}` : ''}`
+      : `${item.route.roadDistanceKm.toFixed(1)} km by road${localizedDuration ? ` · ${localizedDuration}` : ''}`;
   }
   return lang === 'fil'
-    ? `${item.route.straightLineDistanceKm.toFixed(1)} km na tuwid na layo · walang road route`
-    : `${item.route.straightLineDistanceKm.toFixed(1)} km straight-line · no road route`;
+    ? `${item.route.straightLineDistanceKm.toFixed(1)} km na tuwid na layo · hindi available ang road route`
+    : `${item.route.straightLineDistanceKm.toFixed(1)} km straight-line · road route unavailable`;
 }
 
 export function confirmationNote(origin: string, lang: 'en' | 'fil', byRoad: boolean): string {
