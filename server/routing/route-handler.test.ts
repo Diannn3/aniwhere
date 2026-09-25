@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { LAGUNA_MAP_BOUNDS } from '../../src/lib/map/map-config';
 import {
   routeEstimateFromPayload,
   runtimeRoutingPolicy,
@@ -121,10 +122,9 @@ describe('runtime route server handler', () => {
     });
   });
 
-  it('keeps the server policy aligned to ten known origins', () => {
+  it('keeps the server policy aligned to canonical origins and client map bounds', () => {
     expect(runtimeRoutingPolicy.originIds).toHaveLength(10);
-    expect(runtimeRoutingPolicy.bounds).toEqual({
-      west: 121.05, east: 121.53, south: 13.98, north: 14.37,
-    });
+    const [[west, south], [east, north]] = LAGUNA_MAP_BOUNDS;
+    expect(runtimeRoutingPolicy.bounds).toEqual({ west, east, south, north });
   });
 });
