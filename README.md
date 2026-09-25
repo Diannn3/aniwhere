@@ -138,7 +138,7 @@ pnpm dev
 
 The default example config uses `PUBLIC_DATA_MODE=demo`.
 
-For local Bagsakan road routing in development, set the private key in the shell before starting Astro:
+For local Bagsakan road routing in development, keep the private key server-side. You can export it in the shell before starting Astro:
 
 ```bash
 ORS_API_KEY=... pnpm dev
@@ -150,6 +150,8 @@ On PowerShell:
 $env:ORS_API_KEY="..."
 pnpm dev
 ```
+
+You may instead put `ORS_API_KEY=...` in a local `.env` or `.env.local` file. Those files are gitignored; do not rename the key to `PUBLIC_ORS_API_KEY`.
 
 The dev server exposes a same-origin `/api/route-estimate` bridge; the browser never receives the ORS key. Production serverless deployments should keep `ORS_API_KEY` server-only and set `PUBLIC_RUNTIME_ROUTING_ENDPOINT=/api/route-estimate` at build time. The production adapter rejects cross-site browser requests by default; `ROUTING_ALLOWED_ORIGINS` is only for explicit additional trusted origins.
 
