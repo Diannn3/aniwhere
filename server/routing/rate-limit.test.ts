@@ -33,7 +33,7 @@ describe('runtime route request limiter', () => {
     expect(limiter.allow('b').allowed).toBe(true);
     expect(limiter.allow('c')).toEqual({
       allowed: false,
-      retryAfterSeconds: 1,
+      retryAfterSeconds: 10,
     });
 
     time += 10_001;
