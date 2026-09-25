@@ -172,7 +172,7 @@ The layered architecture is now implemented:
 5. `scripts/generate-routing-matrix.mjs` uses a private ORS key outside the browser to precompute 110 explicit cells with provenance and an input fingerprint.
 6. Optional geometry generation stores versioned same-origin GeoJSON route files that are loaded only for the selected outlet.
 7. Discovery/detail/compare read the same artifact and fall back explicitly when no routed cell exists.
-8. A same-device Bagsakan is not part of the static artifact because its coordinates are runtime-local; it keeps a labelled straight-line fallback.
+8. A same-device Bagsakan is not part of the static artifact because its coordinates are runtime-local; when the secure runtime endpoint is configured it can request one selected ORS Directions route, otherwise it keeps the labelled straight-line fallback.
 9. The resilient SVG map remains available when the live map cannot load.
 
 The browser does not send every candidate through a routing API and does not receive an ORS secret.
