@@ -261,3 +261,51 @@ test('resilient map keeps resolved road metrics when MapLibre fails', async ({ p
   await expect(page.getByText('Road estimate available · line is illustrative')).toBeVisible();
   await expect(page.getByText(/30\.5 km by road/).first()).toBeVisible();
 });
+
+
+test('resilient map keeps valid edge pins inside the canonical fallback canvas', async ({ page }) => {
+  const timestamp = new Date().toISOString();
+  const today = todayInManila();
+  await page.evaluate(([key, value]) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [storageKey, {
+    version: 1,
+    profile: {
+      id: profileId,
+      name: 'Edge Bagsakan',
+      municipalityId: 'pagsanjan',
+      lat: 14.37,
+      lng: 121.53,
+      locationBasis: 'exact_pin',
+      updatedAt: timestamp,
+    },
+    demands: [{
+      id: 'need-tomato-edge',
+      profileId,
+      cropKey: 'tomato',
+      maxKg: 32,
+      status: 'active',
+      validFrom: today,
+      validUntil: today,
+      updatedAt: timestamp,
+    }],
+  }] as const);
+
+  await page.route('https://unpkg.com/**', (route) => route.abort());
+  await page.route('**/api/route-estimate', (route) =>
+    route.fulfill({ status: 502, contentType: 'application/json', body: '{"error":"routing_provider_unavailable"}' })
+  );
+
+  const params = new URLSearchParams({ ...CANONICAL_HARVEST, place: placeId });
+  await page.goto(`/bagsakan/preview?${params.toString()}`);
+  await expect(page.getByText('Offline map')).toBeVisible();
+
+  const marker = page.getByRole('button', { name: /Edge Bagsakan:/ });
+  await expect(marker).toBeVisible();
+  const cx = Number(await marker.getAttribute('cx'));
+  const cy = Number(await marker.getAttribute('cy'));
+  expect(cx).toBeGreaterThanOrEqual(11);
+  expect(cx).toBeLessThanOrEqual(469);
+  expect(cy).toBeGreaterThanOrEqual(11);
+  expect(cy).toBeLessThanOrEqual(429);
+});
