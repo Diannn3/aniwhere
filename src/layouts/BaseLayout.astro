@@ -214,21 +214,23 @@ const farmerContextHref = (path: string) => {
           if (value !== null) element.setAttribute('aria-label', value);
         });
 
-        document.querySelectorAll('a[data-language-target]').forEach((element) => {
-          const target = element.getAttribute('data-language-target');
-          if (!target) return;
-          const url = new URL(window.location.href);
-          url.searchParams.set('lang', target);
-          element.setAttribute('href', url.pathname + url.search + url.hash);
+        const updateLanguageLinks = () => {
+          document.querySelectorAll('a[data-language-target]').forEach((element) => {
+            const target = element.getAttribute('data-language-target');
+            if (!target) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', target);
+            element.setAttribute('href', url.pathname + url.search + url.hash);
 
-          const selected = target === activeLang;
-          if (selected) element.setAttribute('aria-current', 'true');
-          else element.removeAttribute('aria-current');
-          element.classList.toggle('bg-[#20251E]', selected);
-          element.classList.toggle('text-[#FFFDF8]', selected);
-          element.classList.toggle('text-[#4A5245]', !selected);
-          element.classList.toggle('hover:bg-[#FCECD8]', !selected);
-        });
+            const selected = target === activeLang;
+            if (selected) element.setAttribute('aria-current', 'true');
+            else element.removeAttribute('aria-current');
+            element.classList.toggle('bg-[#20251E]', selected);
+            element.classList.toggle('text-[#FFFDF8]', selected);
+            element.classList.toggle('text-[#4A5245]', !selected);
+            element.classList.toggle('hover:bg-[#FCECD8]', !selected);
+          });
+        };
 
         const aniMobileTrigger = document.getElementById('ani-mobile-trigger');
         aniMobileTrigger?.addEventListener('click', () => {
@@ -236,23 +238,28 @@ const farmerContextHref = (path: string) => {
         });
 
         const harvestContextKeys = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging'];
-        const hasHarvestContext = ['crop', 'kg', 'origin'].every((key) => params.has(key));
+        const updateRouteLinks = () => {
+          const currentParams = new URLSearchParams(window.location.search);
+          const hasHarvestContext = ['crop', 'kg', 'origin'].every((key) => currentParams.has(key));
+          document.querySelectorAll('a[data-route-href]').forEach((element) => {
+            const route = element.getAttribute('data-route-href');
+            if (!route) return;
+            const url = new URL(route, window.location.origin);
 
-        document.querySelectorAll('a[data-route-href]').forEach((element) => {
-          const route = element.getAttribute('data-route-href');
-          if (!route) return;
-          const url = new URL(route, window.location.origin);
-
-          if ((route === '/discover' || route === '/saved' || route === '/compare') && hasHarvestContext) {
-            for (const key of harvestContextKeys) {
-              const value = params.get(key);
-              if (value) url.searchParams.set(key, value);
+            if ((route === '/discover' || route === '/saved' || route === '/compare') && hasHarvestContext) {
+              for (const key of harvestContextKeys) {
+                const value = currentParams.get(key);
+                if (value) url.searchParams.set(key, value);
+              }
             }
-          }
 
-          if (activeLang === 'fil') url.searchParams.set('lang', 'fil');
-          element.setAttribute('href', url.pathname + url.search);
-        });
+            if (activeLang === 'fil') url.searchParams.set('lang', 'fil');
+            element.setAttribute('href', url.pathname + url.search);
+          });
+        };
+        const updateLinks = () => { updateLanguageLinks(); updateRouteLinks(); };
+        updateLinks();
+        window.addEventListener('aniwhere:harvest-url-change', updateLinks);
       })();
     </script>
   </body>
