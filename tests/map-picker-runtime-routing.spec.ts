@@ -94,3 +94,53 @@ test('list view does not spend runtime routing quota for a selected local Bagsak
   await page.waitForTimeout(250);
   expect(requestCount).toBe(0);
 });
+
+test('a delayed local route cannot leak into a newly selected static outlet', async ({ page }) => {
+  await seedLocalBagsakan(page);
+  await page.route('https://unpkg.com/**', (route) => route.abort());
+
+  let requestCount = 0;
+  await page.route('**/api/route-estimate', async (route) => {
+    requestCount += 1;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        schemaVersion: 1,
+        provider: 'openrouteservice',
+        profile: 'driving-car',
+        distanceMeters: 30500,
+        durationSeconds: 2280,
+        geometryStatus: 'ready',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [121.241, 14.17],
+            [121.285, 14.19],
+            [121.36, 14.23],
+            [121.459, 14.275],
+          ],
+        },
+        generatedAt: '2026-09-25T00:00:00Z',
+        attribution: 'Routing © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors',
+      }),
+    });
+  });
+
+  await page.goto(`/discover?${harvest}&view=map&place=${placeId}`);
+  const picker = page.locator('.map-picker');
+  await expect(picker.locator('.map-picker__selection')).toContainText('Picker Bagsakan');
+
+  await picker.getByRole('button', { name: 'Show all' }).click();
+  await page.locator('[data-outlet-id="demo-nagcarlan-kitchen"] .map-picker__select').click();
+
+  const selection = picker.locator('.map-picker__selection');
+  await expect(selection).toContainText('Nagcarlan Hinog Kitchen');
+  await expect(selection).toContainText('27.5 km by road');
+  await page.waitForTimeout(600);
+  await expect(selection).toContainText('Nagcarlan Hinog Kitchen');
+  await expect(selection).toContainText('27.5 km by road');
+  await expect(selection).not.toContainText('30.5 km by road');
+  expect(requestCount).toBe(1);
+});
