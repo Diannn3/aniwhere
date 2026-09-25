@@ -60,7 +60,7 @@ export async function expectHarvestQuery(
 }
 
 export function outletCard(page: Page, outletName: string): Locator {
-  return page.locator('article').filter({
+  return page.locator('article:visible').filter({
     has: page.getByRole('heading', { name: outletName, exact: true }),
   });
 }

@@ -300,7 +300,7 @@ test('resilient map keeps valid edge pins inside the canonical fallback canvas',
   await page.goto(`/bagsakan/preview?${params.toString()}`);
   await expect(page.getByText('Offline map')).toBeVisible();
 
-  const marker = page.getByRole('button', { name: /Edge Bagsakan:/ });
+  const marker = page.getByRole('button', { name: /Edge Bagsakan/ });
   await expect(marker).toBeVisible();
   const cx = Number(await marker.getAttribute('cx'));
   const cy = Number(await marker.getAttribute('cy'));

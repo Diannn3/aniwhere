@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import { subscribeClientMarketOutlets } from '../../lib/data/client-market';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -20,7 +21,9 @@
     initialLang?: 'en' | 'fil';
   }
 
-  const { outlet, initialLang = 'en' } = $props();
+  let { outlet: initialOutlet, initialLang = 'en' } = $props();
+  let currentOutlet = $state<Outlet>(initialOutlet);
+  const outlet = $derived(initialOutlet.isLocalBagsakan ? initialOutlet : currentOutlet);
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let returnView = $state<'list' | 'map'>('list');
@@ -57,6 +60,13 @@
       lang = parsed.lang;
     }
     routeClientReady = true;
+  });
+
+  onMount(() => {
+    if (initialOutlet.isLocalBagsakan) return;
+    return subscribeClientMarketOutlets((outlets) => {
+      currentOutlet = outlets.find((item) => item.id === initialOutlet.id) ?? initialOutlet;
+    });
   });
 
   onMount(() => subscribeHarvestContext((next) => {
@@ -752,7 +762,7 @@
 
 <!-- Modal: Prepare Message -->
 {#if showMessageModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="prepare-message-title">
+  <div class="detail-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="prepare-message-title">
     <div bind:this={messagePanel} onkeydown={(event) => handleDialogKeydown(event, messagePanel, closeMessageDialog)} class="bg-white rounded-2xl border border-[#20251E]/15 max-w-lg w-full p-6 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
         <h3 id="prepare-message-title" class="text-lg font-serif font-bold text-[#20251E]">
@@ -827,7 +837,7 @@
 
 <!-- Modal: Public Contact Details -->
 {#if showContactModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="contact-details-title">
+  <div class="detail-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20251E]/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="contact-details-title">
     <div bind:this={contactPanel} onkeydown={(event) => handleDialogKeydown(event, contactPanel, closeContactDialog)} class="bg-white rounded-2xl border border-[#20251E]/15 max-w-md w-full p-6 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-[#20251E]/10 pb-3">
         <h3 id="contact-details-title" class="text-lg font-serif font-bold text-[#20251E]">
@@ -987,4 +997,14 @@
     .outlet-route > div:first-child > span { display: none; }
     .outlet-route > div:last-child { grid-template-columns: 1fr; }
   }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .outlet-intro { animation: detail-arrive 850ms cubic-bezier(.16, 1, .3, 1) both; }
+    .outlet-route { animation: detail-arrive 850ms 180ms cubic-bezier(.16, 1, .3, 1) both; }
+    .detail-dialog { animation: dialog-shade 320ms ease-out both; }
+    .detail-dialog > div { animation: detail-arrive 480ms cubic-bezier(.16, 1, .3, 1) both; }
+    .outlet-detail > :first-child button { transition: background-color 320ms ease, border-color 320ms ease, color 320ms ease; }
+  }
+  @keyframes detail-arrive { from { opacity: .65; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes dialog-shade { from { background-color: rgb(32 37 30 / 12%); } to { background-color: rgb(32 37 30 / 40%); } }
 </style>

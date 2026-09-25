@@ -1,13 +1,15 @@
 const CACHE_PREFIX = 'aniwhere-core-';
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
-const CORE_ROUTES = ['/', '/discover', '/saved', '/compare', '/bagsakan', '/bagsakan/preview', '/buyer', '/manifest.webmanifest', '/favicon.svg', '/ani/ani-avatar.webp'];
+const CACHE_NAME = `${CACHE_PREFIX}__BUILD_CACHE_VERSION__`;
+const CORE_ASSETS = [];
+const CORE_ROUTES = ['/', '/discover', '/saved', '/compare', '/bagsakan', '/bagsakan/preview', '/buyer', '/manifest.webmanifest', '/ani/ani-avatar.webp'];
 
 async function cacheCore() {
   const cache = await caches.open(CACHE_NAME);
-  await Promise.allSettled(
-    CORE_ROUTES.map(async (route) => {
+  await Promise.all(
+    [...CORE_ROUTES, ...CORE_ASSETS].map(async (route) => {
       const response = await fetch(route, { cache: 'reload' });
-      if (response.ok) await cache.put(route, response);
+      if (!response.ok) throw new Error(`Unable to cache ${route}: ${response.status}`);
+      await cache.put(route, response);
     }),
   );
 }
@@ -53,7 +55,7 @@ async function networkFirstNavigation(request) {
 
 async function cacheFirstAsset(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, { ignoreVary: true });
   if (cached) return cached;
 
   try {
