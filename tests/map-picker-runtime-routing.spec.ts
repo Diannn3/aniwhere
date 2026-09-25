@@ -132,7 +132,8 @@ test('a delayed local route cannot leak into a newly selected static outlet', as
   const picker = page.locator('.map-picker');
   await expect(picker.locator('.map-picker__selection')).toContainText('Picker Bagsakan');
 
-  await picker.getByRole('button', { name: 'Show all' }).click();
+  const showAll = picker.getByRole('button', { name: 'Show all' });
+  if (await showAll.isVisible()) await showAll.click();
   await page.locator('[data-outlet-id="demo-nagcarlan-kitchen"] .map-picker__select').click();
 
   const selection = picker.locator('.map-picker__selection');
