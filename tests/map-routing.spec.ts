@@ -119,4 +119,8 @@ test('mobile picker details keep map and harvest context in their link', async (
   await expect(page).toHaveURL(/view=map/);
   await expect(page).toHaveURL(/kg=300/);
   await expect(page).toHaveURL(/origin=los-banos/);
+
+  await page.getByRole('link', { name: 'Back to discovery results' }).click();
+  await expect(page).toHaveURL(/\/discover\?/);
+  await expect(page).toHaveURL(/view=map/);
 });

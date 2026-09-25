@@ -23,6 +23,7 @@
   const { outlet, initialLang = 'en' } = $props();
 
   let lang = $state<'en' | 'fil'>(initialLang);
+  let returnView = $state<'list' | 'map'>('list');
   let harvest = $state<HarvestQuery>({
     crop: 'tomato',
     quantityKg: 300,
@@ -51,6 +52,7 @@
     saved = isOutletSaved(outlet.id);
     const parsed = parseDiscoverQuery(window.location.search);
     harvest = parsed.harvest;
+    returnView = parsed.view;
     if (parsed.lang) {
       lang = parsed.lang;
     }
@@ -259,7 +261,7 @@
   );
 
   const backUrl = $derived(
-    `/discover?${serializeDiscoverQuery(harvest, 'list', undefined, lang)}`
+    `/discover?${serializeDiscoverQuery(harvest, returnView, undefined, lang)}`
   );
 
   const compareUrl = $derived(
