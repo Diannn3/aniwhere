@@ -99,11 +99,11 @@
     </div>
     <div>
       <label for="bag-profile-municipalityId" class="mb-1 block font-semibold">{isFil ? 'Bayan o lungsod' : 'Municipality or city'} *</label>
-      <select id="bag-profile-municipalityId" bind:value={municipalityId} onchange={chooseMunicipality} aria-invalid={Boolean(errors.municipalityId)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 focus-visible:outline-2 focus-visible:outline-[#597928]">
+      <select id="bag-profile-municipalityId" bind:value={municipalityId} onchange={chooseMunicipality} aria-invalid={Boolean(errors.municipalityId)} aria-describedby={errors.municipalityId ? 'bag-profile-municipalityId-error' : undefined} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 focus-visible:outline-2 focus-visible:outline-[#597928]">
         <option value="">{isFil ? 'Pumili ng lokasyon' : 'Choose a location'}</option>
         {#each LAGUNA_MUNICIPALITIES as item}<option value={item.id}>{item.name}</option>{/each}
       </select>
-      {#if errors.municipalityId}<p class="mt-1 text-sm text-[#6E3511]">{errors.municipalityId}</p>{/if}
+      {#if errors.municipalityId}<p id="bag-profile-municipalityId-error" class="mt-1 text-sm text-[#6E3511]">{errors.municipalityId}</p>{/if}
     </div>
   </div>
   {#if municipality}
@@ -117,8 +117,8 @@
       {#if showMap}<PinPicker lat={Number(latInput)} lng={Number(lngInput)} {lang} recenterRequest={mapRecenterRequest} onPick={setPin} />{/if}
       <details bind:open={showCoordinates} class="rounded-lg border border-[#20251E]/20 px-4 py-2"><summary class="min-h-11 cursor-pointer py-2 font-semibold">{isFil ? 'Ilagay ang coordinates sa halip' : 'Enter coordinates instead'}</summary>
       <div class="grid gap-4 sm:grid-cols-2">
-        <div><label for="bag-profile-lat" class="mb-1 block font-semibold">{isFil ? 'Latitude ng pin' : 'Pin latitude'}</label><input id="bag-profile-lat" type="number" step="any" bind:value={latInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lat)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lat}<p class="mt-1 text-sm text-[#6E3511]">{errors.lat}</p>{/if}</div>
-        <div><label for="bag-profile-lng" class="mb-1 block font-semibold">{isFil ? 'Longitude ng pin' : 'Pin longitude'}</label><input id="bag-profile-lng" type="number" step="any" bind:value={lngInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lng)} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lng}<p class="mt-1 text-sm text-[#6E3511]">{errors.lng}</p>{/if}</div>
+        <div><label for="bag-profile-lat" class="mb-1 block font-semibold">{isFil ? 'Latitude ng pin' : 'Pin latitude'}</label><input id="bag-profile-lat" type="number" step="any" bind:value={latInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lat)} aria-describedby={errors.lat ? 'bag-profile-lat-error' : undefined} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lat}<p id="bag-profile-lat-error" class="mt-1 text-sm text-[#6E3511]">{errors.lat}</p>{/if}</div>
+        <div><label for="bag-profile-lng" class="mb-1 block font-semibold">{isFil ? 'Longitude ng pin' : 'Pin longitude'}</label><input id="bag-profile-lng" type="number" step="any" bind:value={lngInput} oninput={() => { locationBasis = 'exact_pin'; }} aria-invalid={Boolean(errors.lng)} aria-describedby={errors.lng ? 'bag-profile-lng-error' : undefined} class="min-h-11 w-full rounded-lg border border-[#20251E]/30 bg-[#FFFDF8] px-3 tabular-nums focus-visible:outline-2 focus-visible:outline-[#597928]" />{#if errors.lng}<p id="bag-profile-lng-error" class="mt-1 text-sm text-[#6E3511]">{errors.lng}</p>{/if}</div>
       </div>
       </details>
       <div class="flex flex-wrap items-center gap-3"><button type="button" onclick={chooseMunicipality} class="min-h-11 rounded-lg border border-[#20251E]/30 px-4 font-semibold hover:bg-[#FCECD8] focus-visible:outline-2 focus-visible:outline-[#597928]">{isFil ? 'Ibalik sa sentro ng bayan' : 'Reset to municipality center'}</button><span class="text-sm text-[#4A5245]">{locationBasis === 'municipality_center' ? (isFil ? 'Sentro ng bayan ang pin' : 'Municipality center pin') : (isFil ? 'Eksaktong pin ang gagamitin' : 'Exact pin selected')}</span></div>
