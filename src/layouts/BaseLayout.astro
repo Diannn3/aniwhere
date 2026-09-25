@@ -236,23 +236,45 @@ const farmerContextHref = (path: string) => {
         });
 
         const harvestContextKeys = ['crop', 'kg', 'origin', 'ready', 'variety', 'grade', 'packaging'];
-        const hasHarvestContext = ['crop', 'kg', 'origin'].every((key) => params.has(key));
 
-        document.querySelectorAll('a[data-route-href]').forEach((element) => {
-          const route = element.getAttribute('data-route-href');
-          if (!route) return;
-          const url = new URL(route, window.location.origin);
+        const syncRouteLinks = (harvestOverride) => {
+          const current = new URLSearchParams(window.location.search);
+          const currentLang = current.get('lang') === 'fil' ? 'fil' : 'en';
+          const values = harvestOverride
+            ? {
+                crop: harvestOverride.crop,
+                kg: String(harvestOverride.quantityKg ?? ''),
+                origin: harvestOverride.originMunicipality,
+                ready: harvestOverride.readyDate,
+                variety: harvestOverride.details?.variety,
+                grade: harvestOverride.details?.grade,
+                packaging: harvestOverride.details?.packaging,
+              }
+            : Object.fromEntries(harvestContextKeys.map((key) => [key, current.get(key)]));
+          const hasContext = Boolean(values.crop && values.kg && values.origin);
 
-          if ((route === '/discover' || route === '/saved' || route === '/compare') && hasHarvestContext) {
-            for (const key of harvestContextKeys) {
-              const value = params.get(key);
-              if (value) url.searchParams.set(key, value);
+          document.querySelectorAll('a[data-route-href]').forEach((element) => {
+            const route = element.getAttribute('data-route-href');
+            if (!route) return;
+            const url = new URL(route, window.location.origin);
+
+            if ((route === '/discover' || route === '/saved' || route === '/compare') && hasContext) {
+              for (const key of harvestContextKeys) {
+                const value = values[key];
+                if (value) url.searchParams.set(key, value);
+              }
             }
-          }
 
-          if (activeLang === 'fil') url.searchParams.set('lang', 'fil');
-          element.setAttribute('href', url.pathname + url.search);
+            if (currentLang === 'fil') url.searchParams.set('lang', 'fil');
+            element.setAttribute('href', url.pathname + url.search);
+          });
+        };
+
+        syncRouteLinks();
+        window.addEventListener('aniwhere:harvest-context', (event) => {
+          syncRouteLinks(event.detail);
         });
+        window.addEventListener('popstate', () => syncRouteLinks());
       })();
     </script>
   </body>

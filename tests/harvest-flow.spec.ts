@@ -154,6 +154,23 @@ test('labels fictional price evidence as demo data across farmer decision surfac
   await expect(page.getByText(/Demo price: ₱28\/kg/).first()).toBeVisible();
 });
 
+test('farmer navigation follows edited harvest context without a reload', async ({ page }) => {
+  await page.goto(discoverPath);
+  await page.getByRole('button', { name: /edit harvest/i }).click();
+  await page.getByLabel(/quantity.*kg/i).fill('450');
+  await page.getByLabel(/origin municipality/i).selectOption('calamba');
+  await page.getByRole('button', { name: /update results/i }).click();
+
+  const nav = page.getByRole('navigation', { name: 'Main navigation' });
+  const saved = nav.getByRole('link', { name: 'Saved' });
+  await expect(saved).toHaveAttribute('href', /kg=450/);
+  await expect(saved).toHaveAttribute('href', /origin=calamba/);
+  await saved.click();
+  await expect(page).toHaveURL(/\/saved\?/);
+  await expect(page).toHaveURL(/kg=450/);
+  await expect(page).toHaveURL(/origin=calamba/);
+});
+
 test('distance sorting explains the shared comparison basis to farmers', async ({ page }) => {
   await page.goto(discoverPath);
 
