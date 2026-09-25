@@ -65,9 +65,12 @@ export function validateRuntimeRouteResponse(value: unknown): RuntimeRouteSucces
   };
 }
 
-function reasonForStatus(status: number): RuntimeRouteFailureReason {
+function reasonForStatus(
+  status: number,
+  errorCode?: string
+): RuntimeRouteFailureReason {
   if (status === 429) return 'rate_limited';
-  if (status === 503) return 'not_configured';
+  if (status === 503 && errorCode === 'routing_not_configured') return 'not_configured';
   return 'provider_unavailable';
 }
 
@@ -89,7 +92,26 @@ export async function requestRuntimeRoute(
       signal: options.signal,
       cache: 'no-store',
     });
-    if (!response.ok) return { ok: false, reason: reasonForStatus(response.status) };
+    if (!response.ok) {
+      let errorCode: string | undefined;
+      try {
+        const errorBody: unknown = await response.json();
+        if (
+          errorBody &&
+          typeof errorBody === 'object' &&
+          'error' in errorBody &&
+          typeof errorBody.error === 'string'
+        ) {
+          errorCode = errorBody.error;
+        }
+      } catch {
+        // Status remains authoritative when the error body is absent or malformed.
+      }
+      return {
+        ok: false,
+        reason: reasonForStatus(response.status, errorCode),
+      };
+    }
 
     let body: unknown;
     try {

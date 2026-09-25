@@ -62,7 +62,7 @@ describe('runtime route client', () => {
   });
 
   it('maps provider and rate-limit failures to safe client states', async () => {
-    for (const [status, reason] of [[429, 'rate_limited'], [502, 'provider_unavailable'], [503, 'not_configured']] as const) {
+    for (const [status, reason] of [[429, 'rate_limited'], [502, 'provider_unavailable'], [503, 'provider_unavailable']] as const) {
       const fetchImpl = vi.fn(async () => new Response('{}', { status }));
       const result = await requestRuntimeRoute(
         { originMunicipalityId: 'los-banos', destination: { lat: 14.275, lng: 121.459 } },
@@ -70,6 +70,21 @@ describe('runtime route client', () => {
       );
       expect(result).toEqual({ ok: false, reason });
     }
+  });
+
+  it('uses not-configured only for the endpoint's explicit configuration error', async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(JSON.stringify({ error: 'routing_not_configured' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    await expect(
+      requestRuntimeRoute(
+        { originMunicipalityId: 'los-banos', destination: { lat: 14.275, lng: 121.459 } },
+        { endpoint: '/api/route-estimate', fetchImpl: fetchImpl as typeof fetch }
+      )
+    ).resolves.toEqual({ ok: false, reason: 'not_configured' });
   });
 
   it('treats malformed successful JSON as an invalid response, not offline', async () => {
