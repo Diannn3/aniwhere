@@ -15,6 +15,7 @@
     type OutletRouteEstimate,
   } from '../../lib/routing/routing-matrix';
   import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
+  import { runtimeRouteCacheKey } from '../../lib/routing/runtime-route-cache';
   import { parseCompareQuery, serializeDiscoverQuery, todayInManila } from '../../lib/state/url-state';
   import { safeStorage } from '../../lib/state/storage';
   import type { FitStatus, HarvestQuery, Outlet } from '../../lib/domain/types';
@@ -97,7 +98,12 @@
 
   function routeFor(outlet: Outlet): OutletRouteEstimate {
     const distance = calculateStraightLineDistanceKm(originMun.lat, originMun.lng, outlet.lat, outlet.lng);
-    return resolvedRoutes[outlet.id] ??
+    const key = runtimeRouteCacheKey(
+      harvest.originMunicipality,
+      outlet.lat,
+      outlet.lng
+    );
+    return resolvedRoutes[key] ??
       getImmediateOutletRoute(harvest.originMunicipality, outlet, distance).route;
   }
 
@@ -121,10 +127,11 @@
       const distance = calculateStraightLineDistanceKm(
         originMun.lat, originMun.lng, outlet.lat, outlet.lng
       );
+      const key = runtimeRouteCacheKey(originId, outlet.lat, outlet.lng);
       void resolveOutletRoute(originId, outlet, distance, { signal: controller.signal })
         .then((result) => {
           if (controller.signal.aborted) return;
-          resolvedRoutes = { ...resolvedRoutes, [outlet.id]: result.route };
+          resolvedRoutes = { ...resolvedRoutes, [key]: result.route };
           routeLoadingIds = routeLoadingIds.filter((id) => id !== outlet.id);
         });
     }
