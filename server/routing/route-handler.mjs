@@ -12,6 +12,10 @@ function finite(value) {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function samePoint(a, b) {
+  return Math.abs(a.lat - b.lat) <= 1e-6 && Math.abs(a.lng - b.lng) <= 1e-6;
+}
+
 export function validateRuntimeRouteRequest(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return { ok: false, error: 'invalid_request' };
@@ -92,7 +96,15 @@ export async function routeEstimateFromPayload(
     }
 
     const geometryReady = validateRouteGeometry(geometry);
-    if (!geometryReady && (distanceMeters !== 0 || durationSeconds !== 0)) {
+    const zeroDistance = distanceMeters === 0;
+    const zeroDuration = durationSeconds === 0;
+    if (zeroDistance !== zeroDuration) {
+      return { status: 502, body: { error: 'invalid_routing_response' } };
+    }
+    if (zeroDistance && !samePoint(validated.origin, validated.destination)) {
+      return { status: 502, body: { error: 'invalid_routing_response' } };
+    }
+    if (!geometryReady && !zeroDistance) {
       return { status: 502, body: { error: 'invalid_routing_response' } };
     }
 

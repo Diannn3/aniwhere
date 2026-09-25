@@ -81,7 +81,32 @@ describe('runtime route server handler', () => {
     expect(JSON.stringify(result.body)).not.toContain('private-test-key');
   });
 
-  it('does not invent a polyline for a valid zero-distance response', async () => {
+  it('does not invent a polyline for a co-located zero-distance response', async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(JSON.stringify({
+        features: [{
+          geometry: null,
+          properties: { summary: { distance: 0, duration: 0 } },
+        }],
+      }), { status: 200 })
+    );
+    const result = await routeEstimateFromPayload({
+      originMunicipalityId: 'los-banos',
+      destination: { lat: 14.17, lng: 121.241 },
+    }, {
+      apiKey: 'private-test-key',
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({
+      distanceMeters: 0,
+      durationSeconds: 0,
+      geometryStatus: 'unavailable',
+    });
+    expect(result.body).not.toHaveProperty('geometry');
+  });
+
+  it('rejects zero-distance evidence for different coordinates', async () => {
     const fetchImpl = vi.fn(async () =>
       new Response(JSON.stringify({
         features: [{
@@ -94,13 +119,10 @@ describe('runtime route server handler', () => {
       apiKey: 'private-test-key',
       fetchImpl: fetchImpl as typeof fetch,
     });
-    expect(result.status).toBe(200);
-    expect(result.body).toMatchObject({
-      distanceMeters: 0,
-      durationSeconds: 0,
-      geometryStatus: 'unavailable',
+    expect(result).toEqual({
+      status: 502,
+      body: { error: 'invalid_routing_response' },
     });
-    expect(result.body).not.toHaveProperty('geometry');
   });
 
   it('rejects malformed provider evidence', async () => {
