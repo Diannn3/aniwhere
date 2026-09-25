@@ -25,6 +25,27 @@ test('home rejects malformed harvest URL state before showing it to the farmer',
   await expect(page.getByPlaceholder(/enter crop name/i)).toHaveValue('');
 });
 
+test('landing crop suggestions stay filtered, selectable, and below the mobile search bar', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const input = page.locator('#landing-crop');
+  const options = page.locator('#landing-crop-suggestions').getByRole('option');
+
+  await input.focus();
+  await expect(options).toHaveCount(0);
+  await input.fill('kam');
+  await expect(options).toHaveCount(1);
+  await expect(options.first()).toContainText('Tomatoes');
+  const menuTop = await page.locator('#landing-crop-suggestions').evaluate((element) => element.getBoundingClientRect().top);
+  const submitBottom = await page.getByRole('button', { name: /find outlets/i }).evaluate((element) => element.getBoundingClientRect().bottom);
+  expect(menuTop).toBeGreaterThan(submitBottom);
+
+  await input.press('ArrowDown');
+  await input.press('Enter');
+  await expect(input).toHaveValue('Tomatoes');
+  await expect(options).toHaveCount(0);
+});
+
 test('home exposes the four harvest integration controls', async ({ page }) => {
   await page.goto('/');
 
