@@ -137,6 +137,15 @@ test('edits the discovery harvest and updates the address without discarding lan
     origin: 'calamba',
     ready: '2026-09-25',
   });
+  const navigation = page.getByRole('navigation', { name: /main navigation/i });
+  await expect(navigation.getByRole('link', { name: 'Saved' })).toHaveAttribute('href', /kg=450.*origin=calamba/);
+  await page.getByRole('link', { name: 'FIL' }).click();
+  await expectHarvestQuery(page, {
+    kg: '450',
+    origin: 'calamba',
+    ready: '2026-09-25',
+    lang: 'fil',
+  });
 });
 
 

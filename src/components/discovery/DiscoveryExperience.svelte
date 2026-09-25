@@ -56,23 +56,19 @@
   onMount(() => {
     savedIds = getSavedOutletIds();
 
-    // Hydrate client-side query parameters if present in browser
-    if (typeof window !== 'undefined' && window.location.search) {
-      const clientQuery = parseDiscoverQuery(window.location.search);
-      harvest = clientQuery.harvest;
-      lang = clientQuery.lang;
-      activeMobileView = clientQuery.view;
-      if (clientQuery.selectedPlaceId) {
-        selectedOutletId = clientQuery.selectedPlaceId;
-      }
-      editCrop = clientQuery.harvest.crop;
-      editKg = clientQuery.harvest.quantityKg;
-      editOrigin = clientQuery.harvest.originMunicipality;
-      editReadyDate = clientQuery.harvest.readyDate || '';
-      editVariety = clientQuery.harvest.details?.variety || '';
-      editGrade = clientQuery.harvest.details?.grade || '';
-      editPackaging = clientQuery.harvest.details?.packaging || '';
-    }
+    // Static pages embed build-time defaults; resolve today's date in the browser.
+    const clientQuery = parseDiscoverQuery(window.location.search);
+    harvest = clientQuery.harvest;
+    lang = clientQuery.lang;
+    activeMobileView = clientQuery.view;
+    selectedOutletId = clientQuery.selectedPlaceId;
+    editCrop = clientQuery.harvest.crop;
+    editKg = clientQuery.harvest.quantityKg;
+    editOrigin = clientQuery.harvest.originMunicipality;
+    editReadyDate = clientQuery.harvest.readyDate || '';
+    editVariety = clientQuery.harvest.details?.variety || '';
+    editGrade = clientQuery.harvest.details?.grade || '';
+    editPackaging = clientQuery.harvest.details?.packaging || '';
   });
 
   onMount(() => subscribeHarvestContext((next) => {
@@ -85,7 +81,7 @@
     editGrade = next.details?.grade || '';
     editPackaging = next.details?.packaging || '';
     const newQuery = serializeDiscoverQuery(next, activeMobileView, selectedOutletId, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    replaceDiscoveryUrl(newQuery);
   }));
 
   onMount(() => {
@@ -256,12 +252,17 @@
     publishHarvestContext(harvest);
 
     const newQuery = serializeDiscoverQuery(harvest, activeMobileView, undefined, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    replaceDiscoveryUrl(newQuery);
+  }
+
+  function replaceDiscoveryUrl(query: string) {
+    window.history.replaceState({}, '', `/discover?${query}`);
+    window.dispatchEvent(new Event('aniwhere:harvest-url-change'));
   }
 
   function syncDiscoveryUrl() {
     const newQuery = serializeDiscoverQuery(harvest, activeMobileView, selectedOutletId, lang);
-    window.history.replaceState({}, '', `/discover?${newQuery}`);
+    replaceDiscoveryUrl(newQuery);
   }
 
   function setStatusFilter(next: 'all' | 'match' | 'partial' | 'confirm' | 'no_match') {

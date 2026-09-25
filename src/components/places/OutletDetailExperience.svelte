@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { subscribeHarvestContext } from '../../lib/ani/harvest-sync';
+  import { subscribeClientMarketOutlets } from '../../lib/data/client-market';
   import type { Outlet, HarvestQuery } from '../../lib/domain/types';
   import { evaluateFit } from '../../lib/domain/match';
   import { calculateStraightLineDistanceKm } from '../../lib/domain/distance';
@@ -20,7 +21,9 @@
     initialLang?: 'en' | 'fil';
   }
 
-  const { outlet, initialLang = 'en' } = $props();
+  let { outlet: initialOutlet, initialLang = 'en' } = $props();
+  let currentOutlet = $state<Outlet>(initialOutlet);
+  const outlet = $derived(initialOutlet.isLocalBagsakan ? initialOutlet : currentOutlet);
 
   let lang = $state<'en' | 'fil'>(initialLang);
   let harvest = $state<HarvestQuery>({
@@ -49,6 +52,13 @@
     if (parsed.lang) {
       lang = parsed.lang;
     }
+  });
+
+  onMount(() => {
+    if (initialOutlet.isLocalBagsakan) return;
+    return subscribeClientMarketOutlets((outlets) => {
+      currentOutlet = outlets.find((item) => item.id === initialOutlet.id) ?? initialOutlet;
+    });
   });
 
   onMount(() => subscribeHarvestContext((next) => {
