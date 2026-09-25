@@ -126,3 +126,36 @@ test('mobile home exposes Bagsakan setup without changing farmer navigation', as
   await expect(page.getByRole('navigation', { name: 'Nabigasyon sa mobile' })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
+
+test('Bagsakan profile validation associates inline errors with their fields', async ({ page }) => {
+  await page.goto('/bagsakan');
+
+  await page.getByRole('button', { name: 'Save bagsakan' }).click();
+
+  const municipality = page.locator('#bag-profile-municipalityId');
+  await expect(municipality).toHaveAttribute('aria-invalid', 'true');
+  await expect(municipality).toHaveAttribute(
+    'aria-describedby',
+    'bag-profile-municipalityId-error'
+  );
+  await expect(page.locator('#bag-profile-municipalityId-error')).toBeVisible();
+
+  await page.locator('#bag-profile-name').fill('Accessible Pin Bagsakan');
+  await municipality.selectOption('santa-cruz');
+  await page.getByRole('button', { name: 'Set exact pin (optional)' }).click();
+  await page.getByText('Enter coordinates instead').click();
+  await page.locator('#bag-profile-lat').fill('');
+  await page.locator('#bag-profile-lng').fill('');
+  await page.getByRole('button', { name: 'Save bagsakan' }).click();
+
+  await expect(page.locator('#bag-profile-lat')).toHaveAttribute(
+    'aria-describedby',
+    'bag-profile-lat-error'
+  );
+  await expect(page.locator('#bag-profile-lng')).toHaveAttribute(
+    'aria-describedby',
+    'bag-profile-lng-error'
+  );
+  await expect(page.locator('#bag-profile-lat-error')).toBeVisible();
+  await expect(page.locator('#bag-profile-lng-error')).toBeVisible();
+});
