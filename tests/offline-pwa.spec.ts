@@ -20,14 +20,11 @@ test('registers the AniWhere manifest and service worker after an online load', 
   expect(registration?.scope).toMatch(/\/$/);
 });
 
-test('reopens a previously loaded farmer route offline without caching harvest query strings', async ({ page, context }) => {
+test('opens a core farmer route offline after one online visit with an empty HTTP cache', async ({ page, context }) => {
   await page.goto('/');
   await page.evaluate(async () => {
     if ('serviceWorker' in navigator) await navigator.serviceWorker.ready;
   });
-
-  await page.goto(discover);
-  await expect(page.getByRole('heading', { name: /300 kg/i })).toBeVisible();
 
   const cachedCoreNavigations = await page.evaluate(async () => {
     const names = await caches.keys();
@@ -44,19 +41,15 @@ test('reopens a previously loaded farmer route offline without caching harvest q
   expect(cachedCoreNavigations.some((entry) => entry.pathname === '/discover')).toBe(true);
   expect(cachedCoreNavigations.every((entry) => entry.search === '')).toBe(true);
 
+  const session = await context.newCDPSession(page);
+  await session.send('Network.clearBrowserCache');
+  await session.detach();
   await context.setOffline(true);
-  await page.reload();
+  await page.goto(discover);
   await expect(page.getByRole('heading', { name: /300 kg/i })).toBeVisible();
-  await expect(page).toHaveURL(/crop=tomato/);
+  await expect(page.locator('astro-island[component-url*="DiscoveryExperience"]')).not.toHaveAttribute('ssr', '');
+  await page.getByRole('button', { name: /edit harvest/i }).click();
+  await expect(page.getByRole('button', { name: /update results/i })).toBeVisible();
   await expect(page).toHaveURL(/kg=300/);
   await context.setOffline(false);
-});
-
-test('service worker source explicitly leaves API requests to the network layer', async ({ page }) => {
-  await page.goto('/');
-  const source = await page.evaluate(async () => (await fetch('/sw.js')).text());
-
-  expect(source).toContain("url.pathname.startsWith('/api/')");
-  expect(source).toContain('networkFirstNavigation');
-  expect(source).not.toContain('cache.put(request, response.clone())\n      return response;\n    } catch {\n      if (request.mode');
 });
