@@ -14,7 +14,7 @@ function response() {
 
 function registeredMiddleware() {
   const plugin = runtimeRoutingDevPlugin();
-  plugin.configResolved({ mode: 'test' });
+  plugin.configResolved();
   let mountedPath;
   let handler;
   plugin.configureServer({
