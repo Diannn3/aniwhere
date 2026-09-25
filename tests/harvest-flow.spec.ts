@@ -158,6 +158,15 @@ test('edits the discovery harvest and updates the address without discarding lan
     origin: 'calamba',
     ready: '2026-09-25',
   });
+  const navigation = page.getByRole('navigation', { name: /main navigation/i });
+  await expect(navigation.getByRole('link', { name: 'Saved' })).toHaveAttribute('href', /kg=450.*origin=calamba/);
+  await page.getByRole('link', { name: 'FIL' }).click();
+  await expectHarvestQuery(page, {
+    kg: '450',
+    origin: 'calamba',
+    ready: '2026-09-25',
+    lang: 'fil',
+  });
 });
 
 
@@ -220,7 +229,7 @@ test('clears a selected map place when a fit filter hides it', async ({ page }) 
 test('explains the three-place comparison limit instead of silently blocking the farmer', async ({ page }) => {
   await page.goto(discoverPath);
 
-  const cards = page.locator('article[id^="outlet-card-"]');
+  const cards = page.locator('article[id^="outlet-card-"]:visible');
   await cards.nth(0).locator('.ledger-select-surface').click();
   await cards.nth(1).locator('.ledger-select-surface').click();
   await cards.nth(2).locator('.ledger-select-surface').click();
