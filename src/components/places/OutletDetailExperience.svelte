@@ -13,6 +13,7 @@
   import { formatEstimatedDriveDuration } from '../../lib/routing/routing-matrix';
   import type { OutletRouteEstimate } from '../../lib/routing/routing-matrix';
   import { getImmediateOutletRoute, resolveOutletRoute } from '../../lib/routing/route-resolver';
+  import { runtimeRouteCacheKey } from '../../lib/routing/runtime-route-cache';
 
   interface Props {
     outlet: Outlet;
@@ -40,8 +41,10 @@
   let contactPanel: HTMLDivElement | null = $state(null);
   let messageCloseButton: HTMLButtonElement | null = $state(null);
   let contactCloseButton: HTMLButtonElement | null = $state(null);
+  type RouteRequestState = 'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured';
   let resolvedRoute = $state<OutletRouteEstimate | undefined>();
-  let routeRequestState = $state<'idle' | 'loading' | 'ready' | 'unavailable' | 'not_configured'>('idle');
+  let resolvedRouteKey = $state<string | undefined>();
+  let routeRequestState = $state<RouteRequestState>('idle');
   let routeClientReady = $state(false);
 
   onMount(() => {
@@ -70,13 +73,37 @@
   const immediateRoute = $derived(
     getImmediateOutletRoute(harvest.originMunicipality, outlet, distanceKm)
   );
-  const routeEstimate = $derived(resolvedRoute ?? immediateRoute.route);
+  const routeResolutionKey = $derived(
+    outlet.isLocalBagsakan
+      ? runtimeRouteCacheKey(harvest.originMunicipality, outlet.lat, outlet.lng)
+      : undefined
+  );
+  const routeEstimate = $derived(
+    resolvedRouteKey === routeResolutionKey && resolvedRoute
+      ? resolvedRoute
+      : immediateRoute.route
+  );
+  const displayRouteRequestState = $derived<RouteRequestState>(
+    !outlet.isLocalBagsakan
+      ? 'idle'
+      : resolvedRouteKey === routeResolutionKey
+        ? routeRequestState
+        : immediateRoute.state === 'cached'
+          ? 'ready'
+          : routeClientReady
+            ? 'loading'
+            : 'idle'
+  );
 
   $effect(() => {
     if (!routeClientReady) return;
     const originId = harvest.originMunicipality;
     const straightLineDistanceKm = distanceKm;
+    const key = outlet.isLocalBagsakan
+      ? runtimeRouteCacheKey(originId, outlet.lat, outlet.lng)
+      : undefined;
     const immediate = getImmediateOutletRoute(originId, outlet, straightLineDistanceKm);
+    resolvedRouteKey = key;
     resolvedRoute = immediate.route;
 
     if (
@@ -411,7 +438,7 @@
           lang={lang}
           onSelect={() => {}}
           routeOverride={routeEstimate}
-          {routeRequestState}
+          routeRequestState={displayRouteRequestState}
         />
       </div>
 
@@ -427,11 +454,11 @@
             <span class="block">{formatEstimatedDriveDuration(routeEstimate) ?? '—'} {isFil ? 'tinatayang biyahe' : 'estimated drive'}</span>
           {:else}
             <span class="block">
-              {routeRequestState === 'loading'
+              {displayRouteRequestState === 'loading'
                 ? (isFil ? 'Kinukuha ang rutang pangkalsada…' : 'Fetching road route…')
-                : routeRequestState === 'not_configured'
+                : displayRouteRequestState === 'not_configured'
                   ? (isFil ? 'Hindi naka-configure ang live road routing.' : 'Live road routing is not configured.')
-                  : routeRequestState === 'unavailable'
+                  : displayRouteRequestState === 'unavailable'
                     ? (isFil ? 'Pansamantalang hindi available ang rutang pangkalsada.' : 'Road route is temporarily unavailable.')
                     : (isFil ? 'Walang rutang pangkalsada.' : 'Road route unavailable.')}
             </span>
