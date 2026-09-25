@@ -72,7 +72,7 @@ describe('runtime route client', () => {
     }
   });
 
-  it('uses not-configured only for the endpoint's explicit configuration error', async () => {
+  it("uses not-configured only for the endpoint's explicit configuration error", async () => {
     const fetchImpl = vi.fn(async () =>
       new Response(JSON.stringify({ error: 'routing_not_configured' }), {
         status: 503,
